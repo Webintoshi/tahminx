@@ -1,0 +1,87 @@
+﻿@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --background: #080c14;
+  --foreground: #e2e8f0;
+  --surface: #111827;
+  --surface-alt: #0d1320;
+  --surface-elevated: #1a2332;
+  --border: #1e293b;
+  --accent: #0ea5e9;
+  --accent-2: #38bdf8;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --muted: #64748b;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #f4f6fb;
+  --foreground: #1c2840;
+  --surface: #ffffff;
+  --surface-alt: #e8edf6;
+  --surface-elevated: #e0e8f5;
+  --border: #c3d2ea;
+  --muted: #667a98;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-heading);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.mesh-bg {
+  background:
+    radial-gradient(circle at 12% 16%, rgba(14, 165, 233, 0.2), transparent 50%),
+    radial-gradient(circle at 88% 12%, rgba(56, 189, 248, 0.18), transparent 48%),
+    radial-gradient(circle at 56% 86%, rgba(16, 185, 129, 0.12), transparent 44%);
+}
+
+.editorial-grid {
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --background: #f4f6fb;
+    --foreground: #1c2840;
+    --surface: #ffffff;
+    --surface-alt: #e8edf6;
+    --surface-elevated: #e0e8f5;
+    --border: #c3d2ea;
+    --muted: #667a98;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

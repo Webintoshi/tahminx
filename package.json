@@ -1,0 +1,36 @@
+{
+  "name": "tahminx",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "dev:frontend": "next dev -p 3000",
+    "dev:backend": "npm --prefix backend run start:dev",
+    "dev:all": "concurrently -k -n FRONTEND,BACKEND -c cyan,green \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "infra:up": "docker compose -f backend/docker-compose.yml up -d postgres redis",
+    "infra:down": "docker compose -f backend/docker-compose.yml down",
+    "backend:seed": "npm --prefix backend run prisma:seed:safe",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.96.2",
+    "next": "16.2.2",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "swr": "^2.4.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

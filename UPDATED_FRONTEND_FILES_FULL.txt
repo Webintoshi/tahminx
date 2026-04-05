@@ -1,0 +1,3606 @@
+﻿
+===== FILE: types/api-contract.ts =====
+export type SportKey = "football" | "basketball" | string;
+
+export interface ApiError {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  generatedAt?: string;
+  updatedAt?: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  meta?: PaginationMeta;
+  error?: ApiError | null;
+}
+
+export interface Sport {
+  id: string;
+  key: SportKey;
+  name: string;
+  logoUrl?: string | null;
+}
+
+export interface LeagueListItem {
+  id: string;
+  sportId: string;
+  sportKey: SportKey;
+  name: string;
+  country: string;
+  season: string;
+  logoUrl?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface LeagueDetail extends LeagueListItem {
+  description?: string | null;
+  statsSummary?: {
+    avgScore: number | null;
+    homeWinRate: number | null;
+    awayWinRate: number | null;
+    drawRate?: number | null;
+  };
+}
+
+export interface StandingRow {
+  position: number;
+  teamId: string;
+  teamName: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  points: number;
+  goalsFor?: number | null;
+  goalsAgainst?: number | null;
+  form: Array<"W" | "D" | "L">;
+}
+
+export interface TeamListItem {
+  id: string;
+  leagueId: string;
+  sportId: string;
+  sportKey: SportKey;
+  name: string;
+  shortName?: string | null;
+  city?: string | null;
+  logoUrl?: string | null;
+}
+
+export interface TeamDetail extends TeamListItem {
+  country?: string | null;
+  foundedYear?: number | null;
+  coach?: string | null;
+  homeMetric?: number | null;
+  awayMetric?: number | null;
+  attackMetric?: number | null;
+  defenseMetric?: number | null;
+}
+
+export interface TeamFormPoint {
+  date: string;
+  opponent: string;
+  result: "W" | "D" | "L";
+  scoreFor?: number | null;
+  scoreAgainst?: number | null;
+  value?: number | null;
+}
+
+export type MatchStatus = "scheduled" | "live" | "completed" | "postponed" | "cancelled";
+
+export interface MatchListItem {
+  id: string;
+  sportKey: SportKey;
+  leagueId: string;
+  leagueName: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  homeTeamName: string;
+  awayTeamName: string;
+  homeLogoUrl?: string | null;
+  awayLogoUrl?: string | null;
+  kickoffAt: string;
+  status: MatchStatus;
+  scoreHome?: number | null;
+  scoreAway?: number | null;
+  confidenceScore?: number | null;
+}
+
+export interface MatchDetail extends MatchListItem {
+  venue?: string | null;
+  round?: string | null;
+  summary?: string | null;
+  expectedScoreHome?: number | null;
+  expectedScoreAway?: number | null;
+  riskFlags?: string[] | null;
+  h2hSummary?: string | null;
+}
+
+export interface MatchEvent {
+  id: string;
+  minute: number | null;
+  teamId?: string | null;
+  teamName?: string | null;
+  type: string;
+  title: string;
+  description?: string | null;
+}
+
+export interface MatchStats {
+  possessionHome?: number | null;
+  possessionAway?: number | null;
+  shotsHome?: number | null;
+  shotsAway?: number | null;
+  shotsOnTargetHome?: number | null;
+  shotsOnTargetAway?: number | null;
+  xgHome?: number | null;
+  xgAway?: number | null;
+  paceHome?: number | null;
+  paceAway?: number | null;
+  efficiencyHome?: number | null;
+  efficiencyAway?: number | null;
+}
+
+export interface MatchPrediction {
+  matchId: string;
+  expectedScore: {
+    home: number | null;
+    away: number | null;
+  };
+  probabilities: {
+    home: number;
+    draw?: number | null;
+    away: number;
+  };
+  confidenceScore?: number | null;
+  riskFlags?: string[] | null;
+  modelExplanation?: string | null;
+  summary?: string | null;
+  isLowConfidence?: boolean;
+  isRecommended?: boolean;
+}
+
+export interface PredictionItem {
+  id: string;
+  matchId: string;
+  sportKey: SportKey;
+  leagueId: string;
+  leagueName: string;
+  homeTeamName: string;
+  awayTeamName: string;
+  kickoffAt: string;
+  confidenceScore?: number | null;
+  riskLevel: "low" | "medium" | "high";
+  expectedScore: {
+    home: number | null;
+    away: number | null;
+  };
+  probabilities: {
+    home: number;
+    draw?: number | null;
+    away: number;
+  };
+  modelSummary: string;
+  riskFlags?: string[] | null;
+  isLowConfidence?: boolean;
+  isRecommended?: boolean;
+}
+
+export interface RiskDistributionSummary {
+  low: number;
+  medium: number;
+  high: number;
+  updatedAt?: string | null;
+}
+
+export interface CalibrationHealthSummary {
+  status?: string | null;
+  brierScore?: number | null;
+  ece?: number | null;
+  reliability?: number | null;
+  note?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface DashboardSummary {
+  todayMatchCount: number;
+  liveMatchCount: number;
+  highConfidencePredictionCount: number;
+  updatedLeagues: LeagueListItem[];
+  highConfidencePredictions: PredictionItem[];
+  recentPredictions: PredictionItem[];
+  todayMatches: MatchListItem[];
+  miniTrends: Array<{ label: string; values: number[] }>;
+  calibratedHighConfidenceCount?: number | null;
+  lowConfidenceCount?: number | null;
+  avgConfidenceScore?: number | null;
+  riskDistribution?: RiskDistributionSummary | null;
+  calibrationHealthSummary?: CalibrationHealthSummary | null;
+}
+
+export interface GuideSummary {
+  title: string;
+  sections: Array<{ heading: string; text: string }>;
+}
+
+export interface TeamSquadPlayer {
+  id: string;
+  name: string;
+  position: string;
+  number?: number | null;
+  status?: string | null;
+}
+
+export interface CalibrationResult {
+  id: string;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  sampleSize?: number | null;
+  brierScore?: number | null;
+  ece?: number | null;
+  reliability?: number | null;
+  status?: string | null;
+  note?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface CalibrationRunResponse {
+  runId?: string | null;
+  startedAt?: string | null;
+  message?: string | null;
+  status?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface PredictionRiskSummary {
+  totalPredictions?: number | null;
+  low?: number | null;
+  medium?: number | null;
+  high?: number | null;
+  riskFlagsTop?: Array<{ flag: string; count: number }>;
+  calibrationHealthSummary?: CalibrationHealthSummary | null;
+  updatedAt?: string | null;
+}
+
+
+
+
+===== FILE: lib/api/contract-schemas.ts =====
+import { z } from "zod";
+
+export const apiErrorSchema = z.object({
+  code: z.string(),
+  message: z.string(),
+  details: z.unknown().optional()
+});
+
+export const paginationMetaSchema = z.object({
+  page: z.number(),
+  pageSize: z.number(),
+  total: z.number(),
+  totalPages: z.number(),
+  generatedAt: z.string().optional(),
+  updatedAt: z.string().optional()
+});
+
+export const apiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    success: z.boolean(),
+    data: dataSchema,
+    meta: paginationMetaSchema.optional(),
+    error: apiErrorSchema.nullable().optional()
+  });
+
+export const sportSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  name: z.string(),
+  logoUrl: z.string().nullable().optional()
+});
+
+export const leagueListItemSchema = z.object({
+  id: z.string(),
+  sportId: z.string(),
+  sportKey: z.string(),
+  name: z.string(),
+  country: z.string(),
+  season: z.string(),
+  logoUrl: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const leagueDetailSchema = leagueListItemSchema.extend({
+  description: z.string().nullable().optional(),
+  statsSummary: z
+    .object({
+      avgScore: z.number().nullable(),
+      homeWinRate: z.number().nullable(),
+      awayWinRate: z.number().nullable(),
+      drawRate: z.number().nullable().optional()
+    })
+    .optional()
+});
+
+export const standingRowSchema = z.object({
+  position: z.number(),
+  teamId: z.string(),
+  teamName: z.string(),
+  played: z.number(),
+  won: z.number(),
+  drawn: z.number(),
+  lost: z.number(),
+  points: z.number(),
+  goalsFor: z.number().nullable().optional(),
+  goalsAgainst: z.number().nullable().optional(),
+  form: z.array(z.enum(["W", "D", "L"]))
+});
+
+export const teamListItemSchema = z.object({
+  id: z.string(),
+  leagueId: z.string(),
+  sportId: z.string(),
+  sportKey: z.string(),
+  name: z.string(),
+  shortName: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  logoUrl: z.string().nullable().optional()
+});
+
+export const teamDetailSchema = teamListItemSchema.extend({
+  country: z.string().nullable().optional(),
+  foundedYear: z.number().nullable().optional(),
+  coach: z.string().nullable().optional(),
+  homeMetric: z.number().nullable().optional(),
+  awayMetric: z.number().nullable().optional(),
+  attackMetric: z.number().nullable().optional(),
+  defenseMetric: z.number().nullable().optional()
+});
+
+export const teamFormPointSchema = z.object({
+  date: z.string(),
+  opponent: z.string(),
+  result: z.enum(["W", "D", "L"]),
+  scoreFor: z.number().nullable().optional(),
+  scoreAgainst: z.number().nullable().optional(),
+  value: z.number().nullable().optional()
+});
+
+export const matchListItemSchema = z.object({
+  id: z.string(),
+  sportKey: z.string(),
+  leagueId: z.string(),
+  leagueName: z.string(),
+  homeTeamId: z.string(),
+  awayTeamId: z.string(),
+  homeTeamName: z.string(),
+  awayTeamName: z.string(),
+  homeLogoUrl: z.string().nullable().optional(),
+  awayLogoUrl: z.string().nullable().optional(),
+  kickoffAt: z.string(),
+  status: z.enum(["scheduled", "live", "completed", "postponed", "cancelled"]),
+  scoreHome: z.number().nullable().optional(),
+  scoreAway: z.number().nullable().optional(),
+  confidenceScore: z.number().nullable().optional()
+});
+
+export const matchDetailSchema = matchListItemSchema.extend({
+  venue: z.string().nullable().optional(),
+  round: z.string().nullable().optional(),
+  summary: z.string().nullable().optional(),
+  expectedScoreHome: z.number().nullable().optional(),
+  expectedScoreAway: z.number().nullable().optional(),
+  riskFlags: z.array(z.string()).nullable().optional(),
+  h2hSummary: z.string().nullable().optional()
+});
+
+export const matchEventSchema = z.object({
+  id: z.string(),
+  minute: z.number().nullable(),
+  teamId: z.string().nullable().optional(),
+  teamName: z.string().nullable().optional(),
+  type: z.string(),
+  title: z.string(),
+  description: z.string().nullable().optional()
+});
+
+export const matchStatsSchema = z.object({
+  possessionHome: z.number().nullable().optional(),
+  possessionAway: z.number().nullable().optional(),
+  shotsHome: z.number().nullable().optional(),
+  shotsAway: z.number().nullable().optional(),
+  shotsOnTargetHome: z.number().nullable().optional(),
+  shotsOnTargetAway: z.number().nullable().optional(),
+  xgHome: z.number().nullable().optional(),
+  xgAway: z.number().nullable().optional(),
+  paceHome: z.number().nullable().optional(),
+  paceAway: z.number().nullable().optional(),
+  efficiencyHome: z.number().nullable().optional(),
+  efficiencyAway: z.number().nullable().optional()
+});
+
+export const matchPredictionSchema = z.object({
+  matchId: z.string(),
+  expectedScore: z.object({
+    home: z.number().nullable(),
+    away: z.number().nullable()
+  }),
+  probabilities: z.object({
+    home: z.number(),
+    draw: z.number().nullable().optional(),
+    away: z.number()
+  }),
+  confidenceScore: z.number().nullable().optional(),
+  riskFlags: z.array(z.string()).nullable().optional(),
+  modelExplanation: z.string().nullable().optional(),
+  summary: z.string().nullable().optional(),
+  isLowConfidence: z.boolean().optional(),
+  isRecommended: z.boolean().optional()
+});
+
+export const predictionItemSchema = z.object({
+  id: z.string(),
+  matchId: z.string(),
+  sportKey: z.string(),
+  leagueId: z.string(),
+  leagueName: z.string(),
+  homeTeamName: z.string(),
+  awayTeamName: z.string(),
+  kickoffAt: z.string(),
+  confidenceScore: z.number().nullable().optional(),
+  riskLevel: z.enum(["low", "medium", "high"]),
+  expectedScore: z.object({
+    home: z.number().nullable(),
+    away: z.number().nullable()
+  }),
+  probabilities: z.object({
+    home: z.number(),
+    draw: z.number().nullable().optional(),
+    away: z.number()
+  }),
+  modelSummary: z.string(),
+  riskFlags: z.array(z.string()).nullable().optional(),
+  isLowConfidence: z.boolean().optional(),
+  isRecommended: z.boolean().optional()
+});
+
+export const calibrationHealthSummarySchema = z.object({
+  status: z.string().nullable().optional(),
+  brierScore: z.number().nullable().optional(),
+  ece: z.number().nullable().optional(),
+  reliability: z.number().nullable().optional(),
+  note: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const riskDistributionSummarySchema = z.object({
+  low: z.number(),
+  medium: z.number(),
+  high: z.number(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const dashboardSummarySchema = z.object({
+  todayMatchCount: z.number(),
+  liveMatchCount: z.number(),
+  highConfidencePredictionCount: z.number(),
+  updatedLeagues: z.array(leagueListItemSchema),
+  highConfidencePredictions: z.array(predictionItemSchema),
+  recentPredictions: z.array(predictionItemSchema),
+  todayMatches: z.array(matchListItemSchema),
+  miniTrends: z.array(
+    z.object({
+      label: z.string(),
+      values: z.array(z.number())
+    })
+  ),
+  calibratedHighConfidenceCount: z.number().nullable().optional(),
+  lowConfidenceCount: z.number().nullable().optional(),
+  avgConfidenceScore: z.number().nullable().optional(),
+  riskDistribution: riskDistributionSummarySchema.nullable().optional(),
+  calibrationHealthSummary: calibrationHealthSummarySchema.nullable().optional()
+});
+
+export const guideSummarySchema = z.object({
+  title: z.string(),
+  sections: z.array(
+    z.object({
+      heading: z.string(),
+      text: z.string()
+    })
+  )
+});
+
+export const teamSquadPlayerSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  position: z.string(),
+  number: z.number().nullable().optional(),
+  status: z.string().nullable().optional()
+});
+
+export const calibrationResultSchema = z.object({
+  id: z.string(),
+  startedAt: z.string().nullable().optional(),
+  finishedAt: z.string().nullable().optional(),
+  sampleSize: z.number().nullable().optional(),
+  brierScore: z.number().nullable().optional(),
+  ece: z.number().nullable().optional(),
+  reliability: z.number().nullable().optional(),
+  status: z.string().nullable().optional(),
+  note: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const calibrationRunResponseSchema = z.object({
+  runId: z.string().nullable().optional(),
+  startedAt: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const predictionRiskSummarySchema = z.object({
+  totalPredictions: z.number().nullable().optional(),
+  low: z.number().nullable().optional(),
+  medium: z.number().nullable().optional(),
+  high: z.number().nullable().optional(),
+  riskFlagsTop: z.array(z.object({ flag: z.string(), count: z.number() })).optional(),
+  calibrationHealthSummary: calibrationHealthSummarySchema.nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+
+
+
+===== FILE: lib/api/query.ts =====
+import type { SportKey } from "@/types/api-contract";
+
+export interface ListQuery {
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface MatchQuery extends ListQuery {
+  sport?: SportKey | "all";
+  leagueId?: string;
+  teamId?: string;
+  status?: string;
+  date?: string;
+  from?: string;
+  to?: string;
+  minConfidence?: number;
+}
+
+export interface PredictionQuery extends ListQuery {
+  sport?: SportKey | "all";
+  leagueId?: string;
+  teamId?: string;
+  status?: string;
+  date?: string;
+  from?: string;
+  to?: string;
+  minConfidence?: number;
+  isLowConfidence?: boolean;
+  isRecommended?: boolean;
+}
+
+export const toQueryString = (query?: Record<string, string | number | boolean | undefined | null>) => {
+  if (!query) return "";
+  const params = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "" || value === "all") return;
+    params.set(key, String(value));
+  });
+  const text = params.toString();
+  return text.length > 0 ? `?${text}` : "";
+};
+
+
+
+
+===== FILE: lib/hooks/use-query-state.ts =====
+"use client";
+
+import { useCallback, useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { MatchQuery, PredictionQuery } from "@/lib/api/query";
+
+const parsePositiveInt = (value: string | null, fallback: number) => {
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? num : fallback;
+};
+
+const parseNumberOrUndefined = (value: string | null) => {
+  if (value == null || value.trim() === "") return undefined;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : undefined;
+};
+
+const parseBooleanOrUndefined = (value: string | null) => {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return undefined;
+};
+
+export function useFilterQueryState() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const filters = useMemo(() => {
+    const base = {
+      sport: searchParams.get("sport") ?? "all",
+      leagueId: searchParams.get("leagueId") ?? "",
+      teamId: searchParams.get("teamId") ?? "",
+      status: searchParams.get("status") ?? "all",
+      date: searchParams.get("date") ?? "",
+      from: searchParams.get("from") ?? "",
+      to: searchParams.get("to") ?? "",
+      minConfidence: parseNumberOrUndefined(searchParams.get("minConfidence")),
+      isLowConfidence: parseBooleanOrUndefined(searchParams.get("isLowConfidence")),
+      isRecommended: parseBooleanOrUndefined(searchParams.get("isRecommended")),
+      page: parsePositiveInt(searchParams.get("page"), 1),
+      pageSize: parsePositiveInt(searchParams.get("pageSize"), 20),
+      sortBy: searchParams.get("sortBy") ?? "kickoffAt",
+      sortOrder: (searchParams.get("sortOrder") ?? "desc") as "asc" | "desc"
+    };
+
+    return base;
+  }, [searchParams]);
+
+  const setFilters = useCallback(
+    (partial: Partial<typeof filters>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(partial).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === "" || value === "all") {
+          params.delete(key);
+        } else {
+          params.set(key, String(value));
+        }
+      });
+
+      if (partial.page === undefined && partial.pageSize === undefined) {
+        params.set("page", "1");
+      }
+
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
+  return { filters, setFilters };
+}
+
+export const mapFiltersToMatchQuery = (filters: ReturnType<typeof useFilterQueryState>["filters"]): MatchQuery => ({
+  sport: filters.sport,
+  leagueId: filters.leagueId || undefined,
+  teamId: filters.teamId || undefined,
+  status: filters.status || undefined,
+  date: filters.date || undefined,
+  from: filters.from || undefined,
+  to: filters.to || undefined,
+  minConfidence: filters.minConfidence,
+  page: filters.page,
+  pageSize: filters.pageSize,
+  sortBy: filters.sortBy,
+  sortOrder: filters.sortOrder
+});
+
+export const mapFiltersToPredictionQuery = (
+  filters: ReturnType<typeof useFilterQueryState>["filters"]
+): PredictionQuery => ({
+  sport: filters.sport,
+  leagueId: filters.leagueId || undefined,
+  teamId: filters.teamId || undefined,
+  status: filters.status || undefined,
+  date: filters.date || undefined,
+  from: filters.from || undefined,
+  to: filters.to || undefined,
+  minConfidence: filters.minConfidence,
+  isLowConfidence: filters.isLowConfidence,
+  isRecommended: filters.isRecommended,
+  page: filters.page,
+  pageSize: filters.pageSize,
+  sortBy: filters.sortBy,
+  sortOrder: filters.sortOrder
+});
+
+
+
+
+===== FILE: lib/api/client.ts =====
+import { z } from "zod";
+import {
+  calibrationResultSchema,
+  calibrationRunResponseSchema,
+  dashboardSummarySchema,
+  guideSummarySchema,
+  leagueDetailSchema,
+  leagueListItemSchema,
+  matchDetailSchema,
+  matchEventSchema,
+  matchListItemSchema,
+  matchPredictionSchema,
+  matchStatsSchema,
+  predictionItemSchema,
+  predictionRiskSummarySchema,
+  sportSchema,
+  standingRowSchema,
+  teamDetailSchema,
+  teamFormPointSchema,
+  teamListItemSchema,
+  teamSquadPlayerSchema
+} from "@/lib/api/contract-schemas";
+import { publicRequest } from "@/lib/api/http-client";
+import { toQueryString, type MatchQuery, type PredictionQuery } from "@/lib/api/query";
+
+const listQueryToPath = (
+  path: string,
+  query?: MatchQuery | PredictionQuery
+) => `${path}${toQueryString(query as Record<string, string | number | boolean | null | undefined> | undefined)}`;
+
+export const apiClient = {
+  getSports: () => publicRequest("/sports", z.array(sportSchema)),
+
+  getLeagues: (query?: MatchQuery) => publicRequest(listQueryToPath("/leagues", query), z.array(leagueListItemSchema)),
+  getLeagueDetail: (leagueId: string) => publicRequest(`/leagues/${leagueId}`, leagueDetailSchema),
+  getLeagueStandings: (leagueId: string) => publicRequest(`/leagues/${leagueId}/standings`, z.array(standingRowSchema)),
+
+  getTeams: (query?: MatchQuery) => publicRequest(listQueryToPath("/teams", query), z.array(teamListItemSchema)),
+  getTeamDetail: (teamId: string) => publicRequest(`/teams/${teamId}`, teamDetailSchema),
+  getTeamMatches: (teamId: string, query?: MatchQuery) =>
+    publicRequest(listQueryToPath(`/teams/${teamId}/matches`, query), z.array(matchListItemSchema)),
+  getTeamForm: (teamId: string) => publicRequest(`/teams/${teamId}/form`, z.array(teamFormPointSchema)),
+  getTeamSquad: (teamId: string) => publicRequest(`/teams/${teamId}/squad`, z.array(teamSquadPlayerSchema)),
+
+  getMatches: (query?: MatchQuery) => publicRequest(listQueryToPath("/matches", query), z.array(matchListItemSchema)),
+  getTodayMatches: (query?: MatchQuery) =>
+    publicRequest(listQueryToPath("/matches/today", query), z.array(matchListItemSchema)),
+  getTomorrowMatches: (query?: MatchQuery) =>
+    publicRequest(listQueryToPath("/matches/tomorrow", query), z.array(matchListItemSchema)),
+  getLiveMatches: (query?: MatchQuery) =>
+    publicRequest(listQueryToPath("/matches/live", query), z.array(matchListItemSchema)),
+  getCompletedMatches: (query?: MatchQuery) =>
+    publicRequest(listQueryToPath("/matches/completed", query), z.array(matchListItemSchema)),
+  getMatchDetail: (matchId: string) => publicRequest(`/matches/${matchId}`, matchDetailSchema),
+  getMatchEvents: (matchId: string) => publicRequest(`/matches/${matchId}/events`, z.array(matchEventSchema)),
+  getMatchStats: (matchId: string) => publicRequest(`/matches/${matchId}/stats`, matchStatsSchema),
+  getMatchPrediction: (matchId: string) => publicRequest(`/matches/${matchId}/prediction`, matchPredictionSchema),
+
+  getPredictions: (query?: PredictionQuery) =>
+    publicRequest(listQueryToPath("/predictions", query), z.array(predictionItemSchema)),
+  getHighConfidencePredictions: () =>
+    publicRequest("/predictions/high-confidence", z.array(predictionItemSchema)),
+
+  getDashboardAnalytics: () => publicRequest("/analytics/dashboard", dashboardSummarySchema),
+  getGuideSummary: () => publicRequest("/guide/summary", guideSummarySchema),
+
+  getCalibrationResults: () =>
+    publicRequest("/admin/calibration/results", z.array(calibrationResultSchema)),
+  runCalibration: () =>
+    publicRequest("/admin/calibration/run", calibrationRunResponseSchema, { method: "POST" }),
+  getPredictionRiskSummary: () =>
+    publicRequest("/admin/predictions/risk-summary", predictionRiskSummarySchema),
+  getLowConfidencePredictions: (query?: PredictionQuery) =>
+    publicRequest(listQueryToPath("/admin/predictions/low-confidence", query), z.array(predictionItemSchema))
+};
+
+
+
+
+===== FILE: lib/hooks/use-api.ts =====
+"use client";
+
+import { keepPreviousData, useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import type {
+  ApiResponse,
+  CalibrationResult,
+  CalibrationRunResponse,
+  DashboardSummary,
+  LeagueDetail,
+  LeagueListItem,
+  MatchDetail,
+  MatchEvent,
+  MatchListItem,
+  MatchPrediction,
+  MatchStats,
+  PredictionItem,
+  PredictionRiskSummary,
+  Sport,
+  StandingRow,
+  TeamDetail,
+  TeamFormPoint,
+  TeamListItem,
+  TeamSquadPlayer
+} from "@/types/api-contract";
+import type { MatchQuery, PredictionQuery } from "@/lib/api/query";
+import type { AccountProfile, MembershipPlan, ModelInsight, PerformanceRecord } from "@/types/domain";
+
+const listQueryOptions = {
+  staleTime: 60_000,
+  gcTime: 10 * 60_000,
+  retry: 1,
+  placeholderData: keepPreviousData,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+  refetchOnMount: false
+} satisfies Partial<UseQueryOptions>;
+
+const detailQueryOptions = {
+  staleTime: 2 * 60_000,
+  gcTime: 15 * 60_000,
+  retry: 1,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+  refetchOnMount: false
+} satisfies Partial<UseQueryOptions>;
+
+const liveQueryOptions = {
+  staleTime: 8_000,
+  gcTime: 5 * 60_000,
+  retry: 1,
+  placeholderData: keepPreviousData,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: true,
+  refetchOnMount: true
+} satisfies Partial<UseQueryOptions>;
+
+const buildListKey = <TQuery>(name: string, query?: TQuery) => [name, query ?? {}] as const;
+
+const legacyModelsData: ModelInsight[] = [
+  {
+    id: "model-1",
+    name: "Form Momentum",
+    confidence: 84,
+    dataReliability: 79,
+    uncertainty: 18,
+    explanation: "Son 10 mac performansi, rakip seviyesi ve kadro devamliligi ile skorlaniyor."
+  },
+  {
+    id: "model-2",
+    name: "Expected Score Engine",
+    confidence: 77,
+    dataReliability: 73,
+    uncertainty: 22,
+    explanation: "xG ve tempo agirlikli skor uretim modeli, lig ortalamalarina gore normalize edilir."
+  }
+];
+
+const legacyPerformanceData: PerformanceRecord[] = [
+  { period: "Gunluk", football: 72, basketball: 69, overall: 71 },
+  { period: "Haftalik", football: 74, basketball: 70, overall: 72 },
+  { period: "Aylik", football: 76, basketball: 73, overall: 75 }
+];
+
+const legacyMembershipData: MembershipPlan[] = [
+  {
+    id: "starter",
+    name: "Starter",
+    priceMonthly: 19,
+    features: ["Gunun tahminleri", "Temel filtreleme", "Standart destek"]
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    priceMonthly: 49,
+    recommended: true,
+    features: ["Yuksek guven skoru listesi", "Gelismis filtre paneli", "Takim ve lig favorileri"]
+  },
+  {
+    id: "elite",
+    name: "Elite",
+    priceMonthly: 99,
+    features: ["Canli analiz panelleri", "Model aciklama katmani", "Oncelikli destek"]
+  }
+];
+
+const legacyAccountData: AccountProfile = {
+  id: "u-1",
+  fullName: "Demo Kullanici",
+  email: "demo@tahminx.app",
+  favoriteLeagues: ["Super Lig", "Premier League"],
+  favoriteTeams: ["Galatasaray", "Liverpool"],
+  notifications: {
+    liveAlerts: true,
+    confidenceDropAlerts: true,
+    weeklyDigest: false
+  }
+};
+
+export const useSports = () => useQuery({ queryKey: ["sports"], queryFn: apiClient.getSports, ...listQueryOptions });
+
+export const useLeagues = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("leagues", query), queryFn: () => apiClient.getLeagues(query), ...listQueryOptions });
+
+export const useLeagueDetail = (leagueId?: string) =>
+  useQuery({
+    queryKey: ["league-detail", leagueId],
+    queryFn: () => apiClient.getLeagueDetail(leagueId as string),
+    enabled: Boolean(leagueId),
+    ...detailQueryOptions
+  });
+
+export const useLeagueStandings = (leagueId?: string) =>
+  useQuery({
+    queryKey: ["league-standings", leagueId],
+    queryFn: () => apiClient.getLeagueStandings(leagueId as string),
+    enabled: Boolean(leagueId),
+    ...detailQueryOptions
+  });
+
+export const useTeams = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("teams", query), queryFn: () => apiClient.getTeams(query), ...listQueryOptions });
+
+export const useTeamDetail = (teamId?: string) =>
+  useQuery({
+    queryKey: ["team-detail", teamId],
+    queryFn: () => apiClient.getTeamDetail(teamId as string),
+    enabled: Boolean(teamId),
+    ...detailQueryOptions
+  });
+
+export const useTeamMatches = (teamId?: string, query?: MatchQuery) =>
+  useQuery({
+    queryKey: ["team-matches", teamId, query ?? {}],
+    queryFn: () => apiClient.getTeamMatches(teamId as string, query),
+    enabled: Boolean(teamId),
+    ...detailQueryOptions
+  });
+
+export const useTeamForm = (teamId?: string) =>
+  useQuery({
+    queryKey: ["team-form", teamId],
+    queryFn: () => apiClient.getTeamForm(teamId as string),
+    enabled: Boolean(teamId),
+    ...detailQueryOptions
+  });
+
+export const useTeamSquad = (teamId?: string) =>
+  useQuery({
+    queryKey: ["team-squad", teamId],
+    queryFn: () => apiClient.getTeamSquad(teamId as string),
+    enabled: Boolean(teamId),
+    ...detailQueryOptions
+  });
+
+export const useMatches = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("matches", query), queryFn: () => apiClient.getMatches(query), ...listQueryOptions });
+
+export const useTodayMatches = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("matches-today", query), queryFn: () => apiClient.getTodayMatches(query), ...listQueryOptions });
+
+export const useTomorrowMatches = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("matches-tomorrow", query), queryFn: () => apiClient.getTomorrowMatches(query), ...listQueryOptions });
+
+export const useLiveMatches = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("matches-live", query), queryFn: () => apiClient.getLiveMatches(query), ...liveQueryOptions });
+
+export const useCompletedMatches = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("matches-completed", query), queryFn: () => apiClient.getCompletedMatches(query), ...listQueryOptions });
+
+export const useMatchDetail = (matchId?: string) =>
+  useQuery({
+    queryKey: ["match-detail", matchId],
+    queryFn: () => apiClient.getMatchDetail(matchId as string),
+    enabled: Boolean(matchId),
+    ...detailQueryOptions
+  });
+
+export const useMatchEvents = (matchId?: string) =>
+  useQuery({
+    queryKey: ["match-events", matchId],
+    queryFn: () => apiClient.getMatchEvents(matchId as string),
+    enabled: Boolean(matchId),
+    staleTime: 15_000,
+    gcTime: 10 * 60_000,
+    retry: 1,
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchOnMount: true
+  });
+
+export const useMatchStats = (matchId?: string) =>
+  useQuery({
+    queryKey: ["match-stats", matchId],
+    queryFn: () => apiClient.getMatchStats(matchId as string),
+    enabled: Boolean(matchId),
+    ...detailQueryOptions
+  });
+
+export const useMatchPrediction = (matchId?: string) =>
+  useQuery({
+    queryKey: ["match-prediction", matchId],
+    queryFn: () => apiClient.getMatchPrediction(matchId as string),
+    enabled: Boolean(matchId),
+    ...detailQueryOptions
+  });
+
+export const usePredictions = (query?: PredictionQuery) =>
+  useQuery({ queryKey: buildListKey("predictions", query), queryFn: () => apiClient.getPredictions(query), ...listQueryOptions });
+
+export const useHighConfidencePredictions = () =>
+  useQuery({ queryKey: ["predictions-high-confidence"], queryFn: apiClient.getHighConfidencePredictions, ...listQueryOptions });
+
+export const useDashboardAnalytics = () =>
+  useQuery({ queryKey: ["analytics-dashboard"], queryFn: apiClient.getDashboardAnalytics, ...listQueryOptions });
+
+export const useGuideSummary = () =>
+  useQuery({ queryKey: ["guide-summary"], queryFn: apiClient.getGuideSummary, ...listQueryOptions });
+
+export const useCalibrationResults = () =>
+  useQuery({ queryKey: ["admin-calibration-results"], queryFn: apiClient.getCalibrationResults, ...detailQueryOptions });
+
+export const usePredictionRiskSummary = () =>
+  useQuery({ queryKey: ["admin-prediction-risk-summary"], queryFn: apiClient.getPredictionRiskSummary, ...detailQueryOptions });
+
+export const useLowConfidencePredictions = (query?: PredictionQuery) =>
+  useQuery({
+    queryKey: buildListKey("admin-low-confidence-predictions", query),
+    queryFn: () => apiClient.getLowConfidencePredictions(query),
+    ...listQueryOptions
+  });
+
+export const useRunCalibrationMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: apiClient.runCalibration,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-calibration-results"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-prediction-risk-summary"] });
+      void queryClient.invalidateQueries({ queryKey: ["analytics-dashboard"] });
+    }
+  });
+};
+
+// Legacy aliases for existing screens that haven't migrated yet.
+export const useDashboard = useDashboardAnalytics;
+export const useModels = () =>
+  useQuery<ApiResponse<ModelInsight[]>>({
+    queryKey: ["legacy-models"],
+    queryFn: async () => ({ success: true, data: legacyModelsData }),
+    ...listQueryOptions
+  });
+export const usePerformance = () =>
+  useQuery<ApiResponse<PerformanceRecord[]>>({
+    queryKey: ["legacy-performance"],
+    queryFn: async () => ({ success: true, data: legacyPerformanceData }),
+    ...listQueryOptions
+  });
+export const useMembership = () =>
+  useQuery<ApiResponse<MembershipPlan[]>>({
+    queryKey: ["legacy-membership"],
+    queryFn: async () => ({ success: true, data: legacyMembershipData }),
+    ...listQueryOptions
+  });
+export const useAccount = () =>
+  useQuery<ApiResponse<AccountProfile>>({
+    queryKey: ["legacy-account"],
+    queryFn: async () => ({ success: true, data: legacyAccountData }),
+    ...listQueryOptions
+  });
+
+export type SportsQueryResult = ApiResponse<Sport[]>;
+export type LeaguesQueryResult = ApiResponse<LeagueListItem[]>;
+export type LeagueDetailQueryResult = ApiResponse<LeagueDetail>;
+export type LeagueStandingsQueryResult = ApiResponse<StandingRow[]>;
+export type TeamsQueryResult = ApiResponse<TeamListItem[]>;
+export type TeamDetailQueryResult = ApiResponse<TeamDetail>;
+export type TeamMatchesQueryResult = ApiResponse<MatchListItem[]>;
+export type TeamFormQueryResult = ApiResponse<TeamFormPoint[]>;
+export type TeamSquadQueryResult = ApiResponse<TeamSquadPlayer[]>;
+export type MatchesQueryResult = ApiResponse<MatchListItem[]>;
+export type MatchDetailQueryResult = ApiResponse<MatchDetail>;
+export type MatchEventsQueryResult = ApiResponse<MatchEvent[]>;
+export type MatchStatsQueryResult = ApiResponse<MatchStats>;
+export type MatchPredictionQueryResult = ApiResponse<MatchPrediction>;
+export type PredictionsQueryResult = ApiResponse<PredictionItem[]>;
+export type DashboardQueryResult = ApiResponse<DashboardSummary>;
+export type CalibrationResultsQueryResult = ApiResponse<CalibrationResult[]>;
+export type CalibrationRunMutationResult = ApiResponse<CalibrationRunResponse>;
+export type PredictionRiskSummaryQueryResult = ApiResponse<PredictionRiskSummary>;
+export type LowConfidencePredictionsQueryResult = ApiResponse<PredictionItem[]>;
+
+
+
+
+===== FILE: lib/api/mock-contract-data.ts =====
+import type {
+  CalibrationResult,
+  CalibrationRunResponse,
+  DashboardSummary,
+  GuideSummary,
+  LeagueDetail,
+  MatchDetail,
+  MatchEvent,
+  MatchPrediction,
+  MatchStats,
+  PredictionItem,
+  PredictionRiskSummary,
+  Sport,
+  StandingRow,
+  TeamDetail,
+  TeamFormPoint,
+  TeamSquadPlayer
+} from "@/types/api-contract";
+
+const now = new Date();
+
+const toIso = (dayOffset: number, hour: number, minute = 0) => {
+  const date = new Date(now);
+  date.setDate(date.getDate() + dayOffset);
+  date.setHours(hour, minute, 0, 0);
+  return date.toISOString();
+};
+
+export const sportsMock: Sport[] = [
+  { id: "s-football", key: "football", name: "Futbol" },
+  { id: "s-basketball", key: "basketball", name: "Basketbol" }
+];
+
+export const leaguesMock: LeagueDetail[] = [
+  {
+    id: "l-super-lig",
+    sportId: "s-football",
+    sportKey: "football",
+    name: "Super Lig",
+    country: "Turkiye",
+    season: "2025/26",
+    updatedAt: toIso(0, 18, 30),
+    statsSummary: { avgScore: 2.78, homeWinRate: 46, awayWinRate: 27, drawRate: 27 }
+  },
+  {
+    id: "l-premier-league",
+    sportId: "s-football",
+    sportKey: "football",
+    name: "Premier League",
+    country: "England",
+    season: "2025/26",
+    updatedAt: toIso(0, 19, 20),
+    statsSummary: { avgScore: 2.95, homeWinRate: 48, awayWinRate: 29, drawRate: 23 }
+  },
+  {
+    id: "l-euroleague",
+    sportId: "s-basketball",
+    sportKey: "basketball",
+    name: "EuroLeague",
+    country: "Europe",
+    season: "2025/26",
+    updatedAt: toIso(0, 16, 0),
+    statsSummary: { avgScore: 163.4, homeWinRate: 52, awayWinRate: 48 }
+  },
+  {
+    id: "l-nba",
+    sportId: "s-basketball",
+    sportKey: "basketball",
+    name: "NBA",
+    country: "USA",
+    season: "2025/26",
+    updatedAt: toIso(0, 5, 10),
+    statsSummary: { avgScore: 227.3, homeWinRate: 55, awayWinRate: 45 }
+  }
+];
+
+export const standingsMock: Record<string, StandingRow[]> = {
+  "l-super-lig": [
+    { position: 1, teamId: "t-gs", teamName: "Galatasaray", played: 29, won: 22, drawn: 5, lost: 2, points: 71, goalsFor: 64, goalsAgainst: 24, form: ["W", "W", "D", "W", "W"] },
+    { position: 2, teamId: "t-fb", teamName: "Fenerbahce", played: 29, won: 21, drawn: 4, lost: 4, points: 67, goalsFor: 62, goalsAgainst: 28, form: ["W", "D", "W", "W", "L"] },
+    { position: 3, teamId: "t-bjk", teamName: "Besiktas", played: 29, won: 17, drawn: 6, lost: 6, points: 57, goalsFor: 48, goalsAgainst: 31, form: ["W", "L", "W", "D", "W"] }
+  ],
+  "l-premier-league": [
+    { position: 1, teamId: "t-liv", teamName: "Liverpool", played: 31, won: 22, drawn: 6, lost: 3, points: 72, goalsFor: 71, goalsAgainst: 31, form: ["W", "W", "W", "D", "W"] },
+    { position: 2, teamId: "t-ars", teamName: "Arsenal", played: 31, won: 21, drawn: 7, lost: 3, points: 70, goalsFor: 66, goalsAgainst: 30, form: ["W", "W", "D", "W", "W"] }
+  ],
+  "l-euroleague": [
+    { position: 1, teamId: "t-rm", teamName: "Real Madrid", played: 31, won: 23, drawn: 0, lost: 8, points: 46, form: ["W", "W", "W", "D", "W"] },
+    { position: 2, teamId: "t-fbb", teamName: "Fenerbahce Beko", played: 31, won: 21, drawn: 0, lost: 10, points: 42, form: ["W", "W", "L", "W", "W"] }
+  ],
+  "l-nba": [
+    { position: 1, teamId: "t-bos", teamName: "Boston Celtics", played: 72, won: 52, drawn: 0, lost: 20, points: 104, form: ["W", "W", "W", "L", "W"] },
+    { position: 2, teamId: "t-mil", teamName: "Milwaukee Bucks", played: 72, won: 49, drawn: 0, lost: 23, points: 98, form: ["W", "L", "W", "W", "W"] }
+  ]
+};
+
+export const teamsMock: TeamDetail[] = [
+  { id: "t-gs", leagueId: "l-super-lig", sportId: "s-football", sportKey: "football", name: "Galatasaray", shortName: "GS", city: "Istanbul", country: "Turkiye", foundedYear: 1905, coach: "Okan Buruk", homeMetric: 84, awayMetric: 74, attackMetric: 82, defenseMetric: 75 },
+  { id: "t-fb", leagueId: "l-super-lig", sportId: "s-football", sportKey: "football", name: "Fenerbahce", shortName: "FB", city: "Istanbul", country: "Turkiye", foundedYear: 1907, coach: "Ismail Kartal", homeMetric: 79, awayMetric: 80, attackMetric: 80, defenseMetric: 76 },
+  { id: "t-bjk", leagueId: "l-super-lig", sportId: "s-football", sportKey: "football", name: "Besiktas", shortName: "BJK", city: "Istanbul", country: "Turkiye", foundedYear: 1903, coach: "Fernando Santos", homeMetric: 76, awayMetric: 70, attackMetric: 75, defenseMetric: 70 },
+  { id: "t-liv", leagueId: "l-premier-league", sportId: "s-football", sportKey: "football", name: "Liverpool", shortName: "LIV", city: "Liverpool", country: "England", foundedYear: 1892, coach: "Arne Slot", homeMetric: 86, awayMetric: 77, attackMetric: 87, defenseMetric: 73 },
+  { id: "t-ars", leagueId: "l-premier-league", sportId: "s-football", sportKey: "football", name: "Arsenal", shortName: "ARS", city: "London", country: "England", foundedYear: 1886, coach: "Mikel Arteta", homeMetric: 82, awayMetric: 78, attackMetric: 84, defenseMetric: 75 },
+  { id: "t-fbb", leagueId: "l-euroleague", sportId: "s-basketball", sportKey: "basketball", name: "Fenerbahce Beko", shortName: "FBB", city: "Istanbul", country: "Turkiye", foundedYear: 1913, coach: "Sarunas Jasikevicius", homeMetric: 82, awayMetric: 73, attackMetric: 85, defenseMetric: 77 },
+  { id: "t-rm", leagueId: "l-euroleague", sportId: "s-basketball", sportKey: "basketball", name: "Real Madrid", shortName: "RMD", city: "Madrid", country: "Spain", foundedYear: 1931, coach: "Chus Mateo", homeMetric: 85, awayMetric: 80, attackMetric: 88, defenseMetric: 79 },
+  { id: "t-bos", leagueId: "l-nba", sportId: "s-basketball", sportKey: "basketball", name: "Boston Celtics", shortName: "BOS", city: "Boston", country: "USA", foundedYear: 1946, coach: "Joe Mazzulla", homeMetric: 89, awayMetric: 79, attackMetric: 90, defenseMetric: 81 },
+  { id: "t-mil", leagueId: "l-nba", sportId: "s-basketball", sportKey: "basketball", name: "Milwaukee Bucks", shortName: "MIL", city: "Milwaukee", country: "USA", foundedYear: 1968, coach: "Doc Rivers", homeMetric: 84, awayMetric: 76, attackMetric: 89, defenseMetric: 78 }
+];
+
+export const teamFormMock: Record<string, TeamFormPoint[]> = {
+  "t-gs": [
+    { date: toIso(-10, 21), opponent: "Besiktas", result: "W", scoreFor: 2, scoreAgainst: 1, value: 82 },
+    { date: toIso(-7, 20), opponent: "Trabzonspor", result: "W", scoreFor: 1, scoreAgainst: 0, value: 85 },
+    { date: toIso(-5, 20), opponent: "Basaksehir", result: "D", scoreFor: 1, scoreAgainst: 1, value: 70 },
+    { date: toIso(-3, 20), opponent: "Adana Demir", result: "W", scoreFor: 3, scoreAgainst: 1, value: 88 },
+    { date: toIso(-1, 20), opponent: "Kayserispor", result: "W", scoreFor: 2, scoreAgainst: 0, value: 86 }
+  ],
+  "t-fb": [
+    { date: toIso(-10, 21), opponent: "Antalyaspor", result: "W", scoreFor: 3, scoreAgainst: 0, value: 84 },
+    { date: toIso(-8, 20), opponent: "Konyaspor", result: "D", scoreFor: 1, scoreAgainst: 1, value: 68 },
+    { date: toIso(-6, 20), opponent: "Rizespor", result: "W", scoreFor: 2, scoreAgainst: 0, value: 82 },
+    { date: toIso(-4, 20), opponent: "Alanyaspor", result: "W", scoreFor: 2, scoreAgainst: 1, value: 80 },
+    { date: toIso(-1, 21), opponent: "Sivasspor", result: "L", scoreFor: 0, scoreAgainst: 1, value: 45 }
+  ]
+};
+
+export const teamSquadMock: Record<string, TeamSquadPlayer[]> = {
+  "t-gs": [
+    { id: "p1", name: "Fernando Muslera", position: "GK", number: 1 },
+    { id: "p2", name: "Abdulkerim Bardakci", position: "CB", number: 42 },
+    { id: "p3", name: "Lucas Torreira", position: "DM", number: 34 },
+    { id: "p4", name: "Dries Mertens", position: "AM", number: 10 },
+    { id: "p5", name: "Mauro Icardi", position: "ST", number: 9 }
+  ],
+  "t-fb": [
+    { id: "p6", name: "Dominik Livakovic", position: "GK", number: 40 },
+    { id: "p7", name: "Djiku", position: "CB", number: 6 },
+    { id: "p8", name: "Fred", position: "CM", number: 35 },
+    { id: "p9", name: "Szymanski", position: "AM", number: 53 },
+    { id: "p10", name: "Dzeko", position: "ST", number: 9 }
+  ]
+};
+
+export const matchesMock: MatchDetail[] = [
+  {
+    id: "m1",
+    sportKey: "football",
+    leagueId: "l-super-lig",
+    leagueName: "Super Lig",
+    homeTeamId: "t-gs",
+    awayTeamId: "t-fb",
+    homeTeamName: "Galatasaray",
+    awayTeamName: "Fenerbahce",
+    kickoffAt: toIso(0, 20),
+    status: "scheduled",
+    scoreHome: null,
+    scoreAway: null,
+    confidenceScore: 79,
+    venue: "Rams Park",
+    round: "Hafta 30",
+    summary: "Derby with high tactical variability.",
+    expectedScoreHome: 1.7,
+    expectedScoreAway: 1.3,
+    riskFlags: ["Derby volatility", "Card risk"],
+    h2hSummary: "Last five meetings are tightly balanced."
+  },
+  {
+    id: "m2",
+    sportKey: "football",
+    leagueId: "l-premier-league",
+    leagueName: "Premier League",
+    homeTeamId: "t-liv",
+    awayTeamId: "t-ars",
+    homeTeamName: "Liverpool",
+    awayTeamName: "Arsenal",
+    kickoffAt: toIso(0, 22),
+    status: "live",
+    scoreHome: 2,
+    scoreAway: 1,
+    confidenceScore: 81,
+    venue: "Anfield",
+    round: "Matchday 32",
+    expectedScoreHome: 2.1,
+    expectedScoreAway: 1.4,
+    riskFlags: ["Late pressure phase"],
+    h2hSummary: "Home side has slight edge in high-intensity phases."
+  },
+  {
+    id: "m3",
+    sportKey: "football",
+    leagueId: "l-super-lig",
+    leagueName: "Super Lig",
+    homeTeamId: "t-bjk",
+    awayTeamId: "t-gs",
+    homeTeamName: "Besiktas",
+    awayTeamName: "Galatasaray",
+    kickoffAt: toIso(-1, 20),
+    status: "completed",
+    scoreHome: 1,
+    scoreAway: 2,
+    confidenceScore: 72,
+    venue: "Tupras Stadium",
+    round: "Hafta 29",
+    expectedScoreHome: 1.1,
+    expectedScoreAway: 1.6,
+    riskFlags: ["Set-piece variance"]
+  },
+  {
+    id: "m4",
+    sportKey: "basketball",
+    leagueId: "l-euroleague",
+    leagueName: "EuroLeague",
+    homeTeamId: "t-fbb",
+    awayTeamId: "t-rm",
+    homeTeamName: "Fenerbahce Beko",
+    awayTeamName: "Real Madrid",
+    kickoffAt: toIso(0, 21, 30),
+    status: "scheduled",
+    scoreHome: null,
+    scoreAway: null,
+    confidenceScore: 64,
+    venue: "Ulker Sports Arena",
+    round: "Round 32",
+    expectedScoreHome: 84,
+    expectedScoreAway: 82,
+    riskFlags: ["Three-point variance"]
+  },
+  {
+    id: "m5",
+    sportKey: "basketball",
+    leagueId: "l-nba",
+    leagueName: "NBA",
+    homeTeamId: "t-bos",
+    awayTeamId: "t-mil",
+    homeTeamName: "Boston Celtics",
+    awayTeamName: "Milwaukee Bucks",
+    kickoffAt: toIso(0, 4, 0),
+    status: "live",
+    scoreHome: 74,
+    scoreAway: 70,
+    confidenceScore: 58,
+    venue: "TD Garden",
+    round: "Regular Season",
+    expectedScoreHome: 116,
+    expectedScoreAway: 111,
+    riskFlags: ["Foul trouble"]
+  },
+  {
+    id: "m6",
+    sportKey: "basketball",
+    leagueId: "l-nba",
+    leagueName: "NBA",
+    homeTeamId: "t-mil",
+    awayTeamId: "t-bos",
+    homeTeamName: "Milwaukee Bucks",
+    awayTeamName: "Boston Celtics",
+    kickoffAt: toIso(-1, 3, 30),
+    status: "completed",
+    scoreHome: 108,
+    scoreAway: 112,
+    confidenceScore: 75,
+    venue: "Fiserv Forum",
+    round: "Regular Season",
+    expectedScoreHome: 110,
+    expectedScoreAway: 114,
+    riskFlags: ["Bench variance"]
+  },
+  {
+    id: "m7",
+    sportKey: "football",
+    leagueId: "l-super-lig",
+    leagueName: "Super Lig",
+    homeTeamId: "t-fb",
+    awayTeamId: "t-bjk",
+    homeTeamName: "Fenerbahce",
+    awayTeamName: "Besiktas",
+    kickoffAt: toIso(1, 20),
+    status: "scheduled",
+    scoreHome: null,
+    scoreAway: null,
+    confidenceScore: 68,
+    venue: "Ulker Stadyumu",
+    expectedScoreHome: 1.5,
+    expectedScoreAway: 1.1,
+    riskFlags: ["Injury uncertainty"]
+  }
+];
+
+export const matchEventsMock: Record<string, MatchEvent[]> = {
+  m1: [],
+  m2: [
+    { id: "e1", minute: 11, teamId: "t-liv", teamName: "Liverpool", type: "goal", title: "Goal", description: "Inside-box finish after quick transition" },
+    { id: "e2", minute: 29, teamId: "t-ars", teamName: "Arsenal", type: "goal", title: "Goal", description: "Set-piece equalizer" },
+    { id: "e3", minute: 54, teamId: "t-liv", teamName: "Liverpool", type: "goal", title: "Goal", description: "Back-post header" },
+    { id: "e4", minute: 70, teamId: "t-ars", teamName: "Arsenal", type: "card", title: "Yellow Card", description: "Tactical foul" }
+  ],
+  m4: [],
+  m5: [
+    { id: "e5", minute: 8, teamId: "t-bos", teamName: "Boston Celtics", type: "run", title: "Run", description: "7-0 scoring run" },
+    { id: "e6", minute: 24, teamId: "t-bos", teamName: "Boston Celtics", type: "highlight", title: "Highlight", description: "Transition dunk" }
+  ]
+};
+
+export const matchStatsMock: Record<string, MatchStats> = {
+  m1: { possessionHome: 58, possessionAway: 42, shotsHome: 14, shotsAway: 11, shotsOnTargetHome: 5, shotsOnTargetAway: 4, xgHome: 1.7, xgAway: 1.3 },
+  m2: { possessionHome: 61, possessionAway: 39, shotsHome: 12, shotsAway: 8, shotsOnTargetHome: 6, shotsOnTargetAway: 4, xgHome: 2.1, xgAway: 1.4 },
+  m4: { paceHome: 73, paceAway: 71, efficiencyHome: 1.12, efficiencyAway: 1.15 },
+  m5: { paceHome: 99, paceAway: 101, efficiencyHome: 1.18, efficiencyAway: 1.16 }
+};
+
+export const matchPredictionMock: Record<string, MatchPrediction> = {
+  m1: {
+    matchId: "m1",
+    expectedScore: { home: 1.7, away: 1.3 },
+    probabilities: { home: 44, draw: 27, away: 29 },
+    confidenceScore: 79,
+    riskFlags: ["Derby volatility", "Card risk"],
+    modelExplanation: "Home pressing intensity and final-third control are above league baseline.",
+    summary: "Model home edge with moderate uncertainty.",
+    isLowConfidence: false,
+    isRecommended: true
+  },
+  m2: {
+    matchId: "m2",
+    expectedScore: { home: 2.1, away: 1.4 },
+    probabilities: { home: 52, draw: 23, away: 25 },
+    confidenceScore: 81,
+    riskFlags: ["Late pressure phase"],
+    modelExplanation: "Sequence-based momentum favors home side after minute 60.",
+    summary: "High confidence output under live pressure conditions.",
+    isLowConfidence: false,
+    isRecommended: true
+  },
+  m4: {
+    matchId: "m4",
+    expectedScore: { home: 84, away: 82 },
+    probabilities: { home: 49, away: 51 },
+    confidenceScore: 64,
+    riskFlags: ["Three-point variance"],
+    modelExplanation: "Second unit defense mismatch creates narrow edge scenario.",
+    summary: "Near coin-flip scenario with elevated variance.",
+    isLowConfidence: true,
+    isRecommended: false
+  },
+  m5: {
+    matchId: "m5",
+    expectedScore: { home: 116, away: 111 },
+    probabilities: { home: 57, away: 43 },
+    confidenceScore: 58,
+    riskFlags: ["Foul trouble"],
+    modelExplanation: "Half-court efficiency trend supports home-side closeout.",
+    summary: "Live-state sample instability lowered calibration confidence.",
+    isLowConfidence: true,
+    isRecommended: false
+  }
+};
+
+export const predictionsMock: PredictionItem[] = matchesMock.map((match, index) => {
+  const prediction = matchPredictionMock[match.id] ?? {
+    matchId: match.id,
+    expectedScore: { home: match.expectedScoreHome ?? null, away: match.expectedScoreAway ?? null },
+    probabilities: { home: 45, draw: match.sportKey === "football" ? 25 : undefined, away: 30 },
+    confidenceScore: match.confidenceScore ?? 60,
+    riskFlags: match.riskFlags ?? [],
+    modelExplanation: "Baseline probabilistic model output.",
+    summary: "Baseline summary.",
+    isLowConfidence: (match.confidenceScore ?? 0) < 67,
+    isRecommended: (match.confidenceScore ?? 0) >= 76
+  };
+
+  const confidence = prediction.confidenceScore ?? 0;
+
+  return {
+    id: `pred-${index + 1}`,
+    matchId: match.id,
+    sportKey: match.sportKey,
+    leagueId: match.leagueId,
+    leagueName: match.leagueName,
+    homeTeamName: match.homeTeamName,
+    awayTeamName: match.awayTeamName,
+    kickoffAt: match.kickoffAt,
+    confidenceScore: confidence,
+    riskLevel: confidence >= 78 ? "low" : confidence >= 68 ? "medium" : "high",
+    expectedScore: prediction.expectedScore,
+    probabilities: prediction.probabilities,
+    modelSummary: prediction.summary ?? prediction.modelExplanation ?? "Model summary yok.",
+    riskFlags: prediction.riskFlags ?? [],
+    isLowConfidence: prediction.isLowConfidence ?? confidence < 67,
+    isRecommended: prediction.isRecommended ?? confidence >= 76
+  };
+});
+
+const lowCount = predictionsMock.filter((item) => item.riskLevel === "low").length;
+const mediumCount = predictionsMock.filter((item) => item.riskLevel === "medium").length;
+const highCount = predictionsMock.filter((item) => item.riskLevel === "high").length;
+const lowConfidenceCount = predictionsMock.filter((item) => item.isLowConfidence).length;
+
+export const dashboardMock: DashboardSummary = {
+  todayMatchCount: matchesMock.filter((item) => new Date(item.kickoffAt).toDateString() === now.toDateString()).length,
+  liveMatchCount: matchesMock.filter((item) => item.status === "live").length,
+  highConfidencePredictionCount: predictionsMock.filter((item) => (item.confidenceScore ?? 0) >= 78).length,
+  updatedLeagues: leaguesMock.slice(0, 3),
+  highConfidencePredictions: predictionsMock.filter((item) => (item.confidenceScore ?? 0) >= 78).slice(0, 5),
+  recentPredictions: predictionsMock.slice(0, 6),
+  todayMatches: matchesMock.filter((item) => new Date(item.kickoffAt).toDateString() === now.toDateString()).slice(0, 6),
+  miniTrends: [
+    { label: "Galatasaray", values: [68, 72, 76, 79, 82] },
+    { label: "Liverpool", values: [70, 73, 75, 80, 84] },
+    { label: "Celtics", values: [66, 71, 74, 79, 83] }
+  ],
+  calibratedHighConfidenceCount: predictionsMock.filter((item) => (item.confidenceScore ?? 0) >= 80).length,
+  lowConfidenceCount,
+  avgConfidenceScore: Number(
+    (predictionsMock.reduce((sum, current) => sum + (current.confidenceScore ?? 0), 0) / Math.max(1, predictionsMock.length)).toFixed(1)
+  ),
+  riskDistribution: {
+    low: lowCount,
+    medium: mediumCount,
+    high: highCount,
+    updatedAt: toIso(0, 23, 10)
+  },
+  calibrationHealthSummary: {
+    status: "monitoring",
+    brierScore: 0.18,
+    ece: 0.06,
+    reliability: 0.82,
+    note: "Calibration stable; monitor medium-risk band.",
+    updatedAt: toIso(0, 23, 10)
+  }
+};
+
+export const guideSummaryMock: GuideSummary = {
+  title: "TahminX Rehber Ozeti",
+  sections: [
+    { heading: "Sistem nasil calisir", text: "Veri katmani, modelleme katmani ve aciklanabilirlik birlikte calisir." },
+    { heading: "Guven skoru", text: "Guven skoru, veri kalitesi ve belirsizlik ile birlikte okunmalidir." },
+    { heading: "Toplam skor analizi", text: "Toplam skor senaryolari tempo ve verimlilik baglaminda yorumlanir." }
+  ]
+};
+
+export const calibrationResultsMock: CalibrationResult[] = [
+  {
+    id: "cal-2026-04-05-01",
+    startedAt: toIso(0, 1, 0),
+    finishedAt: toIso(0, 1, 8),
+    sampleSize: 420,
+    brierScore: 0.19,
+    ece: 0.07,
+    reliability: 0.81,
+    status: "completed",
+    note: "Stable distribution across football segment.",
+    updatedAt: toIso(0, 1, 8)
+  },
+  {
+    id: "cal-2026-04-04-01",
+    startedAt: toIso(-1, 1, 0),
+    finishedAt: toIso(-1, 1, 9),
+    sampleSize: 410,
+    brierScore: 0.2,
+    ece: 0.08,
+    reliability: 0.79,
+    status: "completed",
+    note: "Basketball variance slightly elevated.",
+    updatedAt: toIso(-1, 1, 9)
+  }
+];
+
+export const calibrationRunMock: CalibrationRunResponse = {
+  runId: "cal-run-pending-01",
+  startedAt: toIso(0, 2, 0),
+  message: "Calibration run started.",
+  status: "running",
+  updatedAt: toIso(0, 2, 0)
+};
+
+export const predictionRiskSummaryMock: PredictionRiskSummary = {
+  totalPredictions: predictionsMock.length,
+  low: lowCount,
+  medium: mediumCount,
+  high: highCount,
+  riskFlagsTop: [
+    { flag: "Derby volatility", count: 2 },
+    { flag: "Foul trouble", count: 2 },
+    { flag: "Three-point variance", count: 1 }
+  ],
+  calibrationHealthSummary: dashboardMock.calibrationHealthSummary ?? null,
+  updatedAt: toIso(0, 23, 10)
+};
+
+
+
+
+===== FILE: lib/api/mock-adapter.ts =====
+import type {
+  ApiResponse,
+  CalibrationResult,
+  CalibrationRunResponse,
+  DashboardSummary,
+  GuideSummary,
+  LeagueDetail,
+  LeagueListItem,
+  MatchDetail,
+  MatchEvent,
+  MatchListItem,
+  MatchPrediction,
+  MatchStats,
+  PaginationMeta,
+  PredictionItem,
+  PredictionRiskSummary,
+  Sport,
+  StandingRow,
+  TeamDetail,
+  TeamFormPoint,
+  TeamListItem,
+  TeamSquadPlayer
+} from "@/types/api-contract";
+import {
+  calibrationResultsMock,
+  calibrationRunMock,
+  dashboardMock,
+  guideSummaryMock,
+  leaguesMock,
+  matchEventsMock,
+  matchPredictionMock,
+  matchesMock,
+  matchStatsMock,
+  predictionRiskSummaryMock,
+  predictionsMock,
+  sportsMock,
+  standingsMock,
+  teamFormMock,
+  teamsMock,
+  teamSquadMock
+} from "@/lib/api/mock-contract-data";
+
+const toNumber = (value: string | null, fallback: number) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const toBoolean = (value: string | null): boolean | undefined => {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return undefined;
+};
+
+const createMeta = (page: number, pageSize: number, total: number): PaginationMeta => ({
+  page,
+  pageSize,
+  total,
+  totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  generatedAt: new Date().toISOString()
+});
+
+const paginate = <T>(items: T[], page: number, pageSize: number) => {
+  const offset = (page - 1) * pageSize;
+  return items.slice(offset, offset + pageSize);
+};
+
+const ok = <T>(data: T, meta?: PaginationMeta): ApiResponse<T> => ({
+  success: true,
+  data,
+  meta,
+  error: null
+});
+
+const notFound = <T>(message: string): ApiResponse<T> => ({
+  success: false,
+  data: null as T,
+  error: { code: "NOT_FOUND", message }
+});
+
+const applySort = <T>(items: T[], sortBy?: string | null, sortOrder?: string | null, getValue?: (item: T, key: string) => unknown) => {
+  if (!sortBy || !getValue) return items;
+  const direction = sortOrder === "asc" ? 1 : -1;
+
+  return [...items].sort((a, b) => {
+    const av = getValue(a, sortBy);
+    const bv = getValue(b, sortBy);
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === "number" && typeof bv === "number") return (av - bv) * direction;
+    return String(av).localeCompare(String(bv)) * direction;
+  });
+};
+
+const getQuery = (url: URL) => ({
+  sport: url.searchParams.get("sport"),
+  leagueId: url.searchParams.get("leagueId"),
+  teamId: url.searchParams.get("teamId"),
+  status: url.searchParams.get("status"),
+  date: url.searchParams.get("date"),
+  from: url.searchParams.get("from"),
+  to: url.searchParams.get("to"),
+  minConfidence: toNumber(url.searchParams.get("minConfidence"), 0),
+  isLowConfidence: toBoolean(url.searchParams.get("isLowConfidence")),
+  isRecommended: toBoolean(url.searchParams.get("isRecommended")),
+  page: toNumber(url.searchParams.get("page"), 1),
+  pageSize: toNumber(url.searchParams.get("pageSize"), 20),
+  sortBy: url.searchParams.get("sortBy"),
+  sortOrder: url.searchParams.get("sortOrder")
+});
+
+const filterMatches = (query: ReturnType<typeof getQuery>, source: MatchListItem[]) => {
+  const filtered = source.filter((item) => {
+    if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
+    if (query.leagueId && item.leagueId !== query.leagueId) return false;
+    if (query.teamId && item.homeTeamId !== query.teamId && item.awayTeamId !== query.teamId) return false;
+    if (query.status && query.status !== "all" && item.status !== query.status) return false;
+    if (query.minConfidence > 0 && (item.confidenceScore ?? 0) < query.minConfidence) return false;
+    if (query.date) {
+      const day = new Date(item.kickoffAt).toISOString().slice(0, 10);
+      if (day !== query.date) return false;
+    }
+    if (query.from) {
+      const fromDate = new Date(`${query.from}T00:00:00.000Z`);
+      const kickoff = new Date(item.kickoffAt);
+      if (!Number.isNaN(fromDate.getTime()) && kickoff < fromDate) return false;
+    }
+    if (query.to) {
+      const toDate = new Date(`${query.to}T23:59:59.999Z`);
+      const kickoff = new Date(item.kickoffAt);
+      if (!Number.isNaN(toDate.getTime()) && kickoff > toDate) return false;
+    }
+    return true;
+  });
+
+  return applySort(filtered, query.sortBy, query.sortOrder, (item, key) => {
+    if (key === "confidenceScore") return item.confidenceScore ?? 0;
+    if (key === "kickoffAt") return item.kickoffAt;
+    if (key === "status") return item.status;
+    return item.kickoffAt;
+  });
+};
+
+const filterPredictions = (query: ReturnType<typeof getQuery>, source: PredictionItem[]) => {
+  const filtered = source.filter((item) => {
+    if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
+    if (query.leagueId && item.leagueId !== query.leagueId) return false;
+    if (query.teamId) {
+      const match = matchesMock.find((m) => m.id === item.matchId);
+      if (!match || (match.homeTeamId !== query.teamId && match.awayTeamId !== query.teamId)) return false;
+    }
+    if (query.status && query.status !== "all" && item.riskLevel !== query.status) return false;
+    if (query.minConfidence > 0 && (item.confidenceScore ?? 0) < query.minConfidence) return false;
+    if (query.isLowConfidence !== undefined && Boolean(item.isLowConfidence) !== query.isLowConfidence) return false;
+    if (query.isRecommended !== undefined && Boolean(item.isRecommended) !== query.isRecommended) return false;
+    if (query.date) {
+      const day = new Date(item.kickoffAt).toISOString().slice(0, 10);
+      if (day !== query.date) return false;
+    }
+    if (query.from) {
+      const fromDate = new Date(`${query.from}T00:00:00.000Z`);
+      const kickoff = new Date(item.kickoffAt);
+      if (!Number.isNaN(fromDate.getTime()) && kickoff < fromDate) return false;
+    }
+    if (query.to) {
+      const toDate = new Date(`${query.to}T23:59:59.999Z`);
+      const kickoff = new Date(item.kickoffAt);
+      if (!Number.isNaN(toDate.getTime()) && kickoff > toDate) return false;
+    }
+    return true;
+  });
+
+  return applySort(filtered, query.sortBy, query.sortOrder, (item, key) => {
+    if (key === "confidenceScore") return item.confidenceScore ?? 0;
+    if (key === "kickoffAt") return item.kickoffAt;
+    if (key === "riskLevel") return item.riskLevel;
+    return item.confidenceScore ?? 0;
+  });
+};
+
+export async function getMockResponse(path: string): Promise<ApiResponse<unknown>> {
+  const url = new URL(path, "http://localhost");
+  const query = getQuery(url);
+  const pathname = url.pathname;
+  const now = new Date();
+
+  if (pathname === "/api/v1/sports") {
+    return ok<Sport[]>(sportsMock);
+  }
+
+  if (pathname === "/api/v1/leagues") {
+    const list = leaguesMock.filter((item) => !query.sport || query.sport === "all" || item.sportKey === query.sport);
+    const pageItems = paginate<LeagueListItem>(list, query.page, query.pageSize);
+    return ok<LeagueListItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname.match(/^\/api\/v1\/leagues\/[^/]+$/)) {
+    const id = pathname.split("/")[4];
+    const league = leaguesMock.find((item) => item.id === id);
+    if (!league) return notFound<LeagueDetail>("League not found");
+    return ok<LeagueDetail>(league);
+  }
+
+  if (pathname.match(/^\/api\/v1\/leagues\/[^/]+\/standings$/)) {
+    const id = pathname.split("/")[4];
+    return ok<StandingRow[]>(standingsMock[id] ?? []);
+  }
+
+  if (pathname === "/api/v1/teams") {
+    const list = teamsMock.filter((item) => {
+      if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
+      if (query.leagueId && item.leagueId !== query.leagueId) return false;
+      return true;
+    });
+
+    const pageItems = paginate<TeamListItem>(list, query.page, query.pageSize);
+    return ok<TeamListItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname.match(/^\/api\/v1\/teams\/[^/]+$/)) {
+    const id = pathname.split("/")[4];
+    const team = teamsMock.find((item) => item.id === id);
+    if (!team) return notFound<TeamDetail>("Team not found");
+    return ok<TeamDetail>(team);
+  }
+
+  if (pathname.match(/^\/api\/v1\/teams\/[^/]+\/matches$/)) {
+    const id = pathname.split("/")[4];
+    const list = matchesMock.filter((item) => item.homeTeamId === id || item.awayTeamId === id);
+    const sorted = applySort(list, query.sortBy, query.sortOrder, (item, key) => {
+      if (key === "confidenceScore") return item.confidenceScore ?? 0;
+      return item.kickoffAt;
+    });
+    const pageItems = paginate<MatchListItem>(sorted, query.page, query.pageSize);
+    return ok<MatchListItem[]>(pageItems, createMeta(query.page, query.pageSize, sorted.length));
+  }
+
+  if (pathname.match(/^\/api\/v1\/teams\/[^/]+\/form$/)) {
+    const id = pathname.split("/")[4];
+    return ok<TeamFormPoint[]>(teamFormMock[id] ?? []);
+  }
+
+  if (pathname.match(/^\/api\/v1\/teams\/[^/]+\/squad$/)) {
+    const id = pathname.split("/")[4];
+    return ok<TeamSquadPlayer[]>(teamSquadMock[id] ?? []);
+  }
+
+  if (pathname === "/api/v1/matches") {
+    const list = filterMatches(query, matchesMock);
+    const pageItems = paginate<MatchListItem>(list, query.page, query.pageSize);
+    return ok<MatchListItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname === "/api/v1/matches/today") {
+    const today = now.toISOString().slice(0, 10);
+    const list = matchesMock.filter((item) => new Date(item.kickoffAt).toISOString().slice(0, 10) === today);
+    return ok<MatchListItem[]>(list);
+  }
+
+  if (pathname === "/api/v1/matches/tomorrow") {
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const day = tomorrow.toISOString().slice(0, 10);
+    const list = matchesMock.filter((item) => new Date(item.kickoffAt).toISOString().slice(0, 10) === day);
+    return ok<MatchListItem[]>(list);
+  }
+
+  if (pathname === "/api/v1/matches/live") {
+    return ok<MatchListItem[]>(matchesMock.filter((item) => item.status === "live"));
+  }
+
+  if (pathname === "/api/v1/matches/completed") {
+    return ok<MatchListItem[]>(matchesMock.filter((item) => item.status === "completed"));
+  }
+
+  if (pathname.match(/^\/api\/v1\/matches\/[^/]+$/)) {
+    const id = pathname.split("/")[4];
+    const match = matchesMock.find((item) => item.id === id);
+    if (!match) return notFound<MatchDetail>("Match not found");
+    return ok<MatchDetail>(match);
+  }
+
+  if (pathname.match(/^\/api\/v1\/matches\/[^/]+\/events$/)) {
+    const id = pathname.split("/")[4];
+    return ok<MatchEvent[]>(matchEventsMock[id] ?? []);
+  }
+
+  if (pathname.match(/^\/api\/v1\/matches\/[^/]+\/stats$/)) {
+    const id = pathname.split("/")[4];
+    return ok<MatchStats>(matchStatsMock[id] ?? {});
+  }
+
+  if (pathname.match(/^\/api\/v1\/matches\/[^/]+\/prediction$/)) {
+    const id = pathname.split("/")[4];
+    const prediction = matchPredictionMock[id];
+    if (!prediction) return notFound<MatchPrediction>("Prediction not found");
+    return ok<MatchPrediction>(prediction);
+  }
+
+  if (pathname === "/api/v1/predictions") {
+    const list = filterPredictions(query, predictionsMock);
+    const pageItems = paginate<PredictionItem>(list, query.page, query.pageSize);
+    return ok<PredictionItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname === "/api/v1/predictions/high-confidence") {
+    return ok<PredictionItem[]>(predictionsMock.filter((item) => (item.confidenceScore ?? 0) >= 78));
+  }
+
+  if (pathname === "/api/v1/analytics/dashboard") {
+    return ok<DashboardSummary>(dashboardMock);
+  }
+
+  if (pathname === "/api/v1/guide/summary") {
+    return ok<GuideSummary>(guideSummaryMock);
+  }
+
+  if (pathname === "/api/v1/admin/calibration/results") {
+    return ok<CalibrationResult[]>(calibrationResultsMock);
+  }
+
+  if (pathname === "/api/v1/admin/calibration/run") {
+    return ok<CalibrationRunResponse>(calibrationRunMock);
+  }
+
+  if (pathname === "/api/v1/admin/predictions/risk-summary") {
+    return ok<PredictionRiskSummary>(predictionRiskSummaryMock);
+  }
+
+  if (pathname === "/api/v1/admin/predictions/low-confidence") {
+    const lowList = predictionsMock.filter((item) => item.isLowConfidence || (item.confidenceScore ?? 0) < 67);
+    const list = filterPredictions(query, lowList);
+    const pageItems = paginate<PredictionItem>(list, query.page, query.pageSize);
+    return ok<PredictionItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  return {
+    success: false,
+    data: null,
+    error: {
+      code: "UNSUPPORTED_ENDPOINT",
+      message: `${pathname} is not mocked`
+    }
+  };
+}
+
+
+
+
+===== FILE: components/ui/ConfidenceGauge.tsx =====
+import { clamp } from "@/lib/utils";
+
+export function ConfidenceGauge({
+  value,
+  showLabel = true
+}: {
+  value?: number | null;
+  showLabel?: boolean;
+}) {
+  const hasValue = value != null && Number.isFinite(value);
+  const bounded = clamp(value ?? 0, 0, 100);
+
+  const quality = !hasValue
+    ? "Bilinmiyor"
+    : bounded >= 80
+      ? "Yuksek"
+      : bounded >= 67
+        ? "Orta"
+        : "Dusuk";
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-2 text-xs text-[color:var(--muted)]">
+        <span>Confidence</span>
+        {showLabel ? <span>{quality}</span> : null}
+      </div>
+      <div className="flex items-center gap-3">
+        <div
+          className="h-2.5 w-full overflow-hidden rounded-full bg-[color:var(--surface-alt)]"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(bounded)}
+          aria-label="Guven skoru"
+        >
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[color:var(--warning)] via-[color:var(--accent)] to-[color:var(--success)]"
+            style={{ width: `${bounded}%` }}
+          />
+        </div>
+        <span className="text-sm font-semibold text-[color:var(--foreground)]">{hasValue ? `${bounded.toFixed(0)}%` : "-"}</span>
+      </div>
+    </div>
+  );
+}
+
+
+
+
+===== FILE: components/ui/ProbabilityBar.tsx =====
+import { clamp, toPercent } from "@/lib/utils";
+
+export function ProbabilityBar({
+  home,
+  draw,
+  away,
+  title = "Olasilik Dagilimi"
+}: {
+  home?: number | null;
+  draw?: number | null;
+  away?: number | null;
+  title?: string;
+}) {
+  const safeHome = clamp(home ?? 0, 0, 100);
+  const safeDraw = clamp(draw ?? 0, 0, 100);
+  const safeAway = clamp(away ?? 0, 0, 100);
+  const total = safeHome + safeDraw + safeAway;
+
+  if (total <= 0) {
+    return (
+      <div className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-2 text-xs text-[color:var(--muted)]">
+        Olasilik verisi henuz olusmadi.
+      </div>
+    );
+  }
+
+  const homeWidth = (safeHome / total) * 100;
+  const drawWidth = (safeDraw / total) * 100;
+  const awayWidth = (safeAway / total) * 100;
+
+  return (
+    <div className="space-y-2" aria-label="Kazanim olasiligi barlari">
+      <p className="text-xs text-[color:var(--muted)]">{title}</p>
+      <div className="h-3 overflow-hidden rounded-full bg-[color:var(--surface-alt)]">
+        <div className="flex h-full">
+          <div style={{ width: `${homeWidth}%` }} className="bg-emerald-400/70" />
+          {safeDraw > 0 ? <div style={{ width: `${drawWidth}%` }} className="bg-amber-400/70" /> : null}
+          <div style={{ width: `${awayWidth}%` }} className="bg-sky-400/70" />
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-xs text-[color:var(--muted)]">
+        <span>Ev: {toPercent(safeHome)}</span>
+        {safeDraw > 0 ? <span>Ber: {toPercent(safeDraw)}</span> : null}
+        <span>Dep: {toPercent(safeAway)}</span>
+      </div>
+    </div>
+  );
+}
+
+
+
+
+===== FILE: components/ui/StatusBadge.tsx =====
+import type { MatchStatus } from "@/types/api-contract";
+import { cn, getStatusLabel } from "@/lib/utils";
+
+type BadgeStatus = MatchStatus | "low" | "medium" | "high" | "neutral" | "recommended" | "low-confidence";
+
+const styleMap: Record<BadgeStatus, string> = {
+  live: "border-emerald-500/40 bg-emerald-500/15 text-emerald-300",
+  completed: "border-slate-500/40 bg-slate-500/15 text-slate-300",
+  scheduled: "border-sky-500/40 bg-sky-500/15 text-sky-300",
+  postponed: "border-amber-500/40 bg-amber-500/15 text-amber-300",
+  cancelled: "border-rose-500/40 bg-rose-500/15 text-rose-300",
+  low: "border-emerald-500/40 bg-emerald-500/15 text-emerald-300",
+  medium: "border-amber-500/40 bg-amber-500/15 text-amber-300",
+  high: "border-rose-500/40 bg-rose-500/15 text-rose-300",
+  neutral: "border-[var(--border)] bg-[color:var(--surface-alt)] text-[color:var(--muted)]",
+  recommended: "border-teal-500/40 bg-teal-500/15 text-teal-300",
+  "low-confidence": "border-orange-500/40 bg-orange-500/15 text-orange-300"
+};
+
+const getLabel = (status: BadgeStatus) => {
+  if (status === "low") return "Dusuk Risk";
+  if (status === "medium") return "Orta Risk";
+  if (status === "high") return "Yuksek Risk";
+  if (status === "neutral") return "Bilgi";
+  if (status === "recommended") return "Onerilen";
+  if (status === "low-confidence") return "Dusuk Guven";
+  return getStatusLabel(status);
+};
+
+export function StatusBadge({ status, className }: { status: BadgeStatus; className?: string }) {
+  const normalized = status in styleMap ? status : "neutral";
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.1em]",
+        styleMap[normalized],
+        className
+      )}
+      aria-label={`Durum: ${getLabel(normalized)}`}
+    >
+      {getLabel(normalized)}
+    </span>
+  );
+}
+
+
+
+
+===== FILE: components/ui/StatCard.tsx =====
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
+
+export function StatCard({
+  title,
+  value,
+  hint,
+  icon,
+  tone = "default"
+}: {
+  title: string;
+  value: string;
+  hint?: string;
+  icon?: ReactNode;
+  tone?: "default" | "success" | "warning";
+}) {
+  return (
+    <article
+      className={cn(
+        "rounded-2xl border bg-[color:var(--surface)] p-4",
+        tone === "success"
+          ? "border-emerald-500/35"
+          : tone === "warning"
+            ? "border-amber-500/35"
+            : "border-[var(--border)]"
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.12em] text-[color:var(--muted)]">{title}</p>
+          <p className="mt-1 text-2xl font-semibold text-[color:var(--foreground)]">{value || "-"}</p>
+        </div>
+        {icon ? <span className="text-[color:var(--accent-2)]">{icon}</span> : null}
+      </div>
+      {hint ? <p className="mt-2 text-xs text-[color:var(--muted)]">{hint}</p> : null}
+    </article>
+  );
+}
+
+
+
+
+===== FILE: components/states/EmptyState.tsx =====
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
+
+export function EmptyState({
+  title,
+  description,
+  action,
+  tone = "default"
+}: {
+  title: string;
+  description: string;
+  action?: ReactNode;
+  tone?: "default" | "warning";
+}) {
+  return (
+    <section
+      className={cn(
+        "rounded-2xl border bg-[color:var(--surface)] p-6 text-center",
+        tone === "warning" ? "border-amber-500/35" : "border-[var(--border)]"
+      )}
+    >
+      <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--muted)]">
+        {tone === "warning" ? "Bilgilendirme" : "Bos Durum"}
+      </p>
+      <h3 className="mt-1 text-xl text-[color:var(--foreground)] [font-family:var(--font-display)]">{title}</h3>
+      <p className="mt-2 text-sm text-[color:var(--muted)]">{description}</p>
+      {action ? <div className="mt-4">{action}</div> : null}
+    </section>
+  );
+}
+
+
+
+
+===== FILE: components/states/ErrorState.tsx =====
+"use client";
+
+export function ErrorState({
+  title = "Veri alinirken hata olustu",
+  description,
+  onRetry
+}: {
+  title?: string;
+  description?: string;
+  onRetry?: () => void;
+}) {
+  return (
+    <section role="alert" className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-6">
+      <h3 className="text-xl text-amber-200 [font-family:var(--font-display)]">{title}</h3>
+      <p className="mt-2 text-sm text-amber-100/90">{description ?? "Beklenmeyen bir hata olustu."}</p>
+      {onRetry ? (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-4 rounded-lg border border-amber-300/40 px-3 py-2 text-sm font-semibold text-amber-100 transition hover:bg-amber-400/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+        >
+          Tekrar dene
+        </button>
+      ) : null}
+    </section>
+  );
+}
+
+
+
+
+===== FILE: components/filters/FilterPanel.tsx =====
+"use client";
+
+import { useState, type ReactNode } from "react";
+
+export function FilterPanel({
+  title = "Filtreler",
+  description,
+  children,
+  footer
+}: {
+  title?: string;
+  description?: string;
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <section className="rounded-2xl border border-[var(--border)] bg-[color:var(--surface)] p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)]">{title}</h3>
+            {description ? <p className="mt-1 text-xs text-[color:var(--muted)]">{description}</p> : null}
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-alt)] lg:hidden"
+            aria-label={`${title} panelini ac`}
+            aria-haspopup="dialog"
+            aria-expanded={isOpen}
+          >
+            Filtreyi Ac
+          </button>
+        </div>
+
+        <div className="hidden gap-3 md:grid-cols-2 xl:grid-cols-5 lg:grid">{children}</div>
+
+        {footer ? <div className="mt-3 border-t border-[var(--border)] pt-3">{footer}</div> : null}
+      </section>
+
+      {isOpen ? (
+        <div
+          className="fixed inset-0 z-50 bg-black/55 lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${title} drawer`}
+          onClick={(event) => {
+            if (event.currentTarget === event.target) {
+              setIsOpen(false);
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              setIsOpen(false);
+            }
+          }}
+          tabIndex={-1}
+        >
+          <aside className="ml-auto h-full w-[min(92vw,460px)] overflow-y-auto border-l border-[var(--border)] bg-[color:var(--surface)] p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)]">{title}</h3>
+                {description ? <p className="mt-1 text-xs text-[color:var(--muted)]">{description}</p> : null}
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-alt)]"
+              >
+                Kapat
+              </button>
+            </div>
+
+            <div className="grid gap-3">{children}</div>
+
+            {footer ? <div className="mt-3 border-t border-[var(--border)] pt-3">{footer}</div> : null}
+          </aside>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+
+
+
+===== FILE: components/cards/PredictionCard.tsx =====
+import type { PredictionItem } from "@/types/api-contract";
+import { formatDateTime, getSportLabel } from "@/lib/utils";
+import { ConfidenceGauge } from "@/components/ui/ConfidenceGauge";
+import { ProbabilityBar } from "@/components/ui/ProbabilityBar";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+
+export function PredictionCard({ prediction }: { prediction: PredictionItem }) {
+  const riskFlags = prediction.riskFlags ?? [];
+  const isLowConfidence = Boolean(prediction.isLowConfidence) || (prediction.confidenceScore ?? 0) < 67;
+  const isRecommended = Boolean(prediction.isRecommended) && !isLowConfidence;
+
+  return (
+    <article
+      className={`rounded-2xl border bg-[color:var(--surface)] p-4 ${
+        isLowConfidence ? "border-amber-500/45" : isRecommended ? "border-teal-500/40" : "border-[var(--border)]"
+      }`}
+    >
+      <header className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-[0.12em] text-[color:var(--muted)]">{prediction.leagueName || "Lig bilgisi yok"}</p>
+          <p className="text-sm text-[color:var(--muted)]">
+            {formatDateTime(prediction.kickoffAt)} - {getSportLabel(prediction.sportKey)}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          {isRecommended ? <StatusBadge status="recommended" /> : null}
+          {isLowConfidence ? <StatusBadge status="low-confidence" /> : null}
+          <StatusBadge status={prediction.riskLevel} />
+        </div>
+      </header>
+
+      <h3 className="mt-3 text-lg text-[color:var(--foreground)] [font-family:var(--font-display)]">
+        {prediction.homeTeamName || "Ev"} vs {prediction.awayTeamName || "Dep"}
+      </h3>
+
+      <p className="mt-2 text-sm text-[color:var(--muted)]">
+        Beklenen skor: {prediction.expectedScore.home ?? "-"} - {prediction.expectedScore.away ?? "-"}
+      </p>
+      <p className="mt-2 text-sm text-[color:var(--muted)]">{prediction.modelSummary || "Model notu bulunmuyor."}</p>
+
+      {isLowConfidence ? (
+        <p className="mt-2 rounded-md border border-amber-500/35 bg-amber-500/10 px-2 py-1 text-xs text-amber-100">
+          Bu tahmin dusuk guven seviyesinde. Karar verirken ek belirsizlik payini dikkate alin.
+        </p>
+      ) : null}
+
+      {riskFlags.length > 0 ? (
+        <ul className="mt-2 flex flex-wrap gap-2" aria-label="Risk bayraklari">
+          {riskFlags.map((flag) => (
+            <li key={flag} className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[11px] text-amber-200">
+              {flag}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-xs text-[color:var(--muted)]">Risk bayragi yok.</p>
+      )}
+
+      <div className="mt-3 space-y-3">
+        <ProbabilityBar
+          home={prediction.probabilities.home}
+          draw={prediction.probabilities.draw}
+          away={prediction.probabilities.away}
+        />
+        <ConfidenceGauge value={prediction.confidenceScore} />
+      </div>
+    </article>
+  );
+}
+
+
+
+
+===== FILE: app/dashboard/page.tsx =====
+"use client";
+
+import dynamic from "next/dynamic";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { StatCard } from "@/components/ui/StatCard";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { MatchCard } from "@/components/cards/MatchCard";
+import { PredictionCard } from "@/components/cards/PredictionCard";
+import { RecentMatchesTable } from "@/components/tables/RecentMatchesTable";
+import { DataFeedback } from "@/components/states/DataFeedback";
+import { EmptyState } from "@/components/states/EmptyState";
+import { LoadingSkeleton } from "@/components/states/LoadingSkeleton";
+import {
+  useDashboardAnalytics,
+  useHighConfidencePredictions,
+  useLiveMatches,
+  useTodayMatches
+} from "@/lib/hooks/use-api";
+import { formatDateTime } from "@/lib/utils";
+
+const LineChart = dynamic(() => import("@/components/charts/LineChart").then((mod) => mod.LineChart), {
+  ssr: false,
+  loading: () => <LoadingSkeleton className="h-52" />
+});
+
+const BarChart = dynamic(() => import("@/components/charts/BarChart").then((mod) => mod.BarChart), {
+  ssr: false,
+  loading: () => <LoadingSkeleton className="h-52" />
+});
+
+export default function DashboardPage() {
+  const dashboardQuery = useDashboardAnalytics();
+  const todayMatchesQuery = useTodayMatches({ pageSize: 6, sortBy: "kickoffAt", sortOrder: "asc" });
+  const liveMatchesQuery = useLiveMatches({ pageSize: 4, sortBy: "kickoffAt", sortOrder: "asc", status: "live" });
+  const highConfidenceQuery = useHighConfidencePredictions();
+
+  const dashboard = dashboardQuery.data?.data;
+  const todayMatches = todayMatchesQuery.data?.data ?? [];
+  const liveMatches = liveMatchesQuery.data?.data ?? [];
+  const highConfidence = highConfidenceQuery.data?.data ?? [];
+  const updatedLeagues = dashboard?.updatedLeagues ?? [];
+  const recentPredictions = dashboard?.recentPredictions ?? [];
+
+  const topPredictions = (highConfidence.length > 0 ? highConfidence : dashboard?.highConfidencePredictions ?? []).slice(0, 4);
+  const lowConfidencePredictions = recentPredictions.filter((item) => item.isLowConfidence || (item.confidenceScore ?? 0) < 67);
+  const spotlightMatches = (todayMatches.length > 0 ? todayMatches : dashboard?.todayMatches ?? []).slice(0, 6);
+
+  const trendSeries = (dashboard?.miniTrends ?? []).flatMap((trend) =>
+    trend.values.map((value, index) => ({
+      label: `${trend.label}-${index + 1}`,
+      value
+    }))
+  );
+
+  const confidenceChartData = [
+    { label: "Low", value: dashboard?.riskDistribution?.low ?? 0 },
+    { label: "Medium", value: dashboard?.riskDistribution?.medium ?? 0 },
+    { label: "High", value: dashboard?.riskDistribution?.high ?? 0 }
+  ];
+
+  const hasPartialData =
+    Boolean(dashboard) &&
+    (topPredictions.length === 0 || updatedLeagues.length === 0 || recentPredictions.length === 0);
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Dashboard"
+        description="Calibrated confidence, risk dagilimi ve guncel prediction ozeti"
+      />
+
+      <DataFeedback
+        isLoading={dashboardQuery.isLoading}
+        error={(dashboardQuery.error as Error | undefined) ?? (todayMatchesQuery.error as Error | undefined)}
+        isEmpty={!dashboard}
+        isPartial={hasPartialData}
+        emptyTitle="Dashboard verisi bulunamadi"
+        emptyDescription="Analitik ozet su an alinamiyor."
+        partialTitle="Kismi dashboard verisi"
+        partialDescription="Bazi kartlar eksik gelebilir; sistem kalan verilerle gosterime devam ediyor."
+        onRetry={() => {
+          void dashboardQuery.refetch();
+          void todayMatchesQuery.refetch();
+          void liveMatchesQuery.refetch();
+          void highConfidenceQuery.refetch();
+        }}
+        loadingCount={4}
+      >
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            title="Bugunun mac sayisi"
+            value={String(dashboard?.todayMatchCount ?? todayMatches.length)}
+            hint="Guncel gun takvimi"
+          />
+          <StatCard
+            title="Canli mac"
+            value={String(dashboard?.liveMatchCount ?? liveMatches.length)}
+            hint="Anlik takipteki maclar"
+          />
+          <StatCard
+            title="Calibrated high confidence"
+            value={String(dashboard?.calibratedHighConfidenceCount ?? dashboard?.highConfidencePredictionCount ?? topPredictions.length)}
+            hint="Calibration sonrasi yuksek guven"
+            tone="success"
+          />
+          <StatCard
+            title="Low confidence"
+            value={String(dashboard?.lowConfidenceCount ?? lowConfidencePredictions.length)}
+            hint="Ek yorum gerektiren tahminler"
+            tone="warning"
+          />
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+          <SectionCard title="Sistem Performans Ozet Trendi" subtitle="Takim bazli mini trend alanlari">
+            {trendSeries.length > 0 ? (
+              <LineChart data={trendSeries} />
+            ) : (
+              <EmptyState title="Trend verisi yok" description="Model trend serileri gelince bu alan otomatik dolacak." />
+            )}
+          </SectionCard>
+
+          <SectionCard title="Risk Dagilimi" subtitle="Low / medium / high prediction count">
+            {(dashboard?.riskDistribution?.low ?? 0) + (dashboard?.riskDistribution?.medium ?? 0) + (dashboard?.riskDistribution?.high ?? 0) > 0 ? (
+              <BarChart data={confidenceChartData} />
+            ) : (
+              <EmptyState title="Risk dagilimi yok" description="Risk dagilimi verisi su an paylasilmadi." />
+            )}
+          </SectionCard>
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+          <SectionCard title="Calibration Health Summary" subtitle="Model calibration durum ozeti">
+            {dashboard?.calibrationHealthSummary ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                  <p className="text-xs text-[color:var(--muted)]">Status</p>
+                  <p className="font-semibold text-[color:var(--foreground)]">{dashboard.calibrationHealthSummary.status ?? "-"}</p>
+                </article>
+                <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                  <p className="text-xs text-[color:var(--muted)]">Avg confidence</p>
+                  <p className="font-semibold text-[color:var(--foreground)]">{dashboard.avgConfidenceScore ?? "-"}%</p>
+                </article>
+                <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                  <p className="text-xs text-[color:var(--muted)]">Brier score</p>
+                  <p className="font-semibold text-[color:var(--foreground)]">{dashboard.calibrationHealthSummary.brierScore ?? "-"}</p>
+                </article>
+                <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                  <p className="text-xs text-[color:var(--muted)]">ECE</p>
+                  <p className="font-semibold text-[color:var(--foreground)]">{dashboard.calibrationHealthSummary.ece ?? "-"}</p>
+                </article>
+                <article className="sm:col-span-2 rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                  <p className="text-xs text-[color:var(--muted)]">Not</p>
+                  <p className="text-sm text-[color:var(--foreground)]">{dashboard.calibrationHealthSummary.note ?? "Not bulunmuyor."}</p>
+                  <p className="mt-1 text-xs text-[color:var(--muted)]">Updated: {formatDateTime(dashboard.calibrationHealthSummary.updatedAt)}</p>
+                </article>
+              </div>
+            ) : (
+              <EmptyState title="Calibration ozeti yok" description="Calibration health summary endpoint verisi bekleniyor." />
+            )}
+          </SectionCard>
+
+          <SectionCard title="Son Guncellenen Ligler" subtitle="Veri akisi son guncellenen ligler">
+            {updatedLeagues.length > 0 ? (
+              <ul className="space-y-2">
+                {updatedLeagues.map((league) => (
+                  <li key={league.id} className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-2">
+                    <p className="font-semibold text-[color:var(--foreground)]">{league.name}</p>
+                    <p className="text-xs text-[color:var(--muted)]">
+                      {league.country} - {league.season}
+                    </p>
+                    <p className="text-xs text-[color:var(--muted)]">Guncelleme: {formatDateTime(league.updatedAt)}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState title="Lig guncellemesi yok" description="Son guncellenen lig bilgisi su an paylasilmadi." />
+            )}
+          </SectionCard>
+        </section>
+
+        <SectionCard title="Bugunun One Cikan Maclari" subtitle="Canli ve yaklasan maclar">
+          {spotlightMatches.length > 0 ? (
+            <div className="grid gap-3 lg:grid-cols-2">
+              {spotlightMatches.map((match) => (
+                <MatchCard key={match.id} match={match} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="Mac listesi bos" description="Bugun icin gosterilecek mac bulunmuyor." />
+          )}
+        </SectionCard>
+
+        <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+          <SectionCard title="Yuksek Guven Tahminleri" subtitle="Confidence score odakli model ciktilari">
+            {topPredictions.length > 0 ? (
+              <div className="grid gap-3">
+                {topPredictions.map((prediction) => (
+                  <PredictionCard key={prediction.id} prediction={prediction} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Yuksek guven tahmini yok" description="Bu saat araliginda confidence thresholdu asan tahmin yok." />
+            )}
+          </SectionCard>
+
+          <SectionCard title="Low Confidence Tahminler" subtitle="Ek kontrol gerektiren tahminler">
+            {lowConfidencePredictions.length > 0 ? (
+              <div className="space-y-2">
+                {lowConfidencePredictions.slice(0, 4).map((item) => (
+                  <PredictionCard key={`low-${item.id}`} prediction={item} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="Low confidence kayit yok" description="Su anda dusuk guvenli tahmin kaydi bulunmuyor." />
+            )}
+          </SectionCard>
+        </section>
+
+        <SectionCard title="Son Tahmin Ozet Tablosu" subtitle="Canli maclar ve recent predictions overview">
+          {liveMatches.length > 0 || spotlightMatches.length > 0 ? (
+            <RecentMatchesTable matches={liveMatches.length > 0 ? liveMatches : spotlightMatches.slice(0, 4)} />
+          ) : (
+            <EmptyState title="Tablo verisi yok" description="Ozet tabloda gosterilecek mac verisi bulunmuyor." />
+          )}
+        </SectionCard>
+      </DataFeedback>
+    </div>
+  );
+}
+
+
+
+
+===== FILE: app/predictions/page.tsx =====
+"use client";
+
+import { Suspense } from "react";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { FilterPanel } from "@/components/filters/FilterPanel";
+import { SportTabs } from "@/components/filters/SportTabs";
+import { PredictionCard } from "@/components/cards/PredictionCard";
+import { DataFeedback } from "@/components/states/DataFeedback";
+import { LoadingSkeleton } from "@/components/states/LoadingSkeleton";
+import { EmptyState } from "@/components/states/EmptyState";
+import { useHighConfidencePredictions, useLeagues, usePredictions, useTeams } from "@/lib/hooks/use-api";
+import { mapFiltersToPredictionQuery, useFilterQueryState } from "@/lib/hooks/use-query-state";
+
+const riskOptions = [
+  { value: "all", label: "Tum riskler" },
+  { value: "low", label: "Dusuk" },
+  { value: "medium", label: "Orta" },
+  { value: "high", label: "Yuksek" }
+] as const;
+
+function PredictionsPageContent() {
+  const { filters, setFilters } = useFilterQueryState();
+  const predictionQuery = usePredictions(mapFiltersToPredictionQuery(filters));
+  const highConfidenceQuery = useHighConfidencePredictions();
+  const leaguesQuery = useLeagues({ sport: filters.sport, pageSize: 200 });
+  const teamsQuery = useTeams({ sport: filters.sport, leagueId: filters.leagueId || undefined, pageSize: 200 });
+
+  const predictions = predictionQuery.data?.data ?? [];
+  const highConfidence = highConfidenceQuery.data?.data ?? [];
+  const meta = predictionQuery.data?.meta;
+
+  const lowConfidenceCount = predictions.filter((item) => item.isLowConfidence || (item.confidenceScore ?? 0) < 67).length;
+  const recommendedCount = predictions.filter((item) => item.isRecommended).length;
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Tahminler"
+        description="Calibrated confidence score, risk flags ve low-confidence ayrimi"
+      />
+
+      <section className="grid gap-3 sm:grid-cols-3">
+        <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface)] p-3">
+          <p className="text-xs text-[color:var(--muted)]">Toplam</p>
+          <p className="text-2xl font-semibold text-[color:var(--foreground)]">{meta?.total ?? predictions.length}</p>
+        </article>
+        <article className="rounded-xl border border-teal-500/35 bg-[color:var(--surface)] p-3">
+          <p className="text-xs text-[color:var(--muted)]">Onerilen</p>
+          <p className="text-2xl font-semibold text-[color:var(--foreground)]">{recommendedCount}</p>
+        </article>
+        <article className="rounded-xl border border-amber-500/35 bg-[color:var(--surface)] p-3">
+          <p className="text-xs text-[color:var(--muted)]">Dusuk guven</p>
+          <p className="text-2xl font-semibold text-[color:var(--foreground)]">{lowConfidenceCount}</p>
+        </article>
+      </section>
+
+      <FilterPanel
+        description="Risk ve confidence odakli filtreler URL query param ile senkron calisir."
+        footer={
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-[color:var(--muted)]">
+              Sayfa {meta?.page ?? filters.page} / {meta?.totalPages ?? 1} - Toplam {meta?.total ?? predictions.length}
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setFilters({ page: Math.max(1, filters.page - 1) })}
+                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm"
+                disabled={filters.page <= 1}
+              >
+                Onceki
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilters({ page: filters.page + 1 })}
+                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm"
+                disabled={meta ? filters.page >= meta.totalPages : false}
+              >
+                Sonraki
+              </button>
+            </div>
+          </div>
+        }
+      >
+        <SportTabs value={filters.sport as "all" | "football" | "basketball"} onChange={(value) => setFilters({ sport: value })} />
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Lig</span>
+          <select
+            value={filters.leagueId}
+            onChange={(event) => setFilters({ leagueId: event.target.value })}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            <option value="">Tum ligler</option>
+            {(leaguesQuery.data?.data ?? []).map((league) => (
+              <option key={league.id} value={league.id}>{league.name}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Takim</span>
+          <select
+            value={filters.teamId}
+            onChange={(event) => setFilters({ teamId: event.target.value })}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            <option value="">Tum takimlar</option>
+            {(teamsQuery.data?.data ?? []).map((team) => (
+              <option key={team.id} value={team.id}>{team.name}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Risk</span>
+          <select
+            value={filters.status}
+            onChange={(event) => setFilters({ status: event.target.value })}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            {riskOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Min guven</span>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            value={filters.minConfidence ?? ""}
+            onChange={(event) => setFilters({ minConfidence: event.target.value === "" ? undefined : Number(event.target.value) })}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+            placeholder="0-100"
+          />
+        </label>
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Dusuk guven filtresi</span>
+          <select
+            value={filters.isLowConfidence === undefined ? "all" : filters.isLowConfidence ? "true" : "false"}
+            onChange={(event) => {
+              const value = event.target.value;
+              setFilters({ isLowConfidence: value === "all" ? undefined : value === "true" });
+            }}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            <option value="all">Tum kayitlar</option>
+            <option value="true">Sadece dusuk guven</option>
+            <option value="false">Dusuk guven haric</option>
+          </select>
+        </label>
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Onerilen filtresi</span>
+          <select
+            value={filters.isRecommended === undefined ? "all" : filters.isRecommended ? "true" : "false"}
+            onChange={(event) => {
+              const value = event.target.value;
+              setFilters({ isRecommended: value === "all" ? undefined : value === "true" });
+            }}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            <option value="all">Tum kayitlar</option>
+            <option value="true">Sadece onerilen</option>
+            <option value="false">Onerilen haric</option>
+          </select>
+        </label>
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Siralama alani</span>
+          <select
+            value={filters.sortBy}
+            onChange={(event) => setFilters({ sortBy: event.target.value })}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            <option value="confidenceScore">Guven skoru</option>
+            <option value="kickoffAt">Tarih</option>
+            <option value="riskLevel">Risk seviyesi</option>
+          </select>
+        </label>
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Siralama yonu</span>
+          <select
+            value={filters.sortOrder}
+            onChange={(event) => setFilters({ sortOrder: event.target.value as "asc" | "desc" })}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            <option value="desc">Azalan</option>
+            <option value="asc">Artan</option>
+          </select>
+        </label>
+      </FilterPanel>
+
+      <DataFeedback
+        isLoading={predictionQuery.isLoading}
+        error={predictionQuery.error as Error | undefined}
+        isEmpty={predictions.length === 0}
+        isPartial={predictions.length > 0 && predictions.length < 3}
+        emptyTitle="Tahmin bulunamadi"
+        emptyDescription="Secili filtrelerde tahmin listesi bos."
+        partialTitle="Dusuk veri kapsami"
+        partialDescription="Filtrelere uyan tahmin sayisi az oldugu icin gosterim kisitli olabilir."
+        onRetry={() => void predictionQuery.refetch()}
+        loadingCount={8}
+      >
+        <div className="grid gap-3 xl:grid-cols-2">
+          {predictions.map((prediction) => (
+            <PredictionCard key={prediction.id} prediction={prediction} />
+          ))}
+        </div>
+
+        {highConfidence.length > 0 ? (
+          <section className="rounded-2xl border border-[var(--border)] bg-[color:var(--surface)] p-4">
+            <h2 className="text-lg [font-family:var(--font-display)]">Yuksek Guven Skorlu Tahminler</h2>
+            <p className="mt-1 text-sm text-[color:var(--muted)]">Ek kontrol listesi</p>
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              {highConfidence.slice(0, 2).map((prediction) => (
+                <PredictionCard key={`high-${prediction.id}`} prediction={prediction} />
+              ))}
+            </div>
+          </section>
+        ) : (
+          <EmptyState title="Yuksek guven listesi bos" description="High-confidence endpoint su an kayit dondurmuyor." />
+        )}
+      </DataFeedback>
+    </div>
+  );
+}
+
+export default function PredictionsPage() {
+  return (
+    <Suspense fallback={<LoadingSkeleton className="h-36" />}>
+      <PredictionsPageContent />
+    </Suspense>
+  );
+}
+
+
+
+
+===== FILE: app/matches/[id]/page.tsx =====
+"use client";
+
+import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import { useParams } from "next/navigation";
+import {
+  useMatchDetail,
+  useMatchEvents,
+  useMatchPrediction,
+  useMatchStats,
+  useTeamForm,
+  useTeamSquad
+} from "@/lib/hooks/use-api";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { DataFeedback } from "@/components/states/DataFeedback";
+import { ConfidenceGauge } from "@/components/ui/ConfidenceGauge";
+import { ProbabilityBar } from "@/components/ui/ProbabilityBar";
+import { MatchEventsTimeline } from "@/components/match/MatchEventsTimeline";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { EmptyState } from "@/components/states/EmptyState";
+import { formatDate, formatDateTime, safeScore } from "@/lib/utils";
+
+const ComparisonRadarChart = dynamic(
+  () => import("@/components/charts/ComparisonRadarChart").then((mod) => mod.ComparisonRadarChart),
+  { ssr: false }
+);
+
+const tabs = [
+  { id: "overview", label: "Genel Bakis" },
+  { id: "form", label: "Form" },
+  { id: "stats", label: "Istatistik Karsilastirma" },
+  { id: "h2h", label: "H2H" },
+  { id: "lineup", label: "Kadro" },
+  { id: "events", label: "Olaylar" },
+  { id: "predictions", label: "Tahminler" },
+  { id: "risk", label: "Risk Uyarilari" }
+] as const;
+
+type TabId = (typeof tabs)[number]["id"];
+
+export default function MatchDetailPage() {
+  const params = useParams<{ id: string }>();
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
+
+  const detailQuery = useMatchDetail(params.id);
+  const eventsQuery = useMatchEvents(params.id);
+  const statsQuery = useMatchStats(params.id);
+  const predictionQuery = useMatchPrediction(params.id);
+
+  const match = detailQuery.data?.data;
+  const prediction = predictionQuery.data?.data;
+  const stats = statsQuery.data?.data;
+  const events = eventsQuery.data?.data ?? [];
+
+  const homeFormQuery = useTeamForm(match?.homeTeamId);
+  const awayFormQuery = useTeamForm(match?.awayTeamId);
+  const homeSquadQuery = useTeamSquad(match?.homeTeamId);
+  const awaySquadQuery = useTeamSquad(match?.awayTeamId);
+
+  const homeForm = homeFormQuery.data?.data ?? [];
+  const awayForm = awayFormQuery.data?.data ?? [];
+
+  const predictionConfidence = prediction?.confidenceScore ?? match?.confidenceScore ?? null;
+  const isLowConfidence = Boolean(prediction?.isLowConfidence) || (predictionConfidence ?? 0) < 67;
+  const isRecommended = Boolean(prediction?.isRecommended) && !isLowConfidence;
+
+  const predictionSummary = prediction?.summary ?? prediction?.modelExplanation ?? match?.summary ?? null;
+
+  const mergedRiskFlags = useMemo(
+    () => [...(prediction?.riskFlags ?? []), ...(match?.riskFlags ?? [])],
+    [match?.riskFlags, prediction?.riskFlags]
+  );
+
+  const h2hSummary = (() => {
+    if (match?.h2hSummary) return match.h2hSummary;
+    if (homeForm.length === 0 && awayForm.length === 0) return "H2H verisi su an bulunmuyor.";
+
+    const homeWins = homeForm.filter((item) => item.result === "W").length;
+    const awayWins = awayForm.filter((item) => item.result === "W").length;
+
+    return `${match?.homeTeamName ?? "Ev"} son formda ${homeWins} galibiyet, ${match?.awayTeamName ?? "Dep"} ${awayWins} galibiyet uretti.`;
+  })();
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title={match ? `${match.homeTeamName} vs ${match.awayTeamName}` : "Mac Detay"}
+        description={match ? `${match.leagueName} - ${formatDateTime(match.kickoffAt)}` : "Mac veri detayi"}
+      />
+
+      <DataFeedback
+        isLoading={detailQuery.isLoading}
+        error={detailQuery.error as Error | undefined}
+        isEmpty={!match}
+        emptyTitle="Mac verisi bulunamadi"
+        emptyDescription="Mac detay endpoint'i veri dondurmedi."
+        onRetry={() => {
+          void detailQuery.refetch();
+          void eventsQuery.refetch();
+          void statsQuery.refetch();
+          void predictionQuery.refetch();
+        }}
+      >
+        {match ? (
+          <>
+            <SectionCard title="Mac Ozeti" subtitle={`${match.leagueName} - ${match.venue ?? "Stadyum bilgisi yok"}`}>
+              <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr_auto] lg:items-center">
+                <div>
+                  <p className="text-lg font-semibold text-[color:var(--foreground)]">{match.homeTeamName}</p>
+                  <p className="text-xs text-[color:var(--muted)]">Tarih: {formatDate(match.kickoffAt)}</p>
+                </div>
+                <p className="text-3xl font-semibold text-[color:var(--foreground)]">{safeScore(match.scoreHome)}</p>
+                <p className="text-3xl font-semibold text-[color:var(--foreground)]">{safeScore(match.scoreAway)}</p>
+                <div className="text-right">
+                  <p className="text-lg font-semibold text-[color:var(--foreground)]">{match.awayTeamName}</p>
+                  <p className="text-xs text-[color:var(--muted)]">Saat: {formatDateTime(match.kickoffAt)}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <StatusBadge status={match.status} />
+                {isRecommended ? <StatusBadge status="recommended" /> : null}
+                {isLowConfidence ? <StatusBadge status="low-confidence" /> : null}
+                <span className="text-sm text-[color:var(--muted)]">Round: {match.round ?? "-"}</span>
+                <span className="text-sm text-[color:var(--muted)]">Guven: {predictionConfidence ?? "-"}%</span>
+              </div>
+            </SectionCard>
+
+            <div className="rounded-2xl border border-[var(--border)] bg-[color:var(--surface)] p-2">
+              <div className="flex flex-wrap gap-2">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                      activeTab === tab.id
+                        ? "bg-[color:var(--accent)] text-black"
+                        : "text-[color:var(--muted)] hover:bg-[color:var(--surface-alt)] hover:text-[color:var(--foreground)]"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {activeTab === "overview" ? (
+              <SectionCard title="Genel Bakis" subtitle="Temel mac ve model alani">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                    <p className="text-xs text-[color:var(--muted)]">Lig</p>
+                    <p className="font-semibold text-[color:var(--foreground)]">{match.leagueName}</p>
+                  </article>
+                  <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                    <p className="text-xs text-[color:var(--muted)]">Beklenen skor</p>
+                    <p className="font-semibold text-[color:var(--foreground)]">
+                      {prediction?.expectedScore.home ?? match.expectedScoreHome ?? "-"} - {prediction?.expectedScore.away ?? match.expectedScoreAway ?? "-"}
+                    </p>
+                  </article>
+                  <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                    <p className="text-xs text-[color:var(--muted)]">Model guven skoru</p>
+                    <p className="font-semibold text-[color:var(--foreground)]">{predictionConfidence ?? "-"}%</p>
+                  </article>
+                  <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                    <p className="text-xs text-[color:var(--muted)]">Mac durumu</p>
+                    <p className="font-semibold text-[color:var(--foreground)]">{match.status}</p>
+                  </article>
+                </div>
+              </SectionCard>
+            ) : null}
+
+            {activeTab === "form" ? (
+              <SectionCard title="Form" subtitle="Takimlarin son form noktalarinin dagilimi">
+                <DataFeedback
+                  isLoading={homeFormQuery.isLoading || awayFormQuery.isLoading}
+                  error={(homeFormQuery.error as Error | undefined) ?? (awayFormQuery.error as Error | undefined)}
+                  isEmpty={homeForm.length === 0 && awayForm.length === 0}
+                  emptyTitle="Form verisi yok"
+                  emptyDescription="Her iki takim icin de form verisi gelmedi."
+                  onRetry={() => {
+                    void homeFormQuery.refetch();
+                    void awayFormQuery.refetch();
+                  }}
+                >
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-4">
+                      <h3 className="text-lg text-[color:var(--foreground)]">{match.homeTeamName}</h3>
+                      <p className="mt-2 text-sm text-[color:var(--muted)]">
+                        {homeForm.length > 0 ? homeForm.map((item) => item.result).join(" - ") : "Form verisi yok"}
+                      </p>
+                    </article>
+                    <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-4">
+                      <h3 className="text-lg text-[color:var(--foreground)]">{match.awayTeamName}</h3>
+                      <p className="mt-2 text-sm text-[color:var(--muted)]">
+                        {awayForm.length > 0 ? awayForm.map((item) => item.result).join(" - ") : "Form verisi yok"}
+                      </p>
+                    </article>
+                  </div>
+                </DataFeedback>
+              </SectionCard>
+            ) : null}
+
+            {activeTab === "stats" ? (
+              <SectionCard title="Istatistik Karsilastirma" subtitle="Match stats endpoint verisi">
+                <DataFeedback
+                  isLoading={statsQuery.isLoading}
+                  error={statsQuery.error as Error | undefined}
+                  isEmpty={!stats}
+                  emptyTitle="Istatistik verisi yok"
+                  emptyDescription="Bu mac icin stats endpoint veri dondurmedi."
+                  onRetry={() => void statsQuery.refetch()}
+                >
+                  <ComparisonRadarChart
+                    values={[
+                      { label: "Topa sahip", home: Math.round(stats?.possessionHome ?? 0), away: Math.round(stats?.possessionAway ?? 0) },
+                      { label: "Sut", home: Math.round(stats?.shotsHome ?? 0), away: Math.round(stats?.shotsAway ?? 0) },
+                      { label: "Isabetli", home: Math.round(stats?.shotsOnTargetHome ?? 0), away: Math.round(stats?.shotsOnTargetAway ?? 0) },
+                      { label: "xG/Pace", home: Math.round((stats?.xgHome ?? stats?.paceHome ?? 0) * 20), away: Math.round((stats?.xgAway ?? stats?.paceAway ?? 0) * 20) },
+                      { label: "Verimlilik", home: Math.round((stats?.efficiencyHome ?? 1) * 60), away: Math.round((stats?.efficiencyAway ?? 1) * 60) }
+                    ]}
+                  />
+                </DataFeedback>
+              </SectionCard>
+            ) : null}
+
+            {activeTab === "h2h" ? (
+              <SectionCard title="H2H" subtitle="Karsilikli mac ve trend yorumu">
+                <p className="text-sm text-[color:var(--muted)]">{h2hSummary}</p>
+              </SectionCard>
+            ) : null}
+
+            {activeTab === "lineup" ? (
+              <SectionCard title="Kadro" subtitle="Team squad endpoint verisi">
+                <DataFeedback
+                  isLoading={homeSquadQuery.isLoading || awaySquadQuery.isLoading}
+                  error={(homeSquadQuery.error as Error | undefined) ?? (awaySquadQuery.error as Error | undefined)}
+                  isEmpty={(homeSquadQuery.data?.data ?? []).length === 0 && (awaySquadQuery.data?.data ?? []).length === 0}
+                  emptyTitle="Kadro verisi yok"
+                  emptyDescription="Her iki takim icin de kadro endpoint'i veri dondurmedi."
+                  onRetry={() => {
+                    void homeSquadQuery.refetch();
+                    void awaySquadQuery.refetch();
+                  }}
+                >
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-4">
+                      <h3 className="font-semibold text-[color:var(--foreground)]">{match.homeTeamName} kadro</h3>
+                      <ul className="mt-2 space-y-1 text-sm text-[color:var(--muted)]">
+                        {(homeSquadQuery.data?.data ?? []).length > 0 ? (
+                          (homeSquadQuery.data?.data ?? []).map((player) => (
+                            <li key={player.id}>{player.name} - {player.position}</li>
+                          ))
+                        ) : (
+                          <li>Kadro verisi yok</li>
+                        )}
+                      </ul>
+                    </article>
+                    <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-4">
+                      <h3 className="font-semibold text-[color:var(--foreground)]">{match.awayTeamName} kadro</h3>
+                      <ul className="mt-2 space-y-1 text-sm text-[color:var(--muted)]">
+                        {(awaySquadQuery.data?.data ?? []).length > 0 ? (
+                          (awaySquadQuery.data?.data ?? []).map((player) => (
+                            <li key={player.id}>{player.name} - {player.position}</li>
+                          ))
+                        ) : (
+                          <li>Kadro verisi yok</li>
+                        )}
+                      </ul>
+                    </article>
+                  </div>
+                </DataFeedback>
+              </SectionCard>
+            ) : null}
+
+            {activeTab === "events" ? (
+              <SectionCard title="Olaylar" subtitle="Canli olay ve son gelismeler">
+                <DataFeedback
+                  isLoading={eventsQuery.isLoading}
+                  error={eventsQuery.error as Error | undefined}
+                  isEmpty={events.length === 0}
+                  emptyTitle="Olay verisi yok"
+                  emptyDescription="Bu mac icin olay listesi bulunmuyor."
+                  onRetry={() => void eventsQuery.refetch()}
+                >
+                  <MatchEventsTimeline events={events} />
+                </DataFeedback>
+              </SectionCard>
+            ) : null}
+
+            {activeTab === "predictions" ? (
+              <SectionCard title="Tahminler" subtitle="Calibrated prediction output">
+                <DataFeedback
+                  isLoading={predictionQuery.isLoading}
+                  error={predictionQuery.error as Error | undefined}
+                  isEmpty={!prediction}
+                  isPartial={!prediction?.probabilities || predictionConfidence == null}
+                  emptyTitle="Tahmin verisi yok"
+                  emptyDescription="Bu mac icin prediction endpoint veri dondurmuyor."
+                  partialTitle="Kismi prediction verisi"
+                  partialDescription="Bazi prediction alanlari eksik oldugu icin panel kisitli gosteriliyor."
+                  onRetry={() => void predictionQuery.refetch()}
+                >
+                  {prediction ? (
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {isRecommended ? <StatusBadge status="recommended" /> : null}
+                        {isLowConfidence ? <StatusBadge status="low-confidence" /> : null}
+                      </div>
+
+                      <ProbabilityBar
+                        home={prediction.probabilities.home}
+                        draw={prediction.probabilities.draw}
+                        away={prediction.probabilities.away}
+                      />
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                          <p className="text-xs text-[color:var(--muted)]">Expected Score</p>
+                          <p className="font-semibold text-[color:var(--foreground)]">
+                            {prediction.expectedScore.home ?? "-"} - {prediction.expectedScore.away ?? "-"}
+                          </p>
+                        </article>
+                        <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                          <p className="text-xs text-[color:var(--muted)]">Confidence Score</p>
+                          <ConfidenceGauge value={predictionConfidence} />
+                        </article>
+                      </div>
+
+                      <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                        <p className="text-xs text-[color:var(--muted)]">Summary</p>
+                        <p className="text-sm text-[color:var(--foreground)]">{predictionSummary ?? "Prediction summary bulunmuyor."}</p>
+                      </article>
+
+                      {isLowConfidence ? (
+                        <article className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+                          Bu macin tahmininde confidence seviyesi dusuk. Karar verirken ek belirsizlik payi oldugunu dikkate alin.
+                        </article>
+                      ) : null}
+
+                      {mergedRiskFlags.length > 0 ? (
+                        <ul className="flex flex-wrap gap-2">
+                          {mergedRiskFlags.map((risk, index) => (
+                            <li key={`${risk}-${index}`} className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[11px] text-amber-200">
+                              {risk}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <EmptyState title="Risk flag yok" description="Bu mac icin riskFlags alaninda kayit bulunmuyor." />
+                      )}
+                    </div>
+                  ) : null}
+                </DataFeedback>
+              </SectionCard>
+            ) : null}
+
+            {activeTab === "risk" ? (
+              <SectionCard title="Risk Uyarilari" subtitle="Model risk flags ve mac riskleri">
+                <ul className="space-y-2">
+                  {mergedRiskFlags.length > 0 ? (
+                    mergedRiskFlags.map((risk, index) => (
+                      <li key={`${risk}-${index}`} className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+                        {risk}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-2 text-sm text-[color:var(--muted)]">
+                      Risk uyarisi bulunmuyor.
+                    </li>
+                  )}
+                </ul>
+              </SectionCard>
+            ) : null}
+          </>
+        ) : null}
+      </DataFeedback>
+    </div>
+  );
+}
+
+
+
+
+===== FILE: lib/config/menu.ts =====
+export interface MenuItem {
+  title: string;
+  href: string;
+  description?: string;
+}
+
+export interface MenuSection {
+  title: string;
+  items: MenuItem[];
+}
+
+export const sidebarMenu: MenuSection[] = [
+  {
+    title: "Genel",
+    items: [
+      { title: "Anasayfa", href: "/dashboard", description: "Ozet ve canli durum" },
+      { title: "Maclar", href: "/matches", description: "Takvim ve durum filtreleri" },
+      { title: "Tahminler", href: "/predictions", description: "Model ciktilari" },
+      { title: "Canli Analiz", href: "/live", description: "Canli istatistik akisi" }
+    ]
+  },
+  {
+    title: "Futbol",
+    items: [
+      { title: "Futbol Analizi", href: "/football" },
+      { title: "Mac On Analiz", href: "/football/pre-match" },
+      { title: "Takim Karsilastirma", href: "/football/team-comparison" },
+      { title: "Form Analizi", href: "/football/form-analysis" },
+      { title: "Gol Beklentisi", href: "/football/goal-expectation" }
+    ]
+  },
+  {
+    title: "Basketbol",
+    items: [
+      { title: "Basketbol Analizi", href: "/basketball" },
+      { title: "Mac On Analiz", href: "/basketball/pre-match" },
+      { title: "Takim Karsilastirma", href: "/basketball/team-comparison" },
+      { title: "Tempo", href: "/basketball/pace" },
+      { title: "Verimlilik", href: "/basketball/efficiency" },
+      { title: "Ceyrek Analizi", href: "/basketball/quarters" }
+    ]
+  },
+  {
+    title: "Veri Modulleri",
+    items: [
+      { title: "Ligler", href: "/leagues" },
+      { title: "Takimlar", href: "/teams" },
+      { title: "Modeller", href: "/models" },
+      { title: "Performans", href: "/performance" },
+      { title: "Rehber", href: "/guide" }
+    ]
+  },
+  {
+    title: "Admin",
+    items: [
+      { title: "Calibration", href: "/admin/calibration", description: "Model calibration sonuclari" },
+      { title: "Risk Monitor", href: "/admin/risk-monitor", description: "Risk dagilimi ve bayraklar" },
+      { title: "Low Confidence", href: "/admin/low-confidence", description: "Dusuk guvenli prediction listesi" }
+    ]
+  },
+  {
+    title: "Hesap",
+    items: [
+      { title: "Uyelik", href: "/membership" },
+      { title: "Hesabim", href: "/account" }
+    ]
+  }
+];
+
+
+
+
+===== FILE: app/admin/calibration/page.tsx =====
+"use client";
+
+import { PageHeader } from "@/components/layout/PageHeader";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { DataFeedback } from "@/components/states/DataFeedback";
+import { EmptyState } from "@/components/states/EmptyState";
+import { useCalibrationResults, useRunCalibrationMutation } from "@/lib/hooks/use-api";
+import { formatDateTime } from "@/lib/utils";
+import { useToast } from "@/components/providers/ToastProvider";
+
+export default function AdminCalibrationPage() {
+  const resultsQuery = useCalibrationResults();
+  const runMutation = useRunCalibrationMutation();
+  const { showToast } = useToast();
+
+  const results = resultsQuery.data?.data ?? [];
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Admin Calibration"
+        description="Calibration sonuclari ve manuel run islemi"
+        actions={
+          <button
+            type="button"
+            className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-2 text-sm font-semibold"
+            disabled={runMutation.isPending}
+            onClick={() => {
+              runMutation.mutate(undefined, {
+                onSuccess: (response) => {
+                  showToast({
+                    tone: "success",
+                    title: "Calibration tetiklendi",
+                    description: response.data.message ?? "Calibration run istegi gonderildi."
+                  });
+                },
+                onError: (error) => {
+                  showToast({
+                    tone: "error",
+                    title: "Calibration baslatilamadi",
+                    description: error instanceof Error ? error.message : "Bilinmeyen hata"
+                  });
+                }
+              });
+            }}
+          >
+            {runMutation.isPending ? "Calisiyor..." : "Calibration Run"}
+          </button>
+        }
+      />
+
+      <SectionCard title="Calibration Sonuclari" subtitle="Admin endpoint: /api/v1/admin/calibration/results">
+        <DataFeedback
+          isLoading={resultsQuery.isLoading}
+          error={resultsQuery.error as Error | undefined}
+          isEmpty={results.length === 0}
+          emptyTitle="Calibration sonucu bulunamadi"
+          emptyDescription="Sistem henuz calibration sonucu dondurmuyor."
+          onRetry={() => void resultsQuery.refetch()}
+          loadingVariant="table"
+          loadingCount={5}
+        >
+          <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+            <table className="min-w-full text-sm">
+              <thead className="bg-[color:var(--surface-alt)] text-left text-xs uppercase tracking-[0.08em] text-[color:var(--muted)]">
+                <tr>
+                  <th className="px-3 py-2">Run</th>
+                  <th className="px-3 py-2">Status</th>
+                  <th className="px-3 py-2">Sample</th>
+                  <th className="px-3 py-2">Brier</th>
+                  <th className="px-3 py-2">ECE</th>
+                  <th className="px-3 py-2">Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map((item) => (
+                  <tr key={item.id} className="border-t border-[var(--border)]">
+                    <td className="px-3 py-2">{item.id}</td>
+                    <td className="px-3 py-2">{item.status ?? "-"}</td>
+                    <td className="px-3 py-2">{item.sampleSize ?? "-"}</td>
+                    <td className="px-3 py-2">{item.brierScore ?? "-"}</td>
+                    <td className="px-3 py-2">{item.ece ?? "-"}</td>
+                    <td className="px-3 py-2">{formatDateTime(item.updatedAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {runMutation.data?.data ? (
+            <EmptyState
+              title="Son Calibration Run"
+              description={`RunId: ${runMutation.data.data.runId ?? "-"} - Status: ${runMutation.data.data.status ?? "-"}`}
+            />
+          ) : null}
+        </DataFeedback>
+      </SectionCard>
+    </div>
+  );
+}
+
+
+
+
+===== FILE: app/admin/risk-monitor/page.tsx =====
+"use client";
+
+import dynamic from "next/dynamic";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { DataFeedback } from "@/components/states/DataFeedback";
+import { EmptyState } from "@/components/states/EmptyState";
+import { StatCard } from "@/components/ui/StatCard";
+import { usePredictionRiskSummary } from "@/lib/hooks/use-api";
+import { LoadingSkeleton } from "@/components/states/LoadingSkeleton";
+import { formatDateTime } from "@/lib/utils";
+
+const BarChart = dynamic(() => import("@/components/charts/BarChart").then((mod) => mod.BarChart), {
+  ssr: false,
+  loading: () => <LoadingSkeleton className="h-44" />
+});
+
+export default function AdminRiskMonitorPage() {
+  const riskSummaryQuery = usePredictionRiskSummary();
+  const summary = riskSummaryQuery.data?.data;
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Admin Risk Monitor"
+        description="Risk dagilimi, calibration health ve bayrak frekanslari"
+      />
+
+      <DataFeedback
+        isLoading={riskSummaryQuery.isLoading}
+        error={riskSummaryQuery.error as Error | undefined}
+        isEmpty={!summary}
+        emptyTitle="Risk ozeti bulunamadi"
+        emptyDescription="Risk summary endpoint su an veri dondurmuyor."
+        onRetry={() => void riskSummaryQuery.refetch()}
+      >
+        {summary ? (
+          <>
+            <section className="grid gap-3 sm:grid-cols-4">
+              <StatCard title="Total Predictions" value={String(summary.totalPredictions ?? 0)} />
+              <StatCard title="Low Risk" value={String(summary.low ?? 0)} tone="success" />
+              <StatCard title="Medium Risk" value={String(summary.medium ?? 0)} />
+              <StatCard title="High Risk" value={String(summary.high ?? 0)} tone="warning" />
+            </section>
+
+            <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+              <SectionCard title="Risk Dagilimi" subtitle="Admin endpoint: /api/v1/admin/predictions/risk-summary">
+                {(summary.low ?? 0) + (summary.medium ?? 0) + (summary.high ?? 0) > 0 ? (
+                  <BarChart
+                    data={[
+                      { label: "Low", value: summary.low ?? 0 },
+                      { label: "Medium", value: summary.medium ?? 0 },
+                      { label: "High", value: summary.high ?? 0 }
+                    ]}
+                  />
+                ) : (
+                  <EmptyState title="Dagilim verisi yok" description="Risk dagilim verisi henuz olusmadi." />
+                )}
+              </SectionCard>
+
+              <SectionCard title="Calibration Health" subtitle="Risk summary icindeki calibration ozeti">
+                {summary.calibrationHealthSummary ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                      <p className="text-xs text-[color:var(--muted)]">Status</p>
+                      <p className="font-semibold text-[color:var(--foreground)]">{summary.calibrationHealthSummary.status ?? "-"}</p>
+                    </article>
+                    <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                      <p className="text-xs text-[color:var(--muted)]">Brier</p>
+                      <p className="font-semibold text-[color:var(--foreground)]">{summary.calibrationHealthSummary.brierScore ?? "-"}</p>
+                    </article>
+                    <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                      <p className="text-xs text-[color:var(--muted)]">ECE</p>
+                      <p className="font-semibold text-[color:var(--foreground)]">{summary.calibrationHealthSummary.ece ?? "-"}</p>
+                    </article>
+                    <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                      <p className="text-xs text-[color:var(--muted)]">Updated</p>
+                      <p className="font-semibold text-[color:var(--foreground)]">{formatDateTime(summary.updatedAt)}</p>
+                    </article>
+                    <article className="sm:col-span-2 rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
+                      <p className="text-xs text-[color:var(--muted)]">Not</p>
+                      <p className="text-sm text-[color:var(--foreground)]">{summary.calibrationHealthSummary.note ?? "Not bulunmuyor."}</p>
+                    </article>
+                  </div>
+                ) : (
+                  <EmptyState title="Calibration ozeti yok" description="Bu endpointte calibration health bilgisi paylasilmadi." />
+                )}
+              </SectionCard>
+            </section>
+
+            <SectionCard title="Top Risk Flags" subtitle="En sik gorulen risk bayraklari">
+              {(summary.riskFlagsTop ?? []).length > 0 ? (
+                <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {(summary.riskFlagsTop ?? []).map((flag) => (
+                    <li key={flag.flag} className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-2">
+                      <p className="text-sm font-semibold text-[color:var(--foreground)]">{flag.flag}</p>
+                      <p className="text-xs text-[color:var(--muted)]">{flag.count} kayit</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState title="Risk flag kaydi yok" description="Risk flag dagilim listesi su an bos." />
+              )}
+            </SectionCard>
+          </>
+        ) : null}
+      </DataFeedback>
+    </div>
+  );
+}
+
+
+
+
+===== FILE: app/admin/low-confidence/page.tsx =====
+"use client";
+
+import { PageHeader } from "@/components/layout/PageHeader";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { DataFeedback } from "@/components/states/DataFeedback";
+import { EmptyState } from "@/components/states/EmptyState";
+import { useLowConfidencePredictions } from "@/lib/hooks/use-api";
+import { PredictionCard } from "@/components/cards/PredictionCard";
+
+export default function AdminLowConfidencePage() {
+  const lowConfidenceQuery = useLowConfidencePredictions({
+    pageSize: 20,
+    sortBy: "confidenceScore",
+    sortOrder: "asc",
+    isLowConfidence: true
+  });
+
+  const rows = lowConfidenceQuery.data?.data ?? [];
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Admin Low Confidence"
+        description="Dusuk confidence seviyesindeki prediction kayitlari"
+      />
+
+      <SectionCard title="Low Confidence Listesi" subtitle="Admin endpoint: /api/v1/admin/predictions/low-confidence">
+        <DataFeedback
+          isLoading={lowConfidenceQuery.isLoading}
+          error={lowConfidenceQuery.error as Error | undefined}
+          isEmpty={rows.length === 0}
+          emptyTitle="Dusuk confidence kaydi yok"
+          emptyDescription="Low-confidence endpoint su an bos kayit donduruyor."
+          onRetry={() => void lowConfidenceQuery.refetch()}
+          loadingCount={8}
+          loadingVariant="list"
+        >
+          <div className="grid gap-3 xl:grid-cols-2">
+            {rows.map((item) => (
+              <PredictionCard key={item.id} prediction={item} />
+            ))}
+          </div>
+
+          <EmptyState
+            tone="warning"
+            title="Operasyon Notu"
+            description="Dusuk confidence kayitlari otomatik engellenmez; bu panel karar destegi icin izleme amacli kullanilir."
+          />
+        </DataFeedback>
+      </SectionCard>
+    </div>
+  );
+}
+
+
+

@@ -1,0 +1,783 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+enum SportCode {
+  FOOTBALL
+  BASKETBALL
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  COMPLETED
+  POSTPONED
+  CANCELED
+}
+
+enum IngestionStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  DEAD_LETTER
+}
+
+enum PredictionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  name        String   @unique
+  description String?
+  users       User[]
+}
+
+model User {
+  id               String    @id @default(cuid())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+  email            String    @unique
+  username         String    @unique
+  fullName         String
+  passwordHash     String
+  refreshTokenHash String?
+  isActive         Boolean   @default(true)
+  roleId           String
+  role             Role      @relation(fields: [roleId], references: [id])
+  apiLogs          ApiLog[]
+  auditLogs        AuditLog[]
+}
+
+model Sport {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  code      SportCode @unique
+  name      String
+  isActive  Boolean   @default(true)
+  leagues   League[]
+  teams     Team[]
+  matches   Match[]
+}
+
+model Provider {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  code      String   @unique
+  name      String
+  baseUrl   String
+  isActive  Boolean  @default(true)
+
+  configs        ProviderConfig[]
+  teamMappings   ProviderTeamMapping[]
+  leagueMappings ProviderLeagueMapping[]
+  matchMappings  ProviderMatchMapping[]
+  ingestionJobs  IngestionJob[]
+  apiLogs        ApiLog[]
+}
+
+model ProviderConfig {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  providerId     String
+  key            String
+  valueEncrypted String
+  isEnabled      Boolean  @default(true)
+  provider       Provider @relation(fields: [providerId], references: [id])
+
+  @@unique([providerId, key])
+}
+
+model League {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  sportId     String
+  name        String
+  slug        String   @unique
+  country     String?
+  logoUrl     String?
+  isActive    Boolean  @default(true)
+  sport       Sport    @relation(fields: [sportId], references: [id])
+  seasons     Season[]
+  matches     Match[]
+  standings   StandingsSnapshot[]
+  backtestResults BacktestResult[]
+  comparisonSnapshots   ModelComparisonSnapshot[]
+  performanceTimeseries ModelPerformanceTimeseries[]
+  failedAnalyses        FailedPredictionAnalysis[]
+  modelStrategies       ModelStrategy[]
+  featureLabExperiments FeatureLabExperiment[]
+
+  leagueMappings ProviderLeagueMapping[]
+
+  @@index([sportId])
+}
+
+model Season {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+  leagueId   String
+  seasonYear Int
+  name       String
+  startDate  DateTime?
+  endDate    DateTime?
+  isCurrent  Boolean  @default(false)
+  league     League   @relation(fields: [leagueId], references: [id])
+  matches    Match[]
+  standings  StandingsSnapshot[]
+
+  @@unique([leagueId, seasonYear])
+  @@index([leagueId, isCurrent])
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  sportId     String
+  name        String
+  shortName   String?
+  slug        String   @unique
+  country     String?
+  logoUrl     String?
+  venue       String?
+  foundedYear Int?
+  sport       Sport    @relation(fields: [sportId], references: [id])
+  players     Player[]
+  homeMatches Match[]  @relation("homeTeam")
+  awayMatches Match[]  @relation("awayTeam")
+  standings   StandingsSnapshot[]
+  teamStats   TeamStat[]
+  formSnapshots TeamFormSnapshot[]
+  providerMaps ProviderTeamMapping[]
+
+  @@index([sportId])
+  @@index([name])
+  @@index([sportId, name])
+}
+
+model Player {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  teamId      String?
+  name        String
+  shortName   String?
+  nationality String?
+  position    String?
+  birthDate   DateTime?
+  photoUrl    String?
+  team        Team?    @relation(fields: [teamId], references: [id])
+  stats       PlayerStat[]
+
+  @@index([teamId])
+  @@index([name])
+}
+
+model Match {
+  id         String      @id @default(cuid())
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  deletedAt  DateTime?
+  sportId    String
+  leagueId   String
+  seasonId   String?
+  homeTeamId String
+  awayTeamId String
+  matchDate  DateTime
+  status     MatchStatus @default(SCHEDULED)
+  homeScore  Int?
+  awayScore  Int?
+  venue      String?
+  round      String?
+  timezone   String?
+
+  sport    Sport   @relation(fields: [sportId], references: [id])
+  league   League  @relation(fields: [leagueId], references: [id])
+  season   Season? @relation(fields: [seasonId], references: [id])
+  homeTeam Team    @relation("homeTeam", fields: [homeTeamId], references: [id])
+  awayTeam Team    @relation("awayTeam", fields: [awayTeamId], references: [id])
+
+  events           MatchEvent[]
+  teamStats        TeamStat[]
+  playerStats      PlayerStat[]
+  providerMappings ProviderMatchMapping[]
+  predictions      Prediction[]
+  featureSets      FeatureSet[]
+  failedAnalyses   FailedPredictionAnalysis[]
+
+  @@index([leagueId, matchDate])
+  @@index([matchDate, leagueId])
+  @@index([sportId, status, matchDate])
+  @@index([homeTeamId, matchDate])
+  @@index([awayTeamId, matchDate])
+}
+
+model MatchEvent {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  matchId   String
+  minute    Int?
+  type      String
+  teamId    String?
+  playerId  String?
+  payload   Json
+  match     Match    @relation(fields: [matchId], references: [id])
+
+  @@index([matchId, minute])
+}
+
+model StandingsSnapshot {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  leagueId     String
+  seasonId     String
+  teamId       String
+  rank         Int
+  played       Int
+  wins         Int
+  draws        Int
+  losses       Int
+  goalsFor     Int?
+  goalsAgainst Int?
+  points       Int
+  form         String?
+
+  league League @relation(fields: [leagueId], references: [id])
+  season Season @relation(fields: [seasonId], references: [id])
+  team   Team   @relation(fields: [teamId], references: [id])
+
+  @@unique([leagueId, seasonId, teamId])
+  @@index([leagueId, seasonId, rank])
+}
+
+model TeamStat {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  matchId       String
+  teamId        String
+  possession    Float?
+  shots         Int?
+  shotsOnTarget Int?
+  corners       Int?
+  fouls         Int?
+  payload       Json?
+
+  match Match @relation(fields: [matchId], references: [id])
+  team  Team  @relation(fields: [teamId], references: [id])
+
+  @@unique([matchId, teamId])
+  @@index([teamId, createdAt])
+}
+
+model PlayerStat {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  matchId   String
+  playerId  String
+  teamId    String?
+  minutes   Int?
+  points    Int?
+  assists   Int?
+  rebounds  Int?
+  goals     Int?
+  payload   Json?
+
+  match  Match  @relation(fields: [matchId], references: [id])
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([matchId, playerId])
+  @@index([playerId, createdAt])
+}
+
+model TeamFormSnapshot {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  teamId     String
+  leagueId   String?
+  wins       Int
+  draws      Int
+  losses     Int
+  scored     Int
+  conceded   Int
+  formString String
+  sampleSize Int
+
+  team Team @relation(fields: [teamId], references: [id])
+
+  @@index([teamId, createdAt])
+}
+
+model ProviderTeamMapping {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  providerId   String
+  teamId       String?
+  externalId   String
+  externalName String?
+  confidence   Float?
+  reviewNeeded Boolean  @default(false)
+  reviewReason String?
+  rawPayload   Json?
+
+  provider Provider @relation(fields: [providerId], references: [id])
+  team     Team?    @relation(fields: [teamId], references: [id])
+
+  @@unique([providerId, externalId])
+  @@unique([providerId, teamId])
+  @@index([teamId])
+  @@index([providerId, reviewNeeded])
+}
+
+model ProviderLeagueMapping {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  providerId   String
+  leagueId     String?
+  externalId   String
+  externalName String?
+  confidence   Float?
+  reviewNeeded Boolean  @default(false)
+  reviewReason String?
+  rawPayload   Json?
+
+  provider Provider @relation(fields: [providerId], references: [id])
+  league   League?  @relation(fields: [leagueId], references: [id])
+
+  @@unique([providerId, externalId])
+  @@unique([providerId, leagueId])
+  @@index([leagueId])
+  @@index([providerId, reviewNeeded])
+}
+
+model ProviderMatchMapping {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  providerId   String
+  matchId      String?
+  externalId   String
+  externalRef  String?
+  confidence   Float?
+  reviewNeeded Boolean  @default(false)
+  reviewReason String?
+  rawPayload   Json?
+
+  provider Provider @relation(fields: [providerId], references: [id])
+  match    Match?   @relation(fields: [matchId], references: [id])
+
+  @@unique([providerId, externalId])
+  @@unique([matchId, providerId])
+  @@index([matchId])
+  @@index([providerId, reviewNeeded])
+}
+
+model FeatureSet {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  matchId     String
+  modelFamily String
+  features    Json
+  qualityScore Float?
+
+  match Match @relation(fields: [matchId], references: [id])
+
+  @@unique([matchId, modelFamily])
+  @@index([matchId, modelFamily])
+}
+
+model ModelVersion {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  sportId   String?
+  key       String   @unique
+  name      String
+  version   String
+  status    String
+  metadata  Json?
+  metrics   Json?
+
+  predictions     Prediction[]
+  backtestResults BacktestResult[]
+  calibrations    PredictionCalibration[]
+  comparisonSnapshots   ModelComparisonSnapshot[]
+  performanceTimeseries ModelPerformanceTimeseries[]
+  featureImportances    FeatureImportanceSnapshot[]
+  failedAnalyses        FailedPredictionAnalysis[]
+  primaryStrategies     ModelStrategy[]          @relation("PrimaryModelStrategy")
+  fallbackStrategies    ModelStrategy[]          @relation("FallbackModelStrategy")
+  featureLabExperiments FeatureLabExperiment[]
+}
+
+model Prediction {
+  id              String           @id @default(cuid())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  matchId         String
+  modelVersionId  String
+  status          PredictionStatus @default(PUBLISHED)
+  probabilities   Json
+  expectedScore   Json?
+  confidenceScore Int
+  rawProbabilities Json?
+  calibratedProbabilities Json?
+  rawConfidenceScore Int?
+  calibratedConfidenceScore Int?
+  summary         String
+  riskFlags       Json?
+  isRecommended   Boolean          @default(true)
+  isLowConfidence Boolean          @default(false)
+  avoidReason     String?
+  modelStrategyId String?
+  usedStrategy    Json?
+
+  match        Match                 @relation(fields: [matchId], references: [id])
+  modelVersion ModelVersion          @relation(fields: [modelVersionId], references: [id])
+  explanation  PredictionExplanation?
+  failedAnalysis FailedPredictionAnalysis?
+  modelStrategy ModelStrategy?       @relation(fields: [modelStrategyId], references: [id])
+
+  @@unique([matchId, modelVersionId])
+  @@index([confidenceScore, createdAt])
+  @@index([isLowConfidence, confidenceScore, createdAt])
+  @@index([modelStrategyId, createdAt])
+}
+
+model ModelComparisonSnapshot {
+  id                 String   @id @default(cuid())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  modelVersionId     String
+  sport              String
+  leagueId           String?
+  scopeKey           String
+  fromDate           DateTime
+  toDate             DateTime
+  accuracy           Float
+  logLoss            Float
+  brierScore         Float
+  avgConfidenceScore Float
+  calibrationQuality Float
+  sampleSize         Int
+  metadata           Json?
+
+  modelVersion ModelVersion @relation(fields: [modelVersionId], references: [id])
+  league       League?      @relation(fields: [leagueId], references: [id])
+
+  @@index([modelVersionId, sport, scopeKey, createdAt])
+  @@index([leagueId, createdAt])
+  @@map("model_comparison_snapshots")
+}
+
+model ModelPerformanceTimeseries {
+  id                 String   @id @default(cuid())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  modelVersionId     String
+  sport              String
+  leagueId           String?
+  scopeKey           String
+  date               DateTime
+  accuracy           Float
+  logLoss            Float
+  brierScore         Float
+  avgConfidenceScore Float
+  calibrationQuality Float
+  sampleSize         Int
+
+  modelVersion ModelVersion @relation(fields: [modelVersionId], references: [id])
+  league       League?      @relation(fields: [leagueId], references: [id])
+
+  @@unique([modelVersionId, sport, scopeKey, date])
+  @@index([date, sport, scopeKey])
+  @@map("model_performance_timeseries")
+}
+
+model FeatureImportanceSnapshot {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  modelVersionId String
+  sport          String
+  featureName    String
+  importanceScore Float
+  sampleSize     Int
+  scopeKey       String
+  metadata       Json?
+
+  modelVersion ModelVersion @relation(fields: [modelVersionId], references: [id])
+
+  @@unique([modelVersionId, sport, featureName, scopeKey])
+  @@index([modelVersionId, sport, updatedAt])
+  @@index([sport, featureName, updatedAt])
+  @@map("feature_importance_snapshots")
+}
+
+model FailedPredictionAnalysis {
+  id               String   @id @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  predictionId     String   @unique
+  modelVersionId   String
+  matchId          String
+  sport            String
+  leagueId         String?
+  confidenceScore  Int
+  isHighConfidence Boolean
+  predictedOutcome String
+  actualOutcome    String
+  reasonFlags      Json
+  impacts          Json
+  summary          String
+
+  prediction   Prediction   @relation(fields: [predictionId], references: [id])
+  modelVersion ModelVersion @relation(fields: [modelVersionId], references: [id])
+  match        Match        @relation(fields: [matchId], references: [id])
+  league       League?      @relation(fields: [leagueId], references: [id])
+
+  @@index([modelVersionId, createdAt])
+  @@index([sport, createdAt])
+  @@index([leagueId, createdAt])
+  @@map("failed_prediction_analyses")
+}
+
+model PredictionExplanation {
+  id           String     @id @default(cuid())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  predictionId String     @unique
+  explanation  Json
+
+  prediction Prediction @relation(fields: [predictionId], references: [id])
+}
+
+model BacktestResult {
+  id               String   @id @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  modelVersionId   String
+  leagueId         String?
+  season           String?
+  fromDate         DateTime
+  toDate           DateTime
+  accuracy         Float
+  logLoss          Float
+  brierScore       Float
+  sampleSize       Int
+  calibrationCurve Json
+  comparison       Json
+
+  modelVersion ModelVersion @relation(fields: [modelVersionId], references: [id])
+  league       League?      @relation(fields: [leagueId], references: [id])
+
+  @@index([modelVersionId, createdAt])
+  @@index([leagueId, createdAt])
+}
+
+model PredictionCalibration {
+  id                 String   @id @default(cuid())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  modelVersionId     String
+  sport              String
+  predictionType     String
+  calibrationMethod  String
+  trainingSampleSize Int
+  calibrationParams  Json
+  calibrationMetrics Json
+  isActive           Boolean  @default(true)
+
+  modelVersion ModelVersion @relation(fields: [modelVersionId], references: [id])
+  modelStrategies ModelStrategy[]
+
+  @@index([modelVersionId, sport, predictionType, isActive])
+  @@index([createdAt])
+  @@map("prediction_calibrations")
+}
+
+model ModelStrategy {
+  id                    String   @id @default(cuid())
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  sport                 String
+  leagueId              String?
+  predictionType        String
+  primaryModelVersionId String
+  fallbackModelVersionId String?
+  ensembleConfig        Json
+  calibrationProfileId  String?
+  isActive              Boolean  @default(true)
+
+  league                League?               @relation(fields: [leagueId], references: [id])
+  primaryModelVersion   ModelVersion          @relation("PrimaryModelStrategy", fields: [primaryModelVersionId], references: [id])
+  fallbackModelVersion  ModelVersion?         @relation("FallbackModelStrategy", fields: [fallbackModelVersionId], references: [id])
+  calibrationProfile    PredictionCalibration? @relation(fields: [calibrationProfileId], references: [id])
+  predictions           Prediction[]
+
+  @@unique([sport, leagueId, predictionType])
+  @@index([sport, isActive, predictionType])
+  @@index([leagueId, isActive])
+  @@map("model_strategies")
+}
+
+model FeatureLabSet {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  sport           String
+  name            String
+  version         String
+  enabledFeatures Json
+  featureGroups   Json
+  isActive        Boolean  @default(false)
+  metadata        Json?
+
+  experiments FeatureLabExperiment[]
+
+  @@unique([sport, name, version])
+  @@index([sport, isActive])
+  @@map("feature_lab_sets")
+}
+
+model FeatureLabExperiment {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  featureSetId   String
+  modelVersionId String
+  sport          String
+  leagueId       String?
+  predictionType String
+  fromDate       DateTime
+  toDate         DateTime
+  status         String
+  sampleSize     Int
+  metrics        Json
+
+  featureSet   FeatureLabSet @relation(fields: [featureSetId], references: [id])
+  modelVersion ModelVersion  @relation(fields: [modelVersionId], references: [id])
+  league       League?       @relation(fields: [leagueId], references: [id])
+
+  @@index([featureSetId, createdAt])
+  @@index([modelVersionId, createdAt])
+  @@index([sport, createdAt])
+  @@map("feature_lab_experiments")
+}
+
+model IngestionJob {
+  id           String          @id @default(cuid())
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  providerId   String?
+  name         String
+  queueName    String
+  status       IngestionStatus @default(PENDING)
+  payload      Json?
+  scheduledAt  DateTime?
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  errorMessage String?
+
+  provider Provider?         @relation(fields: [providerId], references: [id])
+  runs     IngestionJobRun[]
+
+  @@index([queueName, status, createdAt])
+}
+
+model IngestionJobRun {
+  id             String          @id @default(cuid())
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  ingestionJobId String
+  status         IngestionStatus @default(PENDING)
+  attempt        Int             @default(1)
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  resultPayload  Json?
+  rawPayload     Json?
+  errorMessage   String?
+
+  ingestionJob IngestionJob @relation(fields: [ingestionJobId], references: [id])
+
+  @@index([ingestionJobId, createdAt])
+}
+
+model ApiLog {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String?
+  providerId    String?
+  path          String
+  method        String
+  statusCode    Int
+  durationMs    Int
+  correlationId String?
+  requestBody   Json?
+  responseBody  Json?
+  errorMessage  String?
+
+  user     User?     @relation(fields: [userId], references: [id])
+  provider Provider? @relation(fields: [providerId], references: [id])
+
+  @@index([createdAt, statusCode])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String?
+  action     String
+  targetType String
+  targetId   String?
+  payload    Json?
+  ipAddress  String?
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([createdAt, action])
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  key         String   @unique
+  value       Json
+  description String?
+  isPublic    Boolean  @default(false)
+}

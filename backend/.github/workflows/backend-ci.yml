@@ -1,0 +1,61 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tahminx_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tahminx_ci
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      JWT_ACCESS_SECRET: ci_access_secret_1234567890
+      JWT_REFRESH_SECRET: ci_refresh_secret_1234567890
+      CORS_ORIGIN: http://localhost:3001
+      CORS_METHODS: GET,POST,PATCH,PUT,DELETE,OPTIONS
+      CORS_HEADERS: Content-Type,Authorization,X-Correlation-Id
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Prisma generate
+        run: npm run prisma:generate
+      - name: Prisma migrate deploy
+        run: npm run prisma:deploy
+      - name: Seed
+        run: npm run prisma:seed
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test -- --runInBand
+      - name: E2E tests
+        run: npm run test:e2e -- --runInBand
+      - name: Build
+        run: npm run build
+

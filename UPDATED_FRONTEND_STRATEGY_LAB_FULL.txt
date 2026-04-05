@@ -1,0 +1,4977 @@
+﻿
+===== FILE: types/api-contract.ts =====
+export type SportKey = "football" | "basketball" | string;
+
+export interface ApiError {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  generatedAt?: string;
+  updatedAt?: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  meta?: PaginationMeta;
+  error?: ApiError | null;
+}
+
+export interface Sport {
+  id: string;
+  key: SportKey;
+  name: string;
+  logoUrl?: string | null;
+}
+
+export interface LeagueListItem {
+  id: string;
+  sportId: string;
+  sportKey: SportKey;
+  name: string;
+  country: string;
+  season: string;
+  logoUrl?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface LeagueDetail extends LeagueListItem {
+  description?: string | null;
+  statsSummary?: {
+    avgScore: number | null;
+    homeWinRate: number | null;
+    awayWinRate: number | null;
+    drawRate?: number | null;
+  };
+}
+
+export interface StandingRow {
+  position: number;
+  teamId: string;
+  teamName: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  points: number;
+  goalsFor?: number | null;
+  goalsAgainst?: number | null;
+  form: Array<"W" | "D" | "L">;
+}
+
+export interface TeamListItem {
+  id: string;
+  leagueId: string;
+  sportId: string;
+  sportKey: SportKey;
+  name: string;
+  shortName?: string | null;
+  city?: string | null;
+  logoUrl?: string | null;
+}
+
+export interface TeamDetail extends TeamListItem {
+  country?: string | null;
+  foundedYear?: number | null;
+  coach?: string | null;
+  homeMetric?: number | null;
+  awayMetric?: number | null;
+  attackMetric?: number | null;
+  defenseMetric?: number | null;
+}
+
+export interface TeamFormPoint {
+  date: string;
+  opponent: string;
+  result: "W" | "D" | "L";
+  scoreFor?: number | null;
+  scoreAgainst?: number | null;
+  value?: number | null;
+}
+
+export type MatchStatus = "scheduled" | "live" | "completed" | "postponed" | "cancelled";
+
+export interface MatchListItem {
+  id: string;
+  sportKey: SportKey;
+  leagueId: string;
+  leagueName: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  homeTeamName: string;
+  awayTeamName: string;
+  homeLogoUrl?: string | null;
+  awayLogoUrl?: string | null;
+  kickoffAt: string;
+  status: MatchStatus;
+  scoreHome?: number | null;
+  scoreAway?: number | null;
+  confidenceScore?: number | null;
+}
+
+export interface MatchDetail extends MatchListItem {
+  venue?: string | null;
+  round?: string | null;
+  summary?: string | null;
+  expectedScoreHome?: number | null;
+  expectedScoreAway?: number | null;
+  riskFlags?: string[] | null;
+  h2hSummary?: string | null;
+}
+
+export interface MatchEvent {
+  id: string;
+  minute: number | null;
+  teamId?: string | null;
+  teamName?: string | null;
+  type: string;
+  title: string;
+  description?: string | null;
+}
+
+export interface MatchStats {
+  possessionHome?: number | null;
+  possessionAway?: number | null;
+  shotsHome?: number | null;
+  shotsAway?: number | null;
+  shotsOnTargetHome?: number | null;
+  shotsOnTargetAway?: number | null;
+  xgHome?: number | null;
+  xgAway?: number | null;
+  paceHome?: number | null;
+  paceAway?: number | null;
+  efficiencyHome?: number | null;
+  efficiencyAway?: number | null;
+}
+
+export interface MatchPrediction {
+  matchId: string;
+  expectedScore: {
+    home: number | null;
+    away: number | null;
+  };
+  probabilities: {
+    home: number;
+    draw?: number | null;
+    away: number;
+  };
+  confidenceScore?: number | null;
+  riskFlags?: string[] | null;
+  modelExplanation?: string | null;
+  summary?: string | null;
+  isLowConfidence?: boolean;
+  isRecommended?: boolean;
+}
+
+export interface PredictionItem {
+  id: string;
+  matchId: string;
+  sportKey: SportKey;
+  leagueId: string;
+  leagueName: string;
+  homeTeamName: string;
+  awayTeamName: string;
+  kickoffAt: string;
+  confidenceScore?: number | null;
+  riskLevel: "low" | "medium" | "high";
+  expectedScore: {
+    home: number | null;
+    away: number | null;
+  };
+  probabilities: {
+    home: number;
+    draw?: number | null;
+    away: number;
+  };
+  modelSummary: string;
+  riskFlags?: string[] | null;
+  isLowConfidence?: boolean;
+  isRecommended?: boolean;
+}
+
+export interface RiskDistributionSummary {
+  low: number;
+  medium: number;
+  high: number;
+  updatedAt?: string | null;
+}
+
+export interface CalibrationHealthSummary {
+  status?: string | null;
+  brierScore?: number | null;
+  ece?: number | null;
+  reliability?: number | null;
+  note?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface DashboardSummary {
+  todayMatchCount: number;
+  liveMatchCount: number;
+  highConfidencePredictionCount: number;
+  updatedLeagues: LeagueListItem[];
+  highConfidencePredictions: PredictionItem[];
+  recentPredictions: PredictionItem[];
+  todayMatches: MatchListItem[];
+  miniTrends: Array<{ label: string; values: number[] }>;
+  calibratedHighConfidenceCount?: number | null;
+  lowConfidenceCount?: number | null;
+  avgConfidenceScore?: number | null;
+  riskDistribution?: RiskDistributionSummary | null;
+  calibrationHealthSummary?: CalibrationHealthSummary | null;
+}
+
+export interface GuideSummary {
+  title: string;
+  sections: Array<{ heading: string; text: string }>;
+}
+
+export interface TeamSquadPlayer {
+  id: string;
+  name: string;
+  position: string;
+  number?: number | null;
+  status?: string | null;
+}
+
+export interface CalibrationResult {
+  id: string;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  sampleSize?: number | null;
+  brierScore?: number | null;
+  ece?: number | null;
+  reliability?: number | null;
+  status?: string | null;
+  note?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface CalibrationRunResponse {
+  runId?: string | null;
+  startedAt?: string | null;
+  message?: string | null;
+  status?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface PredictionRiskSummary {
+  totalPredictions?: number | null;
+  low?: number | null;
+  medium?: number | null;
+  high?: number | null;
+  riskFlagsTop?: Array<{ flag: string; count: number }>;
+  calibrationHealthSummary?: CalibrationHealthSummary | null;
+  updatedAt?: string | null;
+}
+
+export interface ComparisonMetric {
+  name: string;
+  value?: number | null;
+  delta?: number | null;
+  rating?: string | null;
+}
+
+export interface ModelComparisonItem {
+  modelVersion: string;
+  sportKey: SportKey;
+  leagueId?: string | null;
+  leagueName?: string | null;
+  accuracy?: number | null;
+  logLoss?: number | null;
+  brierScore?: number | null;
+  avgConfidenceScore?: number | null;
+  calibrationQuality?: number | null;
+  sampleSize?: number | null;
+  metrics?: ComparisonMetric[];
+  updatedAt?: string | null;
+}
+
+export interface FeatureContribution {
+  feature: string;
+  score: number;
+  direction?: "positive" | "negative" | "neutral" | string;
+  description?: string | null;
+}
+
+export interface FeatureImportanceItem {
+  modelVersion: string;
+  sportKey: SportKey;
+  updatedAt?: string | null;
+  features: FeatureContribution[];
+}
+
+export interface FailedPredictionItem {
+  id: string;
+  matchId: string;
+  matchLabel: string;
+  sportKey: SportKey;
+  leagueId: string;
+  leagueName: string;
+  modelVersion?: string | null;
+  predictedResult: string;
+  actualResult: string;
+  confidenceScore?: number | null;
+  riskFlags?: string[] | null;
+  failureReasonSummary?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface FailedPredictionDetail extends FailedPredictionItem {
+  summary?: string | null;
+  probabilities?: {
+    home: number;
+    draw?: number | null;
+    away: number;
+  } | null;
+  expectedScore?: {
+    home: number | null;
+    away: number | null;
+  } | null;
+  heuristicAnalysis?: {
+    missingDataImpact?: string | null;
+    staleStatsImpact?: string | null;
+    modelDisagreementImpact?: string | null;
+    upsetScenario?: string | null;
+    weakMappingConfidence?: string | null;
+    injuryUncertainty?: string | null;
+  } | null;
+}
+
+export interface ModelPerformancePoint {
+  timestamp: string;
+  sportKey?: SportKey | null;
+  leagueId?: string | null;
+  leagueName?: string | null;
+  modelVersion?: string | null;
+  accuracy?: number | null;
+  logLoss?: number | null;
+  brierScore?: number | null;
+  avgConfidenceScore?: number | null;
+  sampleSize?: number | null;
+}
+
+export interface DriftSummary {
+  metric: string;
+  recent7d?: number | null;
+  previous30d?: number | null;
+  delta?: number | null;
+  status?: string | null;
+}
+
+export interface PerformanceDriftSummary {
+  performanceDropDetected?: boolean | null;
+  confidenceDriftDetected?: boolean | null;
+  calibrationDriftDetected?: boolean | null;
+  summaries?: DriftSummary[];
+  updatedAt?: string | null;
+}
+
+export interface StrategySummary {
+  totalStrategies?: number | null;
+  activeStrategies?: number | null;
+  autoSelectedAt?: string | null;
+  note?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface ModelStrategy {
+  id: string;
+  sportKey: SportKey;
+  leagueId?: string | null;
+  leagueName?: string | null;
+  predictionType: string;
+  primaryModel: string;
+  fallbackModel?: string | null;
+  isActive: boolean;
+  summary?: StrategySummary | null;
+  updatedAt?: string | null;
+}
+
+export interface EnsembleWeight {
+  model: string;
+  weight: number;
+}
+
+export interface EnsembleConfig {
+  id: string;
+  sportKey: SportKey;
+  leagueId?: string | null;
+  leagueName?: string | null;
+  modelVersion?: string | null;
+  weights: EnsembleWeight[];
+  isActive?: boolean | null;
+  normalizedWeightTotal?: number | null;
+  updatedAt?: string | null;
+}
+
+export interface FeatureEntry {
+  key: string;
+  label: string;
+  enabled: boolean;
+}
+
+export interface FeatureGroup {
+  id: string;
+  sportKey: SportKey;
+  name: string;
+  description?: string | null;
+  isEnabled: boolean;
+  features: FeatureEntry[];
+  updatedAt?: string | null;
+}
+
+export interface FeatureSet {
+  id: string;
+  sportKey: SportKey;
+  name: string;
+  template?: string | null;
+  featureKeys: string[];
+  isActive: boolean;
+  updatedAt?: string | null;
+}
+
+export interface FeatureLabTemplate {
+  id: string;
+  sportKey: SportKey;
+  label: string;
+  description?: string | null;
+}
+
+export interface FeatureLab {
+  featureGroups: FeatureGroup[];
+  featureSets: FeatureSet[];
+  templates: FeatureLabTemplate[];
+  activeFeatureSetId?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface FeatureExperiment {
+  id: string;
+  modelVersion: string;
+  featureSetId: string;
+  leagueId: string;
+  sportKey?: SportKey | null;
+  from: string;
+  to: string;
+  status: "queued" | "running" | "completed" | "failed" | string;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface FeatureExperimentResult {
+  id: string;
+  experimentId: string;
+  modelVersion: string;
+  featureSetId: string;
+  featureSetName?: string | null;
+  leagueId: string;
+  leagueName?: string | null;
+  accuracy?: number | null;
+  logLoss?: number | null;
+  brierScore?: number | null;
+  sampleSize?: number | null;
+  isWinner?: boolean;
+  updatedAt?: string | null;
+}
+
+
+
+===== FILE: lib/api/contract-schemas.ts =====
+import { z } from "zod";
+
+export const apiErrorSchema = z.object({
+  code: z.string(),
+  message: z.string(),
+  details: z.unknown().optional()
+});
+
+export const paginationMetaSchema = z.object({
+  page: z.number(),
+  pageSize: z.number(),
+  total: z.number(),
+  totalPages: z.number(),
+  generatedAt: z.string().optional(),
+  updatedAt: z.string().optional()
+});
+
+export const apiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    success: z.boolean(),
+    data: dataSchema,
+    meta: paginationMetaSchema.optional(),
+    error: apiErrorSchema.nullable().optional()
+  });
+
+export const sportSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  name: z.string(),
+  logoUrl: z.string().nullable().optional()
+});
+
+export const leagueListItemSchema = z.object({
+  id: z.string(),
+  sportId: z.string(),
+  sportKey: z.string(),
+  name: z.string(),
+  country: z.string(),
+  season: z.string(),
+  logoUrl: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const leagueDetailSchema = leagueListItemSchema.extend({
+  description: z.string().nullable().optional(),
+  statsSummary: z
+    .object({
+      avgScore: z.number().nullable(),
+      homeWinRate: z.number().nullable(),
+      awayWinRate: z.number().nullable(),
+      drawRate: z.number().nullable().optional()
+    })
+    .optional()
+});
+
+export const standingRowSchema = z.object({
+  position: z.number(),
+  teamId: z.string(),
+  teamName: z.string(),
+  played: z.number(),
+  won: z.number(),
+  drawn: z.number(),
+  lost: z.number(),
+  points: z.number(),
+  goalsFor: z.number().nullable().optional(),
+  goalsAgainst: z.number().nullable().optional(),
+  form: z.array(z.enum(["W", "D", "L"]))
+});
+
+export const teamListItemSchema = z.object({
+  id: z.string(),
+  leagueId: z.string(),
+  sportId: z.string(),
+  sportKey: z.string(),
+  name: z.string(),
+  shortName: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  logoUrl: z.string().nullable().optional()
+});
+
+export const teamDetailSchema = teamListItemSchema.extend({
+  country: z.string().nullable().optional(),
+  foundedYear: z.number().nullable().optional(),
+  coach: z.string().nullable().optional(),
+  homeMetric: z.number().nullable().optional(),
+  awayMetric: z.number().nullable().optional(),
+  attackMetric: z.number().nullable().optional(),
+  defenseMetric: z.number().nullable().optional()
+});
+
+export const teamFormPointSchema = z.object({
+  date: z.string(),
+  opponent: z.string(),
+  result: z.enum(["W", "D", "L"]),
+  scoreFor: z.number().nullable().optional(),
+  scoreAgainst: z.number().nullable().optional(),
+  value: z.number().nullable().optional()
+});
+
+export const matchListItemSchema = z.object({
+  id: z.string(),
+  sportKey: z.string(),
+  leagueId: z.string(),
+  leagueName: z.string(),
+  homeTeamId: z.string(),
+  awayTeamId: z.string(),
+  homeTeamName: z.string(),
+  awayTeamName: z.string(),
+  homeLogoUrl: z.string().nullable().optional(),
+  awayLogoUrl: z.string().nullable().optional(),
+  kickoffAt: z.string(),
+  status: z.enum(["scheduled", "live", "completed", "postponed", "cancelled"]),
+  scoreHome: z.number().nullable().optional(),
+  scoreAway: z.number().nullable().optional(),
+  confidenceScore: z.number().nullable().optional()
+});
+
+export const matchDetailSchema = matchListItemSchema.extend({
+  venue: z.string().nullable().optional(),
+  round: z.string().nullable().optional(),
+  summary: z.string().nullable().optional(),
+  expectedScoreHome: z.number().nullable().optional(),
+  expectedScoreAway: z.number().nullable().optional(),
+  riskFlags: z.array(z.string()).nullable().optional(),
+  h2hSummary: z.string().nullable().optional()
+});
+
+export const matchEventSchema = z.object({
+  id: z.string(),
+  minute: z.number().nullable(),
+  teamId: z.string().nullable().optional(),
+  teamName: z.string().nullable().optional(),
+  type: z.string(),
+  title: z.string(),
+  description: z.string().nullable().optional()
+});
+
+export const matchStatsSchema = z.object({
+  possessionHome: z.number().nullable().optional(),
+  possessionAway: z.number().nullable().optional(),
+  shotsHome: z.number().nullable().optional(),
+  shotsAway: z.number().nullable().optional(),
+  shotsOnTargetHome: z.number().nullable().optional(),
+  shotsOnTargetAway: z.number().nullable().optional(),
+  xgHome: z.number().nullable().optional(),
+  xgAway: z.number().nullable().optional(),
+  paceHome: z.number().nullable().optional(),
+  paceAway: z.number().nullable().optional(),
+  efficiencyHome: z.number().nullable().optional(),
+  efficiencyAway: z.number().nullable().optional()
+});
+
+export const matchPredictionSchema = z.object({
+  matchId: z.string(),
+  expectedScore: z.object({
+    home: z.number().nullable(),
+    away: z.number().nullable()
+  }),
+  probabilities: z.object({
+    home: z.number(),
+    draw: z.number().nullable().optional(),
+    away: z.number()
+  }),
+  confidenceScore: z.number().nullable().optional(),
+  riskFlags: z.array(z.string()).nullable().optional(),
+  modelExplanation: z.string().nullable().optional(),
+  summary: z.string().nullable().optional(),
+  isLowConfidence: z.boolean().optional(),
+  isRecommended: z.boolean().optional()
+});
+
+export const predictionItemSchema = z.object({
+  id: z.string(),
+  matchId: z.string(),
+  sportKey: z.string(),
+  leagueId: z.string(),
+  leagueName: z.string(),
+  homeTeamName: z.string(),
+  awayTeamName: z.string(),
+  kickoffAt: z.string(),
+  confidenceScore: z.number().nullable().optional(),
+  riskLevel: z.enum(["low", "medium", "high"]),
+  expectedScore: z.object({
+    home: z.number().nullable(),
+    away: z.number().nullable()
+  }),
+  probabilities: z.object({
+    home: z.number(),
+    draw: z.number().nullable().optional(),
+    away: z.number()
+  }),
+  modelSummary: z.string(),
+  riskFlags: z.array(z.string()).nullable().optional(),
+  isLowConfidence: z.boolean().optional(),
+  isRecommended: z.boolean().optional()
+});
+
+export const calibrationHealthSummarySchema = z.object({
+  status: z.string().nullable().optional(),
+  brierScore: z.number().nullable().optional(),
+  ece: z.number().nullable().optional(),
+  reliability: z.number().nullable().optional(),
+  note: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const riskDistributionSummarySchema = z.object({
+  low: z.number(),
+  medium: z.number(),
+  high: z.number(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const dashboardSummarySchema = z.object({
+  todayMatchCount: z.number(),
+  liveMatchCount: z.number(),
+  highConfidencePredictionCount: z.number(),
+  updatedLeagues: z.array(leagueListItemSchema),
+  highConfidencePredictions: z.array(predictionItemSchema),
+  recentPredictions: z.array(predictionItemSchema),
+  todayMatches: z.array(matchListItemSchema),
+  miniTrends: z.array(
+    z.object({
+      label: z.string(),
+      values: z.array(z.number())
+    })
+  ),
+  calibratedHighConfidenceCount: z.number().nullable().optional(),
+  lowConfidenceCount: z.number().nullable().optional(),
+  avgConfidenceScore: z.number().nullable().optional(),
+  riskDistribution: riskDistributionSummarySchema.nullable().optional(),
+  calibrationHealthSummary: calibrationHealthSummarySchema.nullable().optional()
+});
+
+export const guideSummarySchema = z.object({
+  title: z.string(),
+  sections: z.array(
+    z.object({
+      heading: z.string(),
+      text: z.string()
+    })
+  )
+});
+
+export const teamSquadPlayerSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  position: z.string(),
+  number: z.number().nullable().optional(),
+  status: z.string().nullable().optional()
+});
+
+export const calibrationResultSchema = z.object({
+  id: z.string(),
+  startedAt: z.string().nullable().optional(),
+  finishedAt: z.string().nullable().optional(),
+  sampleSize: z.number().nullable().optional(),
+  brierScore: z.number().nullable().optional(),
+  ece: z.number().nullable().optional(),
+  reliability: z.number().nullable().optional(),
+  status: z.string().nullable().optional(),
+  note: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const calibrationRunResponseSchema = z.object({
+  runId: z.string().nullable().optional(),
+  startedAt: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const predictionRiskSummarySchema = z.object({
+  totalPredictions: z.number().nullable().optional(),
+  low: z.number().nullable().optional(),
+  medium: z.number().nullable().optional(),
+  high: z.number().nullable().optional(),
+  riskFlagsTop: z.array(z.object({ flag: z.string(), count: z.number() })).optional(),
+  calibrationHealthSummary: calibrationHealthSummarySchema.nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const comparisonMetricSchema = z.object({
+  name: z.string(),
+  value: z.number().nullable().optional(),
+  delta: z.number().nullable().optional(),
+  rating: z.string().nullable().optional()
+});
+
+export const modelComparisonItemSchema = z.object({
+  modelVersion: z.string(),
+  sportKey: z.string(),
+  leagueId: z.string().nullable().optional(),
+  leagueName: z.string().nullable().optional(),
+  accuracy: z.number().nullable().optional(),
+  logLoss: z.number().nullable().optional(),
+  brierScore: z.number().nullable().optional(),
+  avgConfidenceScore: z.number().nullable().optional(),
+  calibrationQuality: z.number().nullable().optional(),
+  sampleSize: z.number().nullable().optional(),
+  metrics: z.array(comparisonMetricSchema).optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const featureContributionSchema = z.object({
+  feature: z.string(),
+  score: z.number(),
+  direction: z.string().optional(),
+  description: z.string().nullable().optional()
+});
+
+export const featureImportanceItemSchema = z.object({
+  modelVersion: z.string(),
+  sportKey: z.string(),
+  updatedAt: z.string().nullable().optional(),
+  features: z.array(featureContributionSchema)
+});
+
+export const failedPredictionItemSchema = z.object({
+  id: z.string(),
+  matchId: z.string(),
+  matchLabel: z.string(),
+  sportKey: z.string(),
+  leagueId: z.string(),
+  leagueName: z.string(),
+  modelVersion: z.string().nullable().optional(),
+  predictedResult: z.string(),
+  actualResult: z.string(),
+  confidenceScore: z.number().nullable().optional(),
+  riskFlags: z.array(z.string()).nullable().optional(),
+  failureReasonSummary: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const failedPredictionDetailSchema = failedPredictionItemSchema.extend({
+  summary: z.string().nullable().optional(),
+  probabilities: z
+    .object({
+      home: z.number(),
+      draw: z.number().nullable().optional(),
+      away: z.number()
+    })
+    .nullable()
+    .optional(),
+  expectedScore: z
+    .object({
+      home: z.number().nullable(),
+      away: z.number().nullable()
+    })
+    .nullable()
+    .optional(),
+  heuristicAnalysis: z
+    .object({
+      missingDataImpact: z.string().nullable().optional(),
+      staleStatsImpact: z.string().nullable().optional(),
+      modelDisagreementImpact: z.string().nullable().optional(),
+      upsetScenario: z.string().nullable().optional(),
+      weakMappingConfidence: z.string().nullable().optional(),
+      injuryUncertainty: z.string().nullable().optional()
+    })
+    .nullable()
+    .optional()
+});
+
+export const modelPerformancePointSchema = z.object({
+  timestamp: z.string(),
+  sportKey: z.string().nullable().optional(),
+  leagueId: z.string().nullable().optional(),
+  leagueName: z.string().nullable().optional(),
+  modelVersion: z.string().nullable().optional(),
+  accuracy: z.number().nullable().optional(),
+  logLoss: z.number().nullable().optional(),
+  brierScore: z.number().nullable().optional(),
+  avgConfidenceScore: z.number().nullable().optional(),
+  sampleSize: z.number().nullable().optional()
+});
+
+export const driftSummarySchema = z.object({
+  metric: z.string(),
+  recent7d: z.number().nullable().optional(),
+  previous30d: z.number().nullable().optional(),
+  delta: z.number().nullable().optional(),
+  status: z.string().nullable().optional()
+});
+
+export const performanceDriftSummarySchema = z.object({
+  performanceDropDetected: z.boolean().nullable().optional(),
+  confidenceDriftDetected: z.boolean().nullable().optional(),
+  calibrationDriftDetected: z.boolean().nullable().optional(),
+  summaries: z.array(driftSummarySchema).optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const strategySummarySchema = z.object({
+  totalStrategies: z.number().nullable().optional(),
+  activeStrategies: z.number().nullable().optional(),
+  autoSelectedAt: z.string().nullable().optional(),
+  note: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const modelStrategySchema = z.object({
+  id: z.string(),
+  sportKey: z.string(),
+  leagueId: z.string().nullable().optional(),
+  leagueName: z.string().nullable().optional(),
+  predictionType: z.string(),
+  primaryModel: z.string(),
+  fallbackModel: z.string().nullable().optional(),
+  isActive: z.boolean(),
+  summary: strategySummarySchema.nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const ensembleWeightSchema = z.object({
+  model: z.string(),
+  weight: z.number()
+});
+
+export const ensembleConfigSchema = z.object({
+  id: z.string(),
+  sportKey: z.string(),
+  leagueId: z.string().nullable().optional(),
+  leagueName: z.string().nullable().optional(),
+  modelVersion: z.string().nullable().optional(),
+  weights: z.array(ensembleWeightSchema),
+  isActive: z.boolean().nullable().optional(),
+  normalizedWeightTotal: z.number().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const featureEntrySchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  enabled: z.boolean()
+});
+
+export const featureGroupSchema = z.object({
+  id: z.string(),
+  sportKey: z.string(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  isEnabled: z.boolean(),
+  features: z.array(featureEntrySchema),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const featureSetSchema = z.object({
+  id: z.string(),
+  sportKey: z.string(),
+  name: z.string(),
+  template: z.string().nullable().optional(),
+  featureKeys: z.array(z.string()),
+  isActive: z.boolean(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const featureLabTemplateSchema = z.object({
+  id: z.string(),
+  sportKey: z.string(),
+  label: z.string(),
+  description: z.string().nullable().optional()
+});
+
+export const featureLabSchema = z.object({
+  featureGroups: z.array(featureGroupSchema),
+  featureSets: z.array(featureSetSchema),
+  templates: z.array(featureLabTemplateSchema),
+  activeFeatureSetId: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const featureExperimentSchema = z.object({
+  id: z.string(),
+  modelVersion: z.string(),
+  featureSetId: z.string(),
+  leagueId: z.string(),
+  sportKey: z.string().nullable().optional(),
+  from: z.string(),
+  to: z.string(),
+  status: z.string(),
+  startedAt: z.string().nullable().optional(),
+  finishedAt: z.string().nullable().optional(),
+  createdAt: z.string().nullable().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+export const featureExperimentResultSchema = z.object({
+  id: z.string(),
+  experimentId: z.string(),
+  modelVersion: z.string(),
+  featureSetId: z.string(),
+  featureSetName: z.string().nullable().optional(),
+  leagueId: z.string(),
+  leagueName: z.string().nullable().optional(),
+  accuracy: z.number().nullable().optional(),
+  logLoss: z.number().nullable().optional(),
+  brierScore: z.number().nullable().optional(),
+  sampleSize: z.number().nullable().optional(),
+  isWinner: z.boolean().optional(),
+  updatedAt: z.string().nullable().optional()
+});
+
+
+
+===== FILE: lib/api/query.ts =====
+import type { SportKey } from "@/types/api-contract";
+
+export interface ListQuery {
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface MatchQuery extends ListQuery {
+  sport?: SportKey | "all";
+  leagueId?: string;
+  teamId?: string;
+  status?: string;
+  date?: string;
+  from?: string;
+  to?: string;
+  minConfidence?: number;
+}
+
+export interface PredictionQuery extends ListQuery {
+  sport?: SportKey | "all";
+  leagueId?: string;
+  teamId?: string;
+  status?: string;
+  date?: string;
+  from?: string;
+  to?: string;
+  minConfidence?: number;
+  isLowConfidence?: boolean;
+  isRecommended?: boolean;
+}
+
+export interface AdminAnalyticsQuery extends ListQuery {
+  sport?: SportKey | "all";
+  leagueId?: string;
+  modelVersion?: string;
+  predictionType?: string;
+  isActive?: boolean;
+  from?: string;
+  to?: string;
+}
+
+export interface FailedPredictionQuery extends AdminAnalyticsQuery {
+  onlyHighConfidenceFailed?: boolean;
+}
+
+export type StrategyQuery = AdminAnalyticsQuery;
+
+export interface FeatureExperimentResultsQuery extends AdminAnalyticsQuery {
+  featureSetId?: string;
+  experimentId?: string;
+}
+
+export const toQueryString = (query?: Record<string, string | number | boolean | undefined | null>) => {
+  if (!query) return "";
+  const params = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "" || value === "all") return;
+    params.set(key, String(value));
+  });
+  const text = params.toString();
+  return text.length > 0 ? `?${text}` : "";
+};
+
+
+
+===== FILE: lib/api/client.ts =====
+import { z } from "zod";
+import {
+  calibrationResultSchema,
+  calibrationRunResponseSchema,
+  dashboardSummarySchema,
+  ensembleConfigSchema,
+  featureExperimentResultSchema,
+  featureExperimentSchema,
+  featureLabSchema,
+  failedPredictionDetailSchema,
+  failedPredictionItemSchema,
+  featureImportanceItemSchema,
+  guideSummarySchema,
+  leagueDetailSchema,
+  leagueListItemSchema,
+  matchDetailSchema,
+  matchEventSchema,
+  matchListItemSchema,
+  matchPredictionSchema,
+  matchStatsSchema,
+  modelComparisonItemSchema,
+  modelPerformancePointSchema,
+  modelStrategySchema,
+  performanceDriftSummarySchema,
+  predictionItemSchema,
+  predictionRiskSummarySchema,
+  strategySummarySchema,
+  sportSchema,
+  standingRowSchema,
+  teamDetailSchema,
+  teamFormPointSchema,
+  teamListItemSchema,
+  teamSquadPlayerSchema
+} from "@/lib/api/contract-schemas";
+import { publicRequest } from "@/lib/api/http-client";
+import {
+  toQueryString,
+  type AdminAnalyticsQuery,
+  type FeatureExperimentResultsQuery,
+  type FailedPredictionQuery,
+  type MatchQuery,
+  type PredictionQuery,
+  type StrategyQuery
+} from "@/lib/api/query";
+
+const listQueryToPath = (
+  path: string,
+  query?:
+    | MatchQuery
+    | PredictionQuery
+    | AdminAnalyticsQuery
+    | FeatureExperimentResultsQuery
+    | FailedPredictionQuery
+    | StrategyQuery
+    | Record<string, string | number | boolean | null | undefined>
+) => `${path}${toQueryString(query as Record<string, string | number | boolean | null | undefined> | undefined)}`;
+
+export const apiClient = {
+  getSports: () => publicRequest("/sports", z.array(sportSchema)),
+
+  getLeagues: (query?: MatchQuery) => publicRequest(listQueryToPath("/leagues", query), z.array(leagueListItemSchema)),
+  getLeagueDetail: (leagueId: string) => publicRequest(`/leagues/${leagueId}`, leagueDetailSchema),
+  getLeagueStandings: (leagueId: string) => publicRequest(`/leagues/${leagueId}/standings`, z.array(standingRowSchema)),
+
+  getTeams: (query?: MatchQuery) => publicRequest(listQueryToPath("/teams", query), z.array(teamListItemSchema)),
+  getTeamDetail: (teamId: string) => publicRequest(`/teams/${teamId}`, teamDetailSchema),
+  getTeamMatches: (teamId: string, query?: MatchQuery) =>
+    publicRequest(listQueryToPath(`/teams/${teamId}/matches`, query), z.array(matchListItemSchema)),
+  getTeamForm: (teamId: string) => publicRequest(`/teams/${teamId}/form`, z.array(teamFormPointSchema)),
+  getTeamSquad: (teamId: string) => publicRequest(`/teams/${teamId}/squad`, z.array(teamSquadPlayerSchema)),
+
+  getMatches: (query?: MatchQuery) => publicRequest(listQueryToPath("/matches", query), z.array(matchListItemSchema)),
+  getTodayMatches: (query?: MatchQuery) =>
+    publicRequest(listQueryToPath("/matches/today", query), z.array(matchListItemSchema)),
+  getTomorrowMatches: (query?: MatchQuery) =>
+    publicRequest(listQueryToPath("/matches/tomorrow", query), z.array(matchListItemSchema)),
+  getLiveMatches: (query?: MatchQuery) =>
+    publicRequest(listQueryToPath("/matches/live", query), z.array(matchListItemSchema)),
+  getCompletedMatches: (query?: MatchQuery) =>
+    publicRequest(listQueryToPath("/matches/completed", query), z.array(matchListItemSchema)),
+  getMatchDetail: (matchId: string) => publicRequest(`/matches/${matchId}`, matchDetailSchema),
+  getMatchEvents: (matchId: string) => publicRequest(`/matches/${matchId}/events`, z.array(matchEventSchema)),
+  getMatchStats: (matchId: string) => publicRequest(`/matches/${matchId}/stats`, matchStatsSchema),
+  getMatchPrediction: (matchId: string) => publicRequest(`/matches/${matchId}/prediction`, matchPredictionSchema),
+
+  getPredictions: (query?: PredictionQuery) =>
+    publicRequest(listQueryToPath("/predictions", query), z.array(predictionItemSchema)),
+  getHighConfidencePredictions: () =>
+    publicRequest("/predictions/high-confidence", z.array(predictionItemSchema)),
+
+  getDashboardAnalytics: () => publicRequest("/analytics/dashboard", dashboardSummarySchema),
+  getGuideSummary: () => publicRequest("/guide/summary", guideSummarySchema),
+
+  getCalibrationResults: () =>
+    publicRequest("/admin/calibration/results", z.array(calibrationResultSchema)),
+  runCalibration: () =>
+    publicRequest("/admin/calibration/run", calibrationRunResponseSchema, { method: "POST" }),
+  getPredictionRiskSummary: () =>
+    publicRequest("/admin/predictions/risk-summary", predictionRiskSummarySchema),
+  getLowConfidencePredictions: (query?: PredictionQuery) =>
+    publicRequest(listQueryToPath("/admin/predictions/low-confidence", query), z.array(predictionItemSchema)),
+
+  getModelComparison: (query?: AdminAnalyticsQuery) =>
+    publicRequest(listQueryToPath("/admin/models/comparison", query), z.array(modelComparisonItemSchema)),
+  getFeatureImportance: (query?: AdminAnalyticsQuery) =>
+    publicRequest(listQueryToPath("/admin/models/feature-importance", query), z.array(featureImportanceItemSchema)),
+  getFailedPredictions: (query?: FailedPredictionQuery) =>
+    publicRequest(listQueryToPath("/admin/predictions/failed", query), z.array(failedPredictionItemSchema)),
+  getFailedPredictionDetail: (failedId: string) =>
+    publicRequest(`/admin/predictions/failed/${failedId}`, failedPredictionDetailSchema),
+  getModelPerformanceTimeseries: (query?: AdminAnalyticsQuery) =>
+    publicRequest(listQueryToPath("/admin/models/performance-timeseries", query), z.array(modelPerformancePointSchema)),
+  getModelDriftSummary: (query?: AdminAnalyticsQuery) =>
+    publicRequest(listQueryToPath("/admin/models/drift-summary", query), performanceDriftSummarySchema),
+
+  getModelStrategies: (query?: StrategyQuery) =>
+    publicRequest(listQueryToPath("/admin/models/strategies", query), z.array(modelStrategySchema)),
+  autoSelectModelStrategy: () =>
+    publicRequest("/admin/models/strategies/auto-select", strategySummarySchema, { method: "POST" }),
+  updateModelStrategy: (
+    strategyId: string,
+    payload: { primaryModel: string; fallbackModel?: string | null; isActive: boolean }
+  ) =>
+    publicRequest(`/admin/models/strategies/${strategyId}`, modelStrategySchema, {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    }),
+
+  getEnsembleConfigs: (query?: AdminAnalyticsQuery) =>
+    publicRequest(listQueryToPath("/admin/models/ensemble-configs", query), z.array(ensembleConfigSchema)),
+  updateEnsembleConfig: (
+    configId: string,
+    payload: { weights: Array<{ model: string; weight: number }>; isActive?: boolean }
+  ) =>
+    publicRequest(`/admin/models/ensemble-configs/${configId}`, ensembleConfigSchema, {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    }),
+
+  getFeatureLab: (query?: AdminAnalyticsQuery) =>
+    publicRequest(listQueryToPath("/admin/features/lab", query), featureLabSchema),
+  runFeatureExperiment: (payload: {
+    modelVersion: string;
+    featureSetId: string;
+    leagueId: string;
+    from: string;
+    to: string;
+  }) =>
+    publicRequest("/admin/features/lab/experiment", featureExperimentSchema, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }),
+  getFeatureExperimentResults: (query?: FeatureExperimentResultsQuery) =>
+    publicRequest(listQueryToPath("/admin/features/lab/results", query), z.array(featureExperimentResultSchema))
+};
+
+
+
+===== FILE: lib/hooks/use-api.ts =====
+"use client";
+
+import { keepPreviousData, useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import type {
+  ApiResponse,
+  CalibrationResult,
+  CalibrationRunResponse,
+  DashboardSummary,
+  EnsembleConfig,
+  FailedPredictionDetail,
+  FailedPredictionItem,
+  FeatureExperiment,
+  FeatureExperimentResult,
+  FeatureImportanceItem,
+  FeatureLab,
+  LeagueDetail,
+  LeagueListItem,
+  MatchDetail,
+  MatchEvent,
+  MatchListItem,
+  MatchPrediction,
+  MatchStats,
+  ModelComparisonItem,
+  ModelPerformancePoint,
+  ModelStrategy,
+  PerformanceDriftSummary,
+  PredictionItem,
+  PredictionRiskSummary,
+  Sport,
+  StandingRow,
+  StrategySummary,
+  TeamDetail,
+  TeamFormPoint,
+  TeamListItem,
+  TeamSquadPlayer
+} from "@/types/api-contract";
+import type {
+  AdminAnalyticsQuery,
+  FailedPredictionQuery,
+  FeatureExperimentResultsQuery,
+  MatchQuery,
+  PredictionQuery,
+  StrategyQuery
+} from "@/lib/api/query";
+import type { AccountProfile, MembershipPlan, ModelInsight, PerformanceRecord } from "@/types/domain";
+
+const listQueryOptions = {
+  staleTime: 60_000,
+  gcTime: 10 * 60_000,
+  retry: 1,
+  placeholderData: keepPreviousData,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+  refetchOnMount: false
+} satisfies Partial<UseQueryOptions>;
+
+const detailQueryOptions = {
+  staleTime: 2 * 60_000,
+  gcTime: 15 * 60_000,
+  retry: 1,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+  refetchOnMount: false
+} satisfies Partial<UseQueryOptions>;
+
+const liveQueryOptions = {
+  staleTime: 8_000,
+  gcTime: 5 * 60_000,
+  retry: 1,
+  placeholderData: keepPreviousData,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: true,
+  refetchOnMount: true
+} satisfies Partial<UseQueryOptions>;
+
+const buildListKey = <TQuery>(name: string, query?: TQuery) => [name, query ?? {}] as const;
+
+const legacyModelsData: ModelInsight[] = [
+  {
+    id: "model-1",
+    name: "Form Momentum",
+    confidence: 84,
+    dataReliability: 79,
+    uncertainty: 18,
+    explanation: "Son 10 mac performansi, rakip seviyesi ve kadro devamliligi ile skorlaniyor."
+  },
+  {
+    id: "model-2",
+    name: "Expected Score Engine",
+    confidence: 77,
+    dataReliability: 73,
+    uncertainty: 22,
+    explanation: "xG ve tempo agirlikli skor uretim modeli, lig ortalamalarina gore normalize edilir."
+  }
+];
+
+const legacyPerformanceData: PerformanceRecord[] = [
+  { period: "Gunluk", football: 72, basketball: 69, overall: 71 },
+  { period: "Haftalik", football: 74, basketball: 70, overall: 72 },
+  { period: "Aylik", football: 76, basketball: 73, overall: 75 }
+];
+
+const legacyMembershipData: MembershipPlan[] = [
+  {
+    id: "starter",
+    name: "Starter",
+    priceMonthly: 19,
+    features: ["Gunun tahminleri", "Temel filtreleme", "Standart destek"]
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    priceMonthly: 49,
+    recommended: true,
+    features: ["Yuksek guven skoru listesi", "Gelismis filtre paneli", "Takim ve lig favorileri"]
+  },
+  {
+    id: "elite",
+    name: "Elite",
+    priceMonthly: 99,
+    features: ["Canli analiz panelleri", "Model aciklama katmani", "Oncelikli destek"]
+  }
+];
+
+const legacyAccountData: AccountProfile = {
+  id: "u-1",
+  fullName: "Demo Kullanici",
+  email: "demo@tahminx.app",
+  favoriteLeagues: ["Super Lig", "Premier League"],
+  favoriteTeams: ["Galatasaray", "Liverpool"],
+  notifications: {
+    liveAlerts: true,
+    confidenceDropAlerts: true,
+    weeklyDigest: false
+  }
+};
+
+export const useSports = () => useQuery({ queryKey: ["sports"], queryFn: apiClient.getSports, ...listQueryOptions });
+
+export const useLeagues = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("leagues", query), queryFn: () => apiClient.getLeagues(query), ...listQueryOptions });
+
+export const useLeagueDetail = (leagueId?: string) =>
+  useQuery({
+    queryKey: ["league-detail", leagueId],
+    queryFn: () => apiClient.getLeagueDetail(leagueId as string),
+    enabled: Boolean(leagueId),
+    ...detailQueryOptions
+  });
+
+export const useLeagueStandings = (leagueId?: string) =>
+  useQuery({
+    queryKey: ["league-standings", leagueId],
+    queryFn: () => apiClient.getLeagueStandings(leagueId as string),
+    enabled: Boolean(leagueId),
+    ...detailQueryOptions
+  });
+
+export const useTeams = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("teams", query), queryFn: () => apiClient.getTeams(query), ...listQueryOptions });
+
+export const useTeamDetail = (teamId?: string) =>
+  useQuery({
+    queryKey: ["team-detail", teamId],
+    queryFn: () => apiClient.getTeamDetail(teamId as string),
+    enabled: Boolean(teamId),
+    ...detailQueryOptions
+  });
+
+export const useTeamMatches = (teamId?: string, query?: MatchQuery) =>
+  useQuery({
+    queryKey: ["team-matches", teamId, query ?? {}],
+    queryFn: () => apiClient.getTeamMatches(teamId as string, query),
+    enabled: Boolean(teamId),
+    ...detailQueryOptions
+  });
+
+export const useTeamForm = (teamId?: string) =>
+  useQuery({
+    queryKey: ["team-form", teamId],
+    queryFn: () => apiClient.getTeamForm(teamId as string),
+    enabled: Boolean(teamId),
+    ...detailQueryOptions
+  });
+
+export const useTeamSquad = (teamId?: string) =>
+  useQuery({
+    queryKey: ["team-squad", teamId],
+    queryFn: () => apiClient.getTeamSquad(teamId as string),
+    enabled: Boolean(teamId),
+    ...detailQueryOptions
+  });
+
+export const useMatches = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("matches", query), queryFn: () => apiClient.getMatches(query), ...listQueryOptions });
+
+export const useTodayMatches = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("matches-today", query), queryFn: () => apiClient.getTodayMatches(query), ...listQueryOptions });
+
+export const useTomorrowMatches = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("matches-tomorrow", query), queryFn: () => apiClient.getTomorrowMatches(query), ...listQueryOptions });
+
+export const useLiveMatches = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("matches-live", query), queryFn: () => apiClient.getLiveMatches(query), ...liveQueryOptions });
+
+export const useCompletedMatches = (query?: MatchQuery) =>
+  useQuery({ queryKey: buildListKey("matches-completed", query), queryFn: () => apiClient.getCompletedMatches(query), ...listQueryOptions });
+
+export const useMatchDetail = (matchId?: string) =>
+  useQuery({
+    queryKey: ["match-detail", matchId],
+    queryFn: () => apiClient.getMatchDetail(matchId as string),
+    enabled: Boolean(matchId),
+    ...detailQueryOptions
+  });
+
+export const useMatchEvents = (matchId?: string) =>
+  useQuery({
+    queryKey: ["match-events", matchId],
+    queryFn: () => apiClient.getMatchEvents(matchId as string),
+    enabled: Boolean(matchId),
+    staleTime: 15_000,
+    gcTime: 10 * 60_000,
+    retry: 1,
+    placeholderData: keepPreviousData,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchOnMount: true
+  });
+
+export const useMatchStats = (matchId?: string) =>
+  useQuery({
+    queryKey: ["match-stats", matchId],
+    queryFn: () => apiClient.getMatchStats(matchId as string),
+    enabled: Boolean(matchId),
+    ...detailQueryOptions
+  });
+
+export const useMatchPrediction = (matchId?: string) =>
+  useQuery({
+    queryKey: ["match-prediction", matchId],
+    queryFn: () => apiClient.getMatchPrediction(matchId as string),
+    enabled: Boolean(matchId),
+    ...detailQueryOptions
+  });
+
+export const usePredictions = (query?: PredictionQuery) =>
+  useQuery({ queryKey: buildListKey("predictions", query), queryFn: () => apiClient.getPredictions(query), ...listQueryOptions });
+
+export const useHighConfidencePredictions = () =>
+  useQuery({ queryKey: ["predictions-high-confidence"], queryFn: apiClient.getHighConfidencePredictions, ...listQueryOptions });
+
+export const useDashboardAnalytics = () =>
+  useQuery({ queryKey: ["analytics-dashboard"], queryFn: apiClient.getDashboardAnalytics, ...listQueryOptions });
+
+export const useGuideSummary = () =>
+  useQuery({ queryKey: ["guide-summary"], queryFn: apiClient.getGuideSummary, ...listQueryOptions });
+
+export const useCalibrationResults = () =>
+  useQuery({ queryKey: ["admin-calibration-results"], queryFn: apiClient.getCalibrationResults, ...detailQueryOptions });
+
+export const usePredictionRiskSummary = () =>
+  useQuery({ queryKey: ["admin-prediction-risk-summary"], queryFn: apiClient.getPredictionRiskSummary, ...detailQueryOptions });
+
+export const useLowConfidencePredictions = (query?: PredictionQuery) =>
+  useQuery({
+    queryKey: buildListKey("admin-low-confidence-predictions", query),
+    queryFn: () => apiClient.getLowConfidencePredictions(query),
+    ...listQueryOptions
+  });
+
+export const useModelComparison = (query?: AdminAnalyticsQuery) =>
+  useQuery({
+    queryKey: buildListKey("admin-model-comparison", query),
+    queryFn: () => apiClient.getModelComparison(query),
+    ...listQueryOptions
+  });
+
+export const useFeatureImportance = (query?: AdminAnalyticsQuery) =>
+  useQuery({
+    queryKey: buildListKey("admin-feature-importance", query),
+    queryFn: () => apiClient.getFeatureImportance(query),
+    ...listQueryOptions
+  });
+
+export const useFailedPredictions = (query?: FailedPredictionQuery) =>
+  useQuery({
+    queryKey: buildListKey("admin-failed-predictions", query),
+    queryFn: () => apiClient.getFailedPredictions(query),
+    ...listQueryOptions
+  });
+
+export const useFailedPredictionDetail = (failedId?: string) =>
+  useQuery({
+    queryKey: ["admin-failed-prediction-detail", failedId],
+    queryFn: () => apiClient.getFailedPredictionDetail(failedId as string),
+    enabled: Boolean(failedId),
+    ...detailQueryOptions
+  });
+
+export const useModelPerformanceTimeseries = (query?: AdminAnalyticsQuery) =>
+  useQuery({
+    queryKey: buildListKey("admin-model-performance-timeseries", query),
+    queryFn: () => apiClient.getModelPerformanceTimeseries(query),
+    ...listQueryOptions
+  });
+
+export const useModelDriftSummary = (query?: AdminAnalyticsQuery) =>
+  useQuery({
+    queryKey: buildListKey("admin-model-drift-summary", query),
+    queryFn: () => apiClient.getModelDriftSummary(query),
+    ...detailQueryOptions
+  });
+
+export const useModelStrategies = (query?: StrategyQuery) =>
+  useQuery({
+    queryKey: buildListKey("admin-model-strategies", query),
+    queryFn: () => apiClient.getModelStrategies(query),
+    ...listQueryOptions
+  });
+
+export const useEnsembleConfigs = (query?: AdminAnalyticsQuery) =>
+  useQuery({
+    queryKey: buildListKey("admin-ensemble-configs", query),
+    queryFn: () => apiClient.getEnsembleConfigs(query),
+    ...listQueryOptions
+  });
+
+export const useFeatureLab = (query?: AdminAnalyticsQuery) =>
+  useQuery({
+    queryKey: buildListKey("admin-feature-lab", query),
+    queryFn: () => apiClient.getFeatureLab(query),
+    ...detailQueryOptions
+  });
+
+export const useFeatureExperimentResults = (query?: FeatureExperimentResultsQuery) =>
+  useQuery({
+    queryKey: buildListKey("admin-feature-experiment-results", query),
+    queryFn: () => apiClient.getFeatureExperimentResults(query),
+    ...listQueryOptions
+  });
+
+export const useRunCalibrationMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: apiClient.runCalibration,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-calibration-results"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-prediction-risk-summary"] });
+      void queryClient.invalidateQueries({ queryKey: ["analytics-dashboard"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-model-comparison"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-model-performance-timeseries"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-model-drift-summary"] });
+    }
+  });
+};
+
+export const useAutoSelectStrategyMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: apiClient.autoSelectModelStrategy,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-model-strategies"] });
+    }
+  });
+};
+
+export const useUpdateStrategyMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      strategyId: string;
+      data: { primaryModel: string; fallbackModel?: string | null; isActive: boolean };
+    }) => apiClient.updateModelStrategy(payload.strategyId, payload.data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-model-strategies"] });
+    }
+  });
+};
+
+export const useUpdateEnsembleConfig = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      configId: string;
+      data: { weights: Array<{ model: string; weight: number }>; isActive?: boolean };
+    }) => apiClient.updateEnsembleConfig(payload.configId, payload.data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-ensemble-configs"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-model-comparison"] });
+    }
+  });
+};
+
+export const useRunFeatureExperiment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      modelVersion: string;
+      featureSetId: string;
+      leagueId: string;
+      from: string;
+      to: string;
+    }) => apiClient.runFeatureExperiment(payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin-feature-experiment-results"] });
+    }
+  });
+};
+
+// Legacy aliases for existing screens that haven't migrated yet.
+export const useDashboard = useDashboardAnalytics;
+export const useModels = () =>
+  useQuery<ApiResponse<ModelInsight[]>>({
+    queryKey: ["legacy-models"],
+    queryFn: async () => ({ success: true, data: legacyModelsData }),
+    ...listQueryOptions
+  });
+export const usePerformance = () =>
+  useQuery<ApiResponse<PerformanceRecord[]>>({
+    queryKey: ["legacy-performance"],
+    queryFn: async () => ({ success: true, data: legacyPerformanceData }),
+    ...listQueryOptions
+  });
+export const useMembership = () =>
+  useQuery<ApiResponse<MembershipPlan[]>>({
+    queryKey: ["legacy-membership"],
+    queryFn: async () => ({ success: true, data: legacyMembershipData }),
+    ...listQueryOptions
+  });
+export const useAccount = () =>
+  useQuery<ApiResponse<AccountProfile>>({
+    queryKey: ["legacy-account"],
+    queryFn: async () => ({ success: true, data: legacyAccountData }),
+    ...listQueryOptions
+  });
+
+export type SportsQueryResult = ApiResponse<Sport[]>;
+export type LeaguesQueryResult = ApiResponse<LeagueListItem[]>;
+export type LeagueDetailQueryResult = ApiResponse<LeagueDetail>;
+export type LeagueStandingsQueryResult = ApiResponse<StandingRow[]>;
+export type TeamsQueryResult = ApiResponse<TeamListItem[]>;
+export type TeamDetailQueryResult = ApiResponse<TeamDetail>;
+export type TeamMatchesQueryResult = ApiResponse<MatchListItem[]>;
+export type TeamFormQueryResult = ApiResponse<TeamFormPoint[]>;
+export type TeamSquadQueryResult = ApiResponse<TeamSquadPlayer[]>;
+export type MatchesQueryResult = ApiResponse<MatchListItem[]>;
+export type MatchDetailQueryResult = ApiResponse<MatchDetail>;
+export type MatchEventsQueryResult = ApiResponse<MatchEvent[]>;
+export type MatchStatsQueryResult = ApiResponse<MatchStats>;
+export type MatchPredictionQueryResult = ApiResponse<MatchPrediction>;
+export type PredictionsQueryResult = ApiResponse<PredictionItem[]>;
+export type DashboardQueryResult = ApiResponse<DashboardSummary>;
+export type CalibrationResultsQueryResult = ApiResponse<CalibrationResult[]>;
+export type CalibrationRunMutationResult = ApiResponse<CalibrationRunResponse>;
+export type PredictionRiskSummaryQueryResult = ApiResponse<PredictionRiskSummary>;
+export type LowConfidencePredictionsQueryResult = ApiResponse<PredictionItem[]>;
+export type ModelComparisonQueryResult = ApiResponse<ModelComparisonItem[]>;
+export type FeatureImportanceQueryResult = ApiResponse<FeatureImportanceItem[]>;
+export type FailedPredictionsQueryResult = ApiResponse<FailedPredictionItem[]>;
+export type FailedPredictionDetailQueryResult = ApiResponse<FailedPredictionDetail>;
+export type ModelPerformanceTimeseriesQueryResult = ApiResponse<ModelPerformancePoint[]>;
+export type ModelDriftSummaryQueryResult = ApiResponse<PerformanceDriftSummary>;
+export type ModelStrategiesQueryResult = ApiResponse<ModelStrategy[]>;
+export type AutoSelectStrategyMutationResult = ApiResponse<StrategySummary>;
+export type EnsembleConfigsQueryResult = ApiResponse<EnsembleConfig[]>;
+export type FeatureLabQueryResult = ApiResponse<FeatureLab>;
+export type FeatureExperimentMutationResult = ApiResponse<FeatureExperiment>;
+export type FeatureExperimentResultsQueryResult = ApiResponse<FeatureExperimentResult[]>;
+
+
+
+===== FILE: lib/api/mock-contract-data.ts =====
+import type {
+  CalibrationResult,
+  CalibrationRunResponse,
+  EnsembleConfig,
+  FailedPredictionDetail,
+  FailedPredictionItem,
+  FeatureExperiment,
+  FeatureExperimentResult,
+  FeatureImportanceItem,
+  FeatureLab,
+  ModelComparisonItem,
+  ModelStrategy,
+  ModelPerformancePoint,
+  PerformanceDriftSummary,
+  StrategySummary,
+  DashboardSummary,
+  GuideSummary,
+  LeagueDetail,
+  MatchDetail,
+  MatchEvent,
+  MatchPrediction,
+  MatchStats,
+  PredictionItem,
+  PredictionRiskSummary,
+  Sport,
+  StandingRow,
+  TeamDetail,
+  TeamFormPoint,
+  TeamSquadPlayer
+} from "@/types/api-contract";
+
+const now = new Date();
+
+const toIso = (dayOffset: number, hour: number, minute = 0) => {
+  const date = new Date(now);
+  date.setDate(date.getDate() + dayOffset);
+  date.setHours(hour, minute, 0, 0);
+  return date.toISOString();
+};
+
+export const sportsMock: Sport[] = [
+  { id: "s-football", key: "football", name: "Futbol" },
+  { id: "s-basketball", key: "basketball", name: "Basketbol" }
+];
+
+export const leaguesMock: LeagueDetail[] = [
+  {
+    id: "l-super-lig",
+    sportId: "s-football",
+    sportKey: "football",
+    name: "Super Lig",
+    country: "Turkiye",
+    season: "2025/26",
+    updatedAt: toIso(0, 18, 30),
+    statsSummary: { avgScore: 2.78, homeWinRate: 46, awayWinRate: 27, drawRate: 27 }
+  },
+  {
+    id: "l-premier-league",
+    sportId: "s-football",
+    sportKey: "football",
+    name: "Premier League",
+    country: "England",
+    season: "2025/26",
+    updatedAt: toIso(0, 19, 20),
+    statsSummary: { avgScore: 2.95, homeWinRate: 48, awayWinRate: 29, drawRate: 23 }
+  },
+  {
+    id: "l-euroleague",
+    sportId: "s-basketball",
+    sportKey: "basketball",
+    name: "EuroLeague",
+    country: "Europe",
+    season: "2025/26",
+    updatedAt: toIso(0, 16, 0),
+    statsSummary: { avgScore: 163.4, homeWinRate: 52, awayWinRate: 48 }
+  },
+  {
+    id: "l-nba",
+    sportId: "s-basketball",
+    sportKey: "basketball",
+    name: "NBA",
+    country: "USA",
+    season: "2025/26",
+    updatedAt: toIso(0, 5, 10),
+    statsSummary: { avgScore: 227.3, homeWinRate: 55, awayWinRate: 45 }
+  }
+];
+
+export const standingsMock: Record<string, StandingRow[]> = {
+  "l-super-lig": [
+    { position: 1, teamId: "t-gs", teamName: "Galatasaray", played: 29, won: 22, drawn: 5, lost: 2, points: 71, goalsFor: 64, goalsAgainst: 24, form: ["W", "W", "D", "W", "W"] },
+    { position: 2, teamId: "t-fb", teamName: "Fenerbahce", played: 29, won: 21, drawn: 4, lost: 4, points: 67, goalsFor: 62, goalsAgainst: 28, form: ["W", "D", "W", "W", "L"] },
+    { position: 3, teamId: "t-bjk", teamName: "Besiktas", played: 29, won: 17, drawn: 6, lost: 6, points: 57, goalsFor: 48, goalsAgainst: 31, form: ["W", "L", "W", "D", "W"] }
+  ],
+  "l-premier-league": [
+    { position: 1, teamId: "t-liv", teamName: "Liverpool", played: 31, won: 22, drawn: 6, lost: 3, points: 72, goalsFor: 71, goalsAgainst: 31, form: ["W", "W", "W", "D", "W"] },
+    { position: 2, teamId: "t-ars", teamName: "Arsenal", played: 31, won: 21, drawn: 7, lost: 3, points: 70, goalsFor: 66, goalsAgainst: 30, form: ["W", "W", "D", "W", "W"] }
+  ],
+  "l-euroleague": [
+    { position: 1, teamId: "t-rm", teamName: "Real Madrid", played: 31, won: 23, drawn: 0, lost: 8, points: 46, form: ["W", "W", "W", "D", "W"] },
+    { position: 2, teamId: "t-fbb", teamName: "Fenerbahce Beko", played: 31, won: 21, drawn: 0, lost: 10, points: 42, form: ["W", "W", "L", "W", "W"] }
+  ],
+  "l-nba": [
+    { position: 1, teamId: "t-bos", teamName: "Boston Celtics", played: 72, won: 52, drawn: 0, lost: 20, points: 104, form: ["W", "W", "W", "L", "W"] },
+    { position: 2, teamId: "t-mil", teamName: "Milwaukee Bucks", played: 72, won: 49, drawn: 0, lost: 23, points: 98, form: ["W", "L", "W", "W", "W"] }
+  ]
+};
+
+export const teamsMock: TeamDetail[] = [
+  { id: "t-gs", leagueId: "l-super-lig", sportId: "s-football", sportKey: "football", name: "Galatasaray", shortName: "GS", city: "Istanbul", country: "Turkiye", foundedYear: 1905, coach: "Okan Buruk", homeMetric: 84, awayMetric: 74, attackMetric: 82, defenseMetric: 75 },
+  { id: "t-fb", leagueId: "l-super-lig", sportId: "s-football", sportKey: "football", name: "Fenerbahce", shortName: "FB", city: "Istanbul", country: "Turkiye", foundedYear: 1907, coach: "Ismail Kartal", homeMetric: 79, awayMetric: 80, attackMetric: 80, defenseMetric: 76 },
+  { id: "t-bjk", leagueId: "l-super-lig", sportId: "s-football", sportKey: "football", name: "Besiktas", shortName: "BJK", city: "Istanbul", country: "Turkiye", foundedYear: 1903, coach: "Fernando Santos", homeMetric: 76, awayMetric: 70, attackMetric: 75, defenseMetric: 70 },
+  { id: "t-liv", leagueId: "l-premier-league", sportId: "s-football", sportKey: "football", name: "Liverpool", shortName: "LIV", city: "Liverpool", country: "England", foundedYear: 1892, coach: "Arne Slot", homeMetric: 86, awayMetric: 77, attackMetric: 87, defenseMetric: 73 },
+  { id: "t-ars", leagueId: "l-premier-league", sportId: "s-football", sportKey: "football", name: "Arsenal", shortName: "ARS", city: "London", country: "England", foundedYear: 1886, coach: "Mikel Arteta", homeMetric: 82, awayMetric: 78, attackMetric: 84, defenseMetric: 75 },
+  { id: "t-fbb", leagueId: "l-euroleague", sportId: "s-basketball", sportKey: "basketball", name: "Fenerbahce Beko", shortName: "FBB", city: "Istanbul", country: "Turkiye", foundedYear: 1913, coach: "Sarunas Jasikevicius", homeMetric: 82, awayMetric: 73, attackMetric: 85, defenseMetric: 77 },
+  { id: "t-rm", leagueId: "l-euroleague", sportId: "s-basketball", sportKey: "basketball", name: "Real Madrid", shortName: "RMD", city: "Madrid", country: "Spain", foundedYear: 1931, coach: "Chus Mateo", homeMetric: 85, awayMetric: 80, attackMetric: 88, defenseMetric: 79 },
+  { id: "t-bos", leagueId: "l-nba", sportId: "s-basketball", sportKey: "basketball", name: "Boston Celtics", shortName: "BOS", city: "Boston", country: "USA", foundedYear: 1946, coach: "Joe Mazzulla", homeMetric: 89, awayMetric: 79, attackMetric: 90, defenseMetric: 81 },
+  { id: "t-mil", leagueId: "l-nba", sportId: "s-basketball", sportKey: "basketball", name: "Milwaukee Bucks", shortName: "MIL", city: "Milwaukee", country: "USA", foundedYear: 1968, coach: "Doc Rivers", homeMetric: 84, awayMetric: 76, attackMetric: 89, defenseMetric: 78 }
+];
+
+export const teamFormMock: Record<string, TeamFormPoint[]> = {
+  "t-gs": [
+    { date: toIso(-10, 21), opponent: "Besiktas", result: "W", scoreFor: 2, scoreAgainst: 1, value: 82 },
+    { date: toIso(-7, 20), opponent: "Trabzonspor", result: "W", scoreFor: 1, scoreAgainst: 0, value: 85 },
+    { date: toIso(-5, 20), opponent: "Basaksehir", result: "D", scoreFor: 1, scoreAgainst: 1, value: 70 },
+    { date: toIso(-3, 20), opponent: "Adana Demir", result: "W", scoreFor: 3, scoreAgainst: 1, value: 88 },
+    { date: toIso(-1, 20), opponent: "Kayserispor", result: "W", scoreFor: 2, scoreAgainst: 0, value: 86 }
+  ],
+  "t-fb": [
+    { date: toIso(-10, 21), opponent: "Antalyaspor", result: "W", scoreFor: 3, scoreAgainst: 0, value: 84 },
+    { date: toIso(-8, 20), opponent: "Konyaspor", result: "D", scoreFor: 1, scoreAgainst: 1, value: 68 },
+    { date: toIso(-6, 20), opponent: "Rizespor", result: "W", scoreFor: 2, scoreAgainst: 0, value: 82 },
+    { date: toIso(-4, 20), opponent: "Alanyaspor", result: "W", scoreFor: 2, scoreAgainst: 1, value: 80 },
+    { date: toIso(-1, 21), opponent: "Sivasspor", result: "L", scoreFor: 0, scoreAgainst: 1, value: 45 }
+  ]
+};
+
+export const teamSquadMock: Record<string, TeamSquadPlayer[]> = {
+  "t-gs": [
+    { id: "p1", name: "Fernando Muslera", position: "GK", number: 1 },
+    { id: "p2", name: "Abdulkerim Bardakci", position: "CB", number: 42 },
+    { id: "p3", name: "Lucas Torreira", position: "DM", number: 34 },
+    { id: "p4", name: "Dries Mertens", position: "AM", number: 10 },
+    { id: "p5", name: "Mauro Icardi", position: "ST", number: 9 }
+  ],
+  "t-fb": [
+    { id: "p6", name: "Dominik Livakovic", position: "GK", number: 40 },
+    { id: "p7", name: "Djiku", position: "CB", number: 6 },
+    { id: "p8", name: "Fred", position: "CM", number: 35 },
+    { id: "p9", name: "Szymanski", position: "AM", number: 53 },
+    { id: "p10", name: "Dzeko", position: "ST", number: 9 }
+  ]
+};
+
+export const matchesMock: MatchDetail[] = [
+  {
+    id: "m1",
+    sportKey: "football",
+    leagueId: "l-super-lig",
+    leagueName: "Super Lig",
+    homeTeamId: "t-gs",
+    awayTeamId: "t-fb",
+    homeTeamName: "Galatasaray",
+    awayTeamName: "Fenerbahce",
+    kickoffAt: toIso(0, 20),
+    status: "scheduled",
+    scoreHome: null,
+    scoreAway: null,
+    confidenceScore: 79,
+    venue: "Rams Park",
+    round: "Hafta 30",
+    summary: "Derby with high tactical variability.",
+    expectedScoreHome: 1.7,
+    expectedScoreAway: 1.3,
+    riskFlags: ["Derby volatility", "Card risk"],
+    h2hSummary: "Last five meetings are tightly balanced."
+  },
+  {
+    id: "m2",
+    sportKey: "football",
+    leagueId: "l-premier-league",
+    leagueName: "Premier League",
+    homeTeamId: "t-liv",
+    awayTeamId: "t-ars",
+    homeTeamName: "Liverpool",
+    awayTeamName: "Arsenal",
+    kickoffAt: toIso(0, 22),
+    status: "live",
+    scoreHome: 2,
+    scoreAway: 1,
+    confidenceScore: 81,
+    venue: "Anfield",
+    round: "Matchday 32",
+    expectedScoreHome: 2.1,
+    expectedScoreAway: 1.4,
+    riskFlags: ["Late pressure phase"],
+    h2hSummary: "Home side has slight edge in high-intensity phases."
+  },
+  {
+    id: "m3",
+    sportKey: "football",
+    leagueId: "l-super-lig",
+    leagueName: "Super Lig",
+    homeTeamId: "t-bjk",
+    awayTeamId: "t-gs",
+    homeTeamName: "Besiktas",
+    awayTeamName: "Galatasaray",
+    kickoffAt: toIso(-1, 20),
+    status: "completed",
+    scoreHome: 1,
+    scoreAway: 2,
+    confidenceScore: 72,
+    venue: "Tupras Stadium",
+    round: "Hafta 29",
+    expectedScoreHome: 1.1,
+    expectedScoreAway: 1.6,
+    riskFlags: ["Set-piece variance"]
+  },
+  {
+    id: "m4",
+    sportKey: "basketball",
+    leagueId: "l-euroleague",
+    leagueName: "EuroLeague",
+    homeTeamId: "t-fbb",
+    awayTeamId: "t-rm",
+    homeTeamName: "Fenerbahce Beko",
+    awayTeamName: "Real Madrid",
+    kickoffAt: toIso(0, 21, 30),
+    status: "scheduled",
+    scoreHome: null,
+    scoreAway: null,
+    confidenceScore: 64,
+    venue: "Ulker Sports Arena",
+    round: "Round 32",
+    expectedScoreHome: 84,
+    expectedScoreAway: 82,
+    riskFlags: ["Three-point variance"]
+  },
+  {
+    id: "m5",
+    sportKey: "basketball",
+    leagueId: "l-nba",
+    leagueName: "NBA",
+    homeTeamId: "t-bos",
+    awayTeamId: "t-mil",
+    homeTeamName: "Boston Celtics",
+    awayTeamName: "Milwaukee Bucks",
+    kickoffAt: toIso(0, 4, 0),
+    status: "live",
+    scoreHome: 74,
+    scoreAway: 70,
+    confidenceScore: 58,
+    venue: "TD Garden",
+    round: "Regular Season",
+    expectedScoreHome: 116,
+    expectedScoreAway: 111,
+    riskFlags: ["Foul trouble"]
+  },
+  {
+    id: "m6",
+    sportKey: "basketball",
+    leagueId: "l-nba",
+    leagueName: "NBA",
+    homeTeamId: "t-mil",
+    awayTeamId: "t-bos",
+    homeTeamName: "Milwaukee Bucks",
+    awayTeamName: "Boston Celtics",
+    kickoffAt: toIso(-1, 3, 30),
+    status: "completed",
+    scoreHome: 108,
+    scoreAway: 112,
+    confidenceScore: 75,
+    venue: "Fiserv Forum",
+    round: "Regular Season",
+    expectedScoreHome: 110,
+    expectedScoreAway: 114,
+    riskFlags: ["Bench variance"]
+  },
+  {
+    id: "m7",
+    sportKey: "football",
+    leagueId: "l-super-lig",
+    leagueName: "Super Lig",
+    homeTeamId: "t-fb",
+    awayTeamId: "t-bjk",
+    homeTeamName: "Fenerbahce",
+    awayTeamName: "Besiktas",
+    kickoffAt: toIso(1, 20),
+    status: "scheduled",
+    scoreHome: null,
+    scoreAway: null,
+    confidenceScore: 68,
+    venue: "Ulker Stadyumu",
+    expectedScoreHome: 1.5,
+    expectedScoreAway: 1.1,
+    riskFlags: ["Injury uncertainty"]
+  }
+];
+
+export const matchEventsMock: Record<string, MatchEvent[]> = {
+  m1: [],
+  m2: [
+    { id: "e1", minute: 11, teamId: "t-liv", teamName: "Liverpool", type: "goal", title: "Goal", description: "Inside-box finish after quick transition" },
+    { id: "e2", minute: 29, teamId: "t-ars", teamName: "Arsenal", type: "goal", title: "Goal", description: "Set-piece equalizer" },
+    { id: "e3", minute: 54, teamId: "t-liv", teamName: "Liverpool", type: "goal", title: "Goal", description: "Back-post header" },
+    { id: "e4", minute: 70, teamId: "t-ars", teamName: "Arsenal", type: "card", title: "Yellow Card", description: "Tactical foul" }
+  ],
+  m4: [],
+  m5: [
+    { id: "e5", minute: 8, teamId: "t-bos", teamName: "Boston Celtics", type: "run", title: "Run", description: "7-0 scoring run" },
+    { id: "e6", minute: 24, teamId: "t-bos", teamName: "Boston Celtics", type: "highlight", title: "Highlight", description: "Transition dunk" }
+  ]
+};
+
+export const matchStatsMock: Record<string, MatchStats> = {
+  m1: { possessionHome: 58, possessionAway: 42, shotsHome: 14, shotsAway: 11, shotsOnTargetHome: 5, shotsOnTargetAway: 4, xgHome: 1.7, xgAway: 1.3 },
+  m2: { possessionHome: 61, possessionAway: 39, shotsHome: 12, shotsAway: 8, shotsOnTargetHome: 6, shotsOnTargetAway: 4, xgHome: 2.1, xgAway: 1.4 },
+  m4: { paceHome: 73, paceAway: 71, efficiencyHome: 1.12, efficiencyAway: 1.15 },
+  m5: { paceHome: 99, paceAway: 101, efficiencyHome: 1.18, efficiencyAway: 1.16 }
+};
+
+export const matchPredictionMock: Record<string, MatchPrediction> = {
+  m1: {
+    matchId: "m1",
+    expectedScore: { home: 1.7, away: 1.3 },
+    probabilities: { home: 44, draw: 27, away: 29 },
+    confidenceScore: 79,
+    riskFlags: ["Derby volatility", "Card risk"],
+    modelExplanation: "Home pressing intensity and final-third control are above league baseline.",
+    summary: "Model home edge with moderate uncertainty.",
+    isLowConfidence: false,
+    isRecommended: true
+  },
+  m2: {
+    matchId: "m2",
+    expectedScore: { home: 2.1, away: 1.4 },
+    probabilities: { home: 52, draw: 23, away: 25 },
+    confidenceScore: 81,
+    riskFlags: ["Late pressure phase"],
+    modelExplanation: "Sequence-based momentum favors home side after minute 60.",
+    summary: "High confidence output under live pressure conditions.",
+    isLowConfidence: false,
+    isRecommended: true
+  },
+  m4: {
+    matchId: "m4",
+    expectedScore: { home: 84, away: 82 },
+    probabilities: { home: 49, away: 51 },
+    confidenceScore: 64,
+    riskFlags: ["Three-point variance"],
+    modelExplanation: "Second unit defense mismatch creates narrow edge scenario.",
+    summary: "Near coin-flip scenario with elevated variance.",
+    isLowConfidence: true,
+    isRecommended: false
+  },
+  m5: {
+    matchId: "m5",
+    expectedScore: { home: 116, away: 111 },
+    probabilities: { home: 57, away: 43 },
+    confidenceScore: 58,
+    riskFlags: ["Foul trouble"],
+    modelExplanation: "Half-court efficiency trend supports home-side closeout.",
+    summary: "Live-state sample instability lowered calibration confidence.",
+    isLowConfidence: true,
+    isRecommended: false
+  }
+};
+
+export const predictionsMock: PredictionItem[] = matchesMock.map((match, index) => {
+  const prediction = matchPredictionMock[match.id] ?? {
+    matchId: match.id,
+    expectedScore: { home: match.expectedScoreHome ?? null, away: match.expectedScoreAway ?? null },
+    probabilities: { home: 45, draw: match.sportKey === "football" ? 25 : undefined, away: 30 },
+    confidenceScore: match.confidenceScore ?? 60,
+    riskFlags: match.riskFlags ?? [],
+    modelExplanation: "Baseline probabilistic model output.",
+    summary: "Baseline summary.",
+    isLowConfidence: (match.confidenceScore ?? 0) < 67,
+    isRecommended: (match.confidenceScore ?? 0) >= 76
+  };
+
+  const confidence = prediction.confidenceScore ?? 0;
+
+  return {
+    id: `pred-${index + 1}`,
+    matchId: match.id,
+    sportKey: match.sportKey,
+    leagueId: match.leagueId,
+    leagueName: match.leagueName,
+    homeTeamName: match.homeTeamName,
+    awayTeamName: match.awayTeamName,
+    kickoffAt: match.kickoffAt,
+    confidenceScore: confidence,
+    riskLevel: confidence >= 78 ? "low" : confidence >= 68 ? "medium" : "high",
+    expectedScore: prediction.expectedScore,
+    probabilities: prediction.probabilities,
+    modelSummary: prediction.summary ?? prediction.modelExplanation ?? "Model summary yok.",
+    riskFlags: prediction.riskFlags ?? [],
+    isLowConfidence: prediction.isLowConfidence ?? confidence < 67,
+    isRecommended: prediction.isRecommended ?? confidence >= 76
+  };
+});
+
+const lowCount = predictionsMock.filter((item) => item.riskLevel === "low").length;
+const mediumCount = predictionsMock.filter((item) => item.riskLevel === "medium").length;
+const highCount = predictionsMock.filter((item) => item.riskLevel === "high").length;
+const lowConfidenceCount = predictionsMock.filter((item) => item.isLowConfidence).length;
+
+export const dashboardMock: DashboardSummary = {
+  todayMatchCount: matchesMock.filter((item) => new Date(item.kickoffAt).toDateString() === now.toDateString()).length,
+  liveMatchCount: matchesMock.filter((item) => item.status === "live").length,
+  highConfidencePredictionCount: predictionsMock.filter((item) => (item.confidenceScore ?? 0) >= 78).length,
+  updatedLeagues: leaguesMock.slice(0, 3),
+  highConfidencePredictions: predictionsMock.filter((item) => (item.confidenceScore ?? 0) >= 78).slice(0, 5),
+  recentPredictions: predictionsMock.slice(0, 6),
+  todayMatches: matchesMock.filter((item) => new Date(item.kickoffAt).toDateString() === now.toDateString()).slice(0, 6),
+  miniTrends: [
+    { label: "Galatasaray", values: [68, 72, 76, 79, 82] },
+    { label: "Liverpool", values: [70, 73, 75, 80, 84] },
+    { label: "Celtics", values: [66, 71, 74, 79, 83] }
+  ],
+  calibratedHighConfidenceCount: predictionsMock.filter((item) => (item.confidenceScore ?? 0) >= 80).length,
+  lowConfidenceCount,
+  avgConfidenceScore: Number(
+    (predictionsMock.reduce((sum, current) => sum + (current.confidenceScore ?? 0), 0) / Math.max(1, predictionsMock.length)).toFixed(1)
+  ),
+  riskDistribution: {
+    low: lowCount,
+    medium: mediumCount,
+    high: highCount,
+    updatedAt: toIso(0, 23, 10)
+  },
+  calibrationHealthSummary: {
+    status: "monitoring",
+    brierScore: 0.18,
+    ece: 0.06,
+    reliability: 0.82,
+    note: "Calibration stable; monitor medium-risk band.",
+    updatedAt: toIso(0, 23, 10)
+  }
+};
+
+export const guideSummaryMock: GuideSummary = {
+  title: "TahminX Rehber Ozeti",
+  sections: [
+    { heading: "Sistem nasil calisir", text: "Veri katmani, modelleme katmani ve aciklanabilirlik birlikte calisir." },
+    { heading: "Guven skoru", text: "Guven skoru, veri kalitesi ve belirsizlik ile birlikte okunmalidir." },
+    { heading: "Toplam skor analizi", text: "Toplam skor senaryolari tempo ve verimlilik baglaminda yorumlanir." }
+  ]
+};
+
+export const calibrationResultsMock: CalibrationResult[] = [
+  {
+    id: "cal-2026-04-05-01",
+    startedAt: toIso(0, 1, 0),
+    finishedAt: toIso(0, 1, 8),
+    sampleSize: 420,
+    brierScore: 0.19,
+    ece: 0.07,
+    reliability: 0.81,
+    status: "completed",
+    note: "Stable distribution across football segment.",
+    updatedAt: toIso(0, 1, 8)
+  },
+  {
+    id: "cal-2026-04-04-01",
+    startedAt: toIso(-1, 1, 0),
+    finishedAt: toIso(-1, 1, 9),
+    sampleSize: 410,
+    brierScore: 0.2,
+    ece: 0.08,
+    reliability: 0.79,
+    status: "completed",
+    note: "Basketball variance slightly elevated.",
+    updatedAt: toIso(-1, 1, 9)
+  }
+];
+
+export const calibrationRunMock: CalibrationRunResponse = {
+  runId: "cal-run-pending-01",
+  startedAt: toIso(0, 2, 0),
+  message: "Calibration run started.",
+  status: "running",
+  updatedAt: toIso(0, 2, 0)
+};
+
+export const predictionRiskSummaryMock: PredictionRiskSummary = {
+  totalPredictions: predictionsMock.length,
+  low: lowCount,
+  medium: mediumCount,
+  high: highCount,
+  riskFlagsTop: [
+    { flag: "Derby volatility", count: 2 },
+    { flag: "Foul trouble", count: 2 },
+    { flag: "Three-point variance", count: 1 }
+  ],
+  calibrationHealthSummary: dashboardMock.calibrationHealthSummary ?? null,
+  updatedAt: toIso(0, 23, 10)
+};
+
+export const modelComparisonMock: ModelComparisonItem[] = [
+  {
+    modelVersion: "v2.7.1",
+    sportKey: "football",
+    leagueId: "l-super-lig",
+    leagueName: "Super Lig",
+    accuracy: 74.8,
+    logLoss: 0.89,
+    brierScore: 0.2,
+    avgConfidenceScore: 71.6,
+    calibrationQuality: 83.2,
+    sampleSize: 642,
+    metrics: [
+      { name: "accuracy", value: 74.8, delta: 1.4, rating: "stable" },
+      { name: "logLoss", value: 0.89, delta: -0.03, rating: "improving" },
+      { name: "brierScore", value: 0.2, delta: -0.01, rating: "improving" }
+    ],
+    updatedAt: toIso(0, 22, 10)
+  },
+  {
+    modelVersion: "v2.7.1",
+    sportKey: "basketball",
+    leagueId: "l-nba",
+    leagueName: "NBA",
+    accuracy: 72.3,
+    logLoss: 0.94,
+    brierScore: 0.22,
+    avgConfidenceScore: 69.1,
+    calibrationQuality: 80.4,
+    sampleSize: 715,
+    metrics: [
+      { name: "accuracy", value: 72.3, delta: 0.5, rating: "stable" },
+      { name: "logLoss", value: 0.94, delta: 0.01, rating: "watch" },
+      { name: "brierScore", value: 0.22, delta: 0.01, rating: "watch" }
+    ],
+    updatedAt: toIso(0, 22, 14)
+  },
+  {
+    modelVersion: "v2.6.9",
+    sportKey: "football",
+    leagueId: "l-premier-league",
+    leagueName: "Premier League",
+    accuracy: 73.1,
+    logLoss: 0.93,
+    brierScore: 0.21,
+    avgConfidenceScore: 70.2,
+    calibrationQuality: 79.6,
+    sampleSize: 608,
+    metrics: [
+      { name: "accuracy", value: 73.1, delta: -0.7, rating: "watch" },
+      { name: "logLoss", value: 0.93, delta: 0.02, rating: "watch" },
+      { name: "brierScore", value: 0.21, delta: 0.01, rating: "watch" }
+    ],
+    updatedAt: toIso(-1, 22, 0)
+  }
+];
+
+export const featureImportanceMock: FeatureImportanceItem[] = [
+  {
+    modelVersion: "v2.7.1",
+    sportKey: "football",
+    updatedAt: toIso(0, 20, 0),
+    features: [
+      { feature: "recentFormDelta", score: 0.24, direction: "positive", description: "Son 5 mac form farki" },
+      { feature: "homeAwaySplit", score: 0.18, direction: "positive", description: "Ic saha/dis saha performans etkisi" },
+      { feature: "lineupStability", score: 0.15, direction: "positive", description: "Kadro devamliligi" },
+      { feature: "injuryAbsences", score: 0.12, direction: "negative", description: "Eksik oyuncu etkisi" },
+      { feature: "setPieceVariance", score: 0.09, direction: "neutral", description: "Duran top varyansi" }
+    ]
+  },
+  {
+    modelVersion: "v2.7.1",
+    sportKey: "basketball",
+    updatedAt: toIso(0, 20, 10),
+    features: [
+      { feature: "paceMismatch", score: 0.22, direction: "positive", description: "Tempo uyumsuzlugu etkisi" },
+      { feature: "threePointVolume", score: 0.2, direction: "positive", description: "Uc sayi hacmi etkisi" },
+      { feature: "benchNetRating", score: 0.16, direction: "positive", description: "Bench net rating katkisi" },
+      { feature: "foulRateRisk", score: 0.14, direction: "negative", description: "Faul riski etkisi" },
+      { feature: "backToBackFatigue", score: 0.1, direction: "negative", description: "Yorgunluk etkisi" }
+    ]
+  },
+  {
+    modelVersion: "v2.6.9",
+    sportKey: "football",
+    updatedAt: toIso(-1, 19, 30),
+    features: [
+      { feature: "xgTrend", score: 0.21, direction: "positive", description: "xG trend katkisii" },
+      { feature: "transitionDefense", score: 0.17, direction: "negative", description: "Gecis savunmasi zayifligi" },
+      { feature: "pressResistance", score: 0.13, direction: "positive", description: "Pres kirma kalitesi" },
+      { feature: "cardRisk", score: 0.1, direction: "negative", description: "Kart riski etkisi" }
+    ]
+  }
+];
+
+export const failedPredictionsMock: FailedPredictionItem[] = [
+  {
+    id: "fp-001",
+    matchId: "m3",
+    matchLabel: "Besiktas vs Galatasaray",
+    sportKey: "football",
+    leagueId: "l-super-lig",
+    leagueName: "Super Lig",
+    modelVersion: "v2.7.1",
+    predictedResult: "Away Win",
+    actualResult: "Draw",
+    confidenceScore: 82,
+    riskFlags: ["Set-piece variance", "Derby volatility"],
+    failureReasonSummary: "Set-piece variance expected edge'i dengeledi.",
+    updatedAt: toIso(-1, 23, 10)
+  },
+  {
+    id: "fp-002",
+    matchId: "m6",
+    matchLabel: "Milwaukee Bucks vs Boston Celtics",
+    sportKey: "basketball",
+    leagueId: "l-nba",
+    leagueName: "NBA",
+    modelVersion: "v2.7.1",
+    predictedResult: "Home Win",
+    actualResult: "Away Win",
+    confidenceScore: 78,
+    riskFlags: ["Bench variance", "Foul trouble"],
+    failureReasonSummary: "Ucuncu ceyrek bench performansi model beklentisini bozdu.",
+    updatedAt: toIso(-1, 4, 30)
+  },
+  {
+    id: "fp-003",
+    matchId: "m4",
+    matchLabel: "Fenerbahce Beko vs Real Madrid",
+    sportKey: "basketball",
+    leagueId: "l-euroleague",
+    leagueName: "EuroLeague",
+    modelVersion: "v2.6.9",
+    predictedResult: "Under 167.5",
+    actualResult: "Over 167.5",
+    confidenceScore: 66,
+    riskFlags: ["Three-point variance"],
+    failureReasonSummary: "Yuksek pace fazi nedeniyle toplam skor yukari sapti.",
+    updatedAt: toIso(-2, 21, 40)
+  }
+];
+
+export const failedPredictionDetailsMock: Record<string, FailedPredictionDetail> = {
+  "fp-001": {
+    ...failedPredictionsMock[0],
+    summary: "Derby macinda gecis fazlari tahminden daha hizli oynandi.",
+    probabilities: { home: 24, draw: 28, away: 48 },
+    expectedScore: { home: 1.1, away: 1.5 },
+    heuristicAnalysis: {
+      missingDataImpact: "Yok.",
+      staleStatsImpact: "Son iki mac xG sapmasi modele gec yansidi.",
+      modelDisagreementImpact: "Ikincil model draw olasiligini daha yuksek vermisti.",
+      upsetScenario: "Erken duran top golu dengeyi bozdu.",
+      weakMappingConfidence: "Orta seviye.",
+      injuryUncertainty: "Mac oncesi son dakika eksigi etkili oldu."
+    }
+  },
+  "fp-002": {
+    ...failedPredictionsMock[1],
+    summary: "Ucuncu ceyrek rotasyon verimsizligi nedeniyle ev sahibi avantaj kaybetti.",
+    probabilities: { home: 56, away: 44 },
+    expectedScore: { home: 112, away: 109 },
+    heuristicAnalysis: {
+      missingDataImpact: "Yok.",
+      staleStatsImpact: "B2B etkisi son 48 saat verisinde gecikti.",
+      modelDisagreementImpact: "Pace modeli away lehine sinyal uretmisti.",
+      upsetScenario: "Clutch fazinda uc sayilik isabet orani artti.",
+      weakMappingConfidence: "Dusuk etki.",
+      injuryUncertainty: "Kisitli sure alan oyuncu rotasyonu etkiledi."
+    }
+  },
+  "fp-003": {
+    ...failedPredictionsMock[2],
+    summary: "Beklenenden yuksek tempoda oynanan ikinci yari toplam skoru artirdi.",
+    probabilities: { home: 49, away: 51 },
+    expectedScore: { home: 82, away: 84 },
+    heuristicAnalysis: {
+      missingDataImpact: "Kismi pace verisi eksikti.",
+      staleStatsImpact: "Son iki mac ritim degisimi modele tam yansimadi.",
+      modelDisagreementImpact: "Verimlilik modeli over senaryosunu destekliyordu.",
+      upsetScenario: "Son ceyrek tempo kirilimi olustu.",
+      weakMappingConfidence: "Orta.",
+      injuryUncertainty: "Onemsiz."
+    }
+  }
+};
+
+export const modelPerformanceTimeseriesMock: ModelPerformancePoint[] = [
+  { timestamp: toIso(-6, 12), sportKey: "football", leagueId: "l-super-lig", leagueName: "Super Lig", modelVersion: "v2.7.1", accuracy: 73.1, logLoss: 0.93, brierScore: 0.22, avgConfidenceScore: 69.9, sampleSize: 82 },
+  { timestamp: toIso(-5, 12), sportKey: "football", leagueId: "l-super-lig", leagueName: "Super Lig", modelVersion: "v2.7.1", accuracy: 74.2, logLoss: 0.91, brierScore: 0.21, avgConfidenceScore: 70.6, sampleSize: 86 },
+  { timestamp: toIso(-4, 12), sportKey: "football", leagueId: "l-super-lig", leagueName: "Super Lig", modelVersion: "v2.7.1", accuracy: 74.8, logLoss: 0.9, brierScore: 0.2, avgConfidenceScore: 71.2, sampleSize: 90 },
+  { timestamp: toIso(-3, 12), sportKey: "basketball", leagueId: "l-nba", leagueName: "NBA", modelVersion: "v2.7.1", accuracy: 71.5, logLoss: 0.95, brierScore: 0.23, avgConfidenceScore: 68.3, sampleSize: 102 },
+  { timestamp: toIso(-2, 12), sportKey: "basketball", leagueId: "l-nba", leagueName: "NBA", modelVersion: "v2.7.1", accuracy: 72.1, logLoss: 0.94, brierScore: 0.22, avgConfidenceScore: 68.8, sampleSize: 108 },
+  { timestamp: toIso(-1, 12), sportKey: "basketball", leagueId: "l-nba", leagueName: "NBA", modelVersion: "v2.7.1", accuracy: 72.3, logLoss: 0.94, brierScore: 0.22, avgConfidenceScore: 69.1, sampleSize: 112 },
+  { timestamp: toIso(0, 12), sportKey: "football", leagueId: "l-premier-league", leagueName: "Premier League", modelVersion: "v2.6.9", accuracy: 73.1, logLoss: 0.93, brierScore: 0.21, avgConfidenceScore: 70.2, sampleSize: 98 }
+];
+
+export const modelDriftSummaryMock: PerformanceDriftSummary = {
+  performanceDropDetected: true,
+  confidenceDriftDetected: false,
+  calibrationDriftDetected: true,
+  summaries: [
+    { metric: "accuracy", recent7d: 72.9, previous30d: 74.1, delta: -1.2, status: "watch" },
+    { metric: "logLoss", recent7d: 0.93, previous30d: 0.9, delta: 0.03, status: "watch" },
+    { metric: "brierScore", recent7d: 0.22, previous30d: 0.2, delta: 0.02, status: "watch" },
+    { metric: "avgConfidenceScore", recent7d: 69.8, previous30d: 70.3, delta: -0.5, status: "stable" },
+    { metric: "calibrationQuality", recent7d: 80.1, previous30d: 82.8, delta: -2.7, status: "watch" }
+  ],
+  updatedAt: toIso(0, 23, 30)
+};
+
+export const strategySummaryMock: StrategySummary = {
+  totalStrategies: 6,
+  activeStrategies: 4,
+  autoSelectedAt: toIso(0, 11, 15),
+  note: "Auto-select son 30 gun performansina gore guncellendi.",
+  updatedAt: toIso(0, 11, 15)
+};
+
+export const modelStrategiesMock: ModelStrategy[] = [
+  {
+    id: "strategy-1",
+    sportKey: "football",
+    leagueId: "l-super-lig",
+    leagueName: "Super Lig",
+    predictionType: "match-winner",
+    primaryModel: "logistic-v2.7.1",
+    fallbackModel: "poisson-v2.6.9",
+    isActive: true,
+    summary: strategySummaryMock,
+    updatedAt: toIso(0, 10, 20)
+  },
+  {
+    id: "strategy-2",
+    sportKey: "football",
+    leagueId: "l-premier-league",
+    leagueName: "Premier League",
+    predictionType: "goal-expectation",
+    primaryModel: "xg-sequence-v2.7.1",
+    fallbackModel: "elo-v2.5.3",
+    isActive: true,
+    summary: strategySummaryMock,
+    updatedAt: toIso(0, 10, 30)
+  },
+  {
+    id: "strategy-3",
+    sportKey: "basketball",
+    leagueId: "l-nba",
+    leagueName: "NBA",
+    predictionType: "total-score",
+    primaryModel: "tempo-logistic-v2.7.1",
+    fallbackModel: "teamRating-v2.6.2",
+    isActive: true,
+    summary: strategySummaryMock,
+    updatedAt: toIso(0, 9, 40)
+  },
+  {
+    id: "strategy-4",
+    sportKey: "basketball",
+    leagueId: "l-euroleague",
+    leagueName: "EuroLeague",
+    predictionType: "handicap-analysis",
+    primaryModel: "elo-v2.6.1",
+    fallbackModel: "poisson-v2.5.8",
+    isActive: false,
+    summary: strategySummaryMock,
+    updatedAt: toIso(-1, 22, 35)
+  }
+];
+
+export const ensembleConfigsMock: EnsembleConfig[] = [
+  {
+    id: "ens-1",
+    sportKey: "football",
+    leagueId: "l-super-lig",
+    leagueName: "Super Lig",
+    modelVersion: "v2.7.1",
+    isActive: true,
+    weights: [
+      { model: "elo", weight: 0.24 },
+      { model: "poisson", weight: 0.26 },
+      { model: "logistic", weight: 0.28 },
+      { model: "teamRating", weight: 0.22 }
+    ],
+    normalizedWeightTotal: 1,
+    updatedAt: toIso(0, 9, 10)
+  },
+  {
+    id: "ens-2",
+    sportKey: "basketball",
+    leagueId: "l-nba",
+    leagueName: "NBA",
+    modelVersion: "v2.7.1",
+    isActive: true,
+    weights: [
+      { model: "elo", weight: 0.2 },
+      { model: "poisson", weight: 0.15 },
+      { model: "logistic", weight: 0.35 },
+      { model: "teamRating", weight: 0.3 }
+    ],
+    normalizedWeightTotal: 1,
+    updatedAt: toIso(0, 9, 30)
+  }
+];
+
+export const featureLabMock: FeatureLab = {
+  templates: [
+    { id: "tpl-football-core", sportKey: "football", label: "Football Core", description: "Form + xG + lineup baseline" },
+    { id: "tpl-football-variance", sportKey: "football", label: "Football Variance", description: "High variance and derby-aware setup" },
+    { id: "tpl-basketball-core", sportKey: "basketball", label: "Basketball Core", description: "Pace + efficiency baseline" },
+    { id: "tpl-basketball-fatigue", sportKey: "basketball", label: "Basketball Fatigue", description: "Back-to-back and rotation risk focused" }
+  ],
+  featureGroups: [
+    {
+      id: "fg-football-form",
+      sportKey: "football",
+      name: "Form Signals",
+      description: "Takim form trendlerini olcer",
+      isEnabled: true,
+      features: [
+        { key: "recentFormDelta", label: "Recent Form Delta", enabled: true },
+        { key: "homeAwaySplit", label: "Home/Away Split", enabled: true },
+        { key: "lineupStability", label: "Lineup Stability", enabled: true }
+      ],
+      updatedAt: toIso(0, 8, 10)
+    },
+    {
+      id: "fg-football-risk",
+      sportKey: "football",
+      name: "Risk Inputs",
+      description: "Belirsizlik ve risk bayraklari",
+      isEnabled: true,
+      features: [
+        { key: "injuryAbsences", label: "Injury Absences", enabled: true },
+        { key: "cardRisk", label: "Card Risk", enabled: true },
+        { key: "derbyVolatility", label: "Derby Volatility", enabled: false }
+      ],
+      updatedAt: toIso(0, 8, 20)
+    },
+    {
+      id: "fg-basketball-tempo",
+      sportKey: "basketball",
+      name: "Tempo Inputs",
+      description: "Toplam skor ve tempo etkisi",
+      isEnabled: true,
+      features: [
+        { key: "paceMismatch", label: "Pace Mismatch", enabled: true },
+        { key: "threePointVolume", label: "Three Point Volume", enabled: true },
+        { key: "foulRateRisk", label: "Foul Rate Risk", enabled: true }
+      ],
+      updatedAt: toIso(0, 8, 25)
+    },
+    {
+      id: "fg-basketball-fatigue",
+      sportKey: "basketball",
+      name: "Fatigue Inputs",
+      description: "Yorgunluk ve rotasyon etkisi",
+      isEnabled: false,
+      features: [
+        { key: "backToBackFatigue", label: "Back-to-Back Fatigue", enabled: false },
+        { key: "benchNetRating", label: "Bench Net Rating", enabled: true },
+        { key: "travelLoad", label: "Travel Load", enabled: false }
+      ],
+      updatedAt: toIso(-1, 23, 45)
+    }
+  ],
+  featureSets: [
+    {
+      id: "fs-football-core",
+      sportKey: "football",
+      name: "Football Core v1",
+      template: "tpl-football-core",
+      featureKeys: ["recentFormDelta", "homeAwaySplit", "lineupStability", "injuryAbsences"],
+      isActive: true,
+      updatedAt: toIso(0, 7, 50)
+    },
+    {
+      id: "fs-football-variance",
+      sportKey: "football",
+      name: "Football Variance v2",
+      template: "tpl-football-variance",
+      featureKeys: ["recentFormDelta", "cardRisk", "derbyVolatility", "injuryAbsences"],
+      isActive: false,
+      updatedAt: toIso(-1, 21, 20)
+    },
+    {
+      id: "fs-basketball-core",
+      sportKey: "basketball",
+      name: "Basketball Core v1",
+      template: "tpl-basketball-core",
+      featureKeys: ["paceMismatch", "threePointVolume", "benchNetRating"],
+      isActive: true,
+      updatedAt: toIso(0, 7, 55)
+    }
+  ],
+  activeFeatureSetId: "fs-football-core",
+  updatedAt: toIso(0, 8, 40)
+};
+
+export const featureExperimentMock: FeatureExperiment = {
+  id: "exp-20260405-01",
+  modelVersion: "v2.7.1",
+  featureSetId: "fs-football-core",
+  leagueId: "l-super-lig",
+  sportKey: "football",
+  from: toIso(-30, 0),
+  to: toIso(0, 0),
+  status: "running",
+  startedAt: toIso(0, 12, 5),
+  createdAt: toIso(0, 12, 5),
+  updatedAt: toIso(0, 12, 6)
+};
+
+export const featureExperimentResultsMock: FeatureExperimentResult[] = [
+  {
+    id: "exp-res-1",
+    experimentId: "exp-20260405-01",
+    modelVersion: "v2.7.1",
+    featureSetId: "fs-football-core",
+    featureSetName: "Football Core v1",
+    leagueId: "l-super-lig",
+    leagueName: "Super Lig",
+    accuracy: 75.1,
+    logLoss: 0.88,
+    brierScore: 0.19,
+    sampleSize: 420,
+    isWinner: true,
+    updatedAt: toIso(0, 13, 0)
+  },
+  {
+    id: "exp-res-2",
+    experimentId: "exp-20260405-01",
+    modelVersion: "v2.7.1",
+    featureSetId: "fs-football-variance",
+    featureSetName: "Football Variance v2",
+    leagueId: "l-super-lig",
+    leagueName: "Super Lig",
+    accuracy: 73.6,
+    logLoss: 0.92,
+    brierScore: 0.21,
+    sampleSize: 420,
+    isWinner: false,
+    updatedAt: toIso(0, 13, 0)
+  },
+  {
+    id: "exp-res-3",
+    experimentId: "exp-20260404-02",
+    modelVersion: "v2.7.1",
+    featureSetId: "fs-basketball-core",
+    featureSetName: "Basketball Core v1",
+    leagueId: "l-nba",
+    leagueName: "NBA",
+    accuracy: 72.4,
+    logLoss: 0.94,
+    brierScore: 0.22,
+    sampleSize: 510,
+    isWinner: true,
+    updatedAt: toIso(-1, 18, 30)
+  }
+];
+
+
+
+===== FILE: lib/api/mock-adapter.ts =====
+import type {
+  ApiResponse,
+  CalibrationResult,
+  CalibrationRunResponse,
+  DashboardSummary,
+  EnsembleConfig,
+  FailedPredictionDetail,
+  FailedPredictionItem,
+  FeatureExperiment,
+  FeatureExperimentResult,
+  FeatureImportanceItem,
+  FeatureLab,
+  GuideSummary,
+  LeagueDetail,
+  LeagueListItem,
+  MatchDetail,
+  MatchEvent,
+  MatchListItem,
+  MatchPrediction,
+  MatchStats,
+  ModelComparisonItem,
+  ModelPerformancePoint,
+  ModelStrategy,
+  PaginationMeta,
+  PerformanceDriftSummary,
+  PredictionItem,
+  PredictionRiskSummary,
+  Sport,
+  StrategySummary,
+  StandingRow,
+  TeamDetail,
+  TeamFormPoint,
+  TeamListItem,
+  TeamSquadPlayer
+} from "@/types/api-contract";
+import {
+  calibrationResultsMock,
+  calibrationRunMock,
+  dashboardMock,
+  ensembleConfigsMock,
+  failedPredictionDetailsMock,
+  failedPredictionsMock,
+  featureExperimentMock,
+  featureExperimentResultsMock,
+  featureImportanceMock,
+  featureLabMock,
+  guideSummaryMock,
+  leaguesMock,
+  matchEventsMock,
+  matchPredictionMock,
+  matchesMock,
+  matchStatsMock,
+  modelComparisonMock,
+  modelDriftSummaryMock,
+  modelPerformanceTimeseriesMock,
+  modelStrategiesMock,
+  predictionRiskSummaryMock,
+  predictionsMock,
+  sportsMock,
+  strategySummaryMock,
+  standingsMock,
+  teamFormMock,
+  teamsMock,
+  teamSquadMock
+} from "@/lib/api/mock-contract-data";
+
+const toNumber = (value: string | null, fallback: number) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const toBoolean = (value: string | null): boolean | undefined => {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return undefined;
+};
+
+const createMeta = (page: number, pageSize: number, total: number): PaginationMeta => ({
+  page,
+  pageSize,
+  total,
+  totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  generatedAt: new Date().toISOString()
+});
+
+const paginate = <T>(items: T[], page: number, pageSize: number) => {
+  const offset = (page - 1) * pageSize;
+  return items.slice(offset, offset + pageSize);
+};
+
+const ok = <T>(data: T, meta?: PaginationMeta): ApiResponse<T> => ({
+  success: true,
+  data,
+  meta,
+  error: null
+});
+
+const notFound = <T>(message: string): ApiResponse<T> => ({
+  success: false,
+  data: null as T,
+  error: { code: "NOT_FOUND", message }
+});
+
+const applySort = <T>(
+  items: T[],
+  sortBy?: string | null,
+  sortOrder?: string | null,
+  getValue?: (item: T, key: string) => unknown
+) => {
+  if (!sortBy || !getValue) return items;
+  const direction = sortOrder === "asc" ? 1 : -1;
+
+  return [...items].sort((a, b) => {
+    const av = getValue(a, sortBy);
+    const bv = getValue(b, sortBy);
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === "number" && typeof bv === "number") return (av - bv) * direction;
+    return String(av).localeCompare(String(bv)) * direction;
+  });
+};
+
+const getQuery = (url: URL) => ({
+  sport: url.searchParams.get("sport"),
+  leagueId: url.searchParams.get("leagueId"),
+  teamId: url.searchParams.get("teamId"),
+  status: url.searchParams.get("status"),
+  modelVersion: url.searchParams.get("modelVersion"),
+  predictionType: url.searchParams.get("predictionType"),
+  isActive: toBoolean(url.searchParams.get("isActive")),
+  featureSetId: url.searchParams.get("featureSetId"),
+  experimentId: url.searchParams.get("experimentId"),
+  date: url.searchParams.get("date"),
+  from: url.searchParams.get("from"),
+  to: url.searchParams.get("to"),
+  minConfidence: toNumber(url.searchParams.get("minConfidence"), 0),
+  isLowConfidence: toBoolean(url.searchParams.get("isLowConfidence")),
+  isRecommended: toBoolean(url.searchParams.get("isRecommended")),
+  onlyHighConfidenceFailed: toBoolean(url.searchParams.get("onlyHighConfidenceFailed")),
+  page: toNumber(url.searchParams.get("page"), 1),
+  pageSize: toNumber(url.searchParams.get("pageSize"), 20),
+  sortBy: url.searchParams.get("sortBy"),
+  sortOrder: url.searchParams.get("sortOrder")
+});
+
+const inDateRange = (value: string | null | undefined, from?: string | null, to?: string | null, date?: string | null) => {
+  if (!from && !to && !date) return true;
+  if (!value) return false;
+  const point = new Date(value);
+  if (Number.isNaN(point.getTime())) return false;
+
+  if (date) {
+    const day = point.toISOString().slice(0, 10);
+    if (day !== date) return false;
+  }
+
+  if (from) {
+    const fromDate = new Date(`${from}T00:00:00.000Z`);
+    if (!Number.isNaN(fromDate.getTime()) && point < fromDate) return false;
+  }
+
+  if (to) {
+    const toDate = new Date(`${to}T23:59:59.999Z`);
+    if (!Number.isNaN(toDate.getTime()) && point > toDate) return false;
+  }
+
+  return true;
+};
+
+const filterMatches = (query: ReturnType<typeof getQuery>, source: MatchListItem[]) => {
+  const filtered = source.filter((item) => {
+    if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
+    if (query.leagueId && item.leagueId !== query.leagueId) return false;
+    if (query.teamId && item.homeTeamId !== query.teamId && item.awayTeamId !== query.teamId) return false;
+    if (query.status && query.status !== "all" && item.status !== query.status) return false;
+    if (query.minConfidence > 0 && (item.confidenceScore ?? 0) < query.minConfidence) return false;
+    if (!inDateRange(item.kickoffAt, query.from, query.to, query.date)) return false;
+    return true;
+  });
+
+  return applySort(filtered, query.sortBy, query.sortOrder, (item, key) => {
+    if (key === "confidenceScore") return item.confidenceScore ?? 0;
+    if (key === "kickoffAt") return item.kickoffAt;
+    if (key === "status") return item.status;
+    return item.kickoffAt;
+  });
+};
+
+const filterPredictions = (query: ReturnType<typeof getQuery>, source: PredictionItem[]) => {
+  const filtered = source.filter((item) => {
+    if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
+    if (query.leagueId && item.leagueId !== query.leagueId) return false;
+    if (query.teamId) {
+      const match = matchesMock.find((m) => m.id === item.matchId);
+      if (!match || (match.homeTeamId !== query.teamId && match.awayTeamId !== query.teamId)) return false;
+    }
+    if (query.status && query.status !== "all" && item.riskLevel !== query.status) return false;
+    if (query.minConfidence > 0 && (item.confidenceScore ?? 0) < query.minConfidence) return false;
+    if (query.isLowConfidence !== undefined && Boolean(item.isLowConfidence) !== query.isLowConfidence) return false;
+    if (query.isRecommended !== undefined && Boolean(item.isRecommended) !== query.isRecommended) return false;
+    if (!inDateRange(item.kickoffAt, query.from, query.to, query.date)) return false;
+    return true;
+  });
+
+  return applySort(filtered, query.sortBy, query.sortOrder, (item, key) => {
+    if (key === "confidenceScore") return item.confidenceScore ?? 0;
+    if (key === "kickoffAt") return item.kickoffAt;
+    if (key === "riskLevel") return item.riskLevel;
+    return item.confidenceScore ?? 0;
+  });
+};
+
+const filterModelComparison = (query: ReturnType<typeof getQuery>, source: ModelComparisonItem[]) => {
+  const filtered = source.filter((item) => {
+    if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
+    if (query.leagueId && item.leagueId !== query.leagueId) return false;
+    if (query.modelVersion && item.modelVersion !== query.modelVersion) return false;
+    if (!inDateRange(item.updatedAt ?? null, query.from, query.to, query.date)) return false;
+    return true;
+  });
+
+  return applySort(filtered, query.sortBy, query.sortOrder, (item, key) => {
+    if (key === "accuracy") return item.accuracy ?? 0;
+    if (key === "logLoss") return item.logLoss ?? 0;
+    if (key === "brierScore") return item.brierScore ?? 0;
+    if (key === "avgConfidenceScore") return item.avgConfidenceScore ?? 0;
+    if (key === "sampleSize") return item.sampleSize ?? 0;
+    if (key === "updatedAt") return item.updatedAt ?? "";
+    return item.updatedAt ?? "";
+  });
+};
+
+const filterFeatureImportance = (query: ReturnType<typeof getQuery>, source: FeatureImportanceItem[]) => {
+  const filtered = source.filter((item) => {
+    if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
+    if (query.modelVersion && item.modelVersion !== query.modelVersion) return false;
+    if (!inDateRange(item.updatedAt ?? null, query.from, query.to, query.date)) return false;
+    return true;
+  });
+
+  return applySort(filtered, query.sortBy, query.sortOrder, (item, key) => {
+    if (key === "updatedAt") return item.updatedAt ?? "";
+    if (key === "modelVersion") return item.modelVersion;
+    return item.updatedAt ?? "";
+  });
+};
+
+const filterFailedPredictions = (query: ReturnType<typeof getQuery>, source: FailedPredictionItem[]) => {
+  const filtered = source.filter((item) => {
+    if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
+    if (query.leagueId && item.leagueId !== query.leagueId) return false;
+    if (query.modelVersion && item.modelVersion !== query.modelVersion) return false;
+    if (query.onlyHighConfidenceFailed && (item.confidenceScore ?? 0) < 75) return false;
+    if (!inDateRange(item.updatedAt ?? null, query.from, query.to, query.date)) return false;
+    return true;
+  });
+
+  return applySort(filtered, query.sortBy, query.sortOrder, (item, key) => {
+    if (key === "confidenceScore") return item.confidenceScore ?? 0;
+    if (key === "updatedAt") return item.updatedAt ?? "";
+    return item.updatedAt ?? "";
+  });
+};
+
+const filterPerformancePoints = (query: ReturnType<typeof getQuery>, source: ModelPerformancePoint[]) => {
+  const filtered = source.filter((item) => {
+    if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
+    if (query.leagueId && item.leagueId !== query.leagueId) return false;
+    if (query.modelVersion && item.modelVersion !== query.modelVersion) return false;
+    if (!inDateRange(item.timestamp, query.from, query.to, query.date)) return false;
+    return true;
+  });
+
+  return applySort(filtered, query.sortBy, query.sortOrder, (item, key) => {
+    if (key === "accuracy") return item.accuracy ?? 0;
+    if (key === "logLoss") return item.logLoss ?? 0;
+    if (key === "brierScore") return item.brierScore ?? 0;
+    if (key === "avgConfidenceScore") return item.avgConfidenceScore ?? 0;
+    if (key === "timestamp") return item.timestamp;
+    return item.timestamp;
+  });
+};
+
+const filterModelStrategies = (query: ReturnType<typeof getQuery>, source: ModelStrategy[]) => {
+  const filtered = source.filter((item) => {
+    if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
+    if (query.leagueId && item.leagueId !== query.leagueId) return false;
+    if (query.predictionType && item.predictionType !== query.predictionType) return false;
+    if (query.isActive !== undefined && item.isActive !== query.isActive) return false;
+    if (!inDateRange(item.updatedAt ?? null, query.from, query.to, query.date)) return false;
+    return true;
+  });
+
+  return applySort(filtered, query.sortBy, query.sortOrder, (item, key) => {
+    if (key === "updatedAt") return item.updatedAt ?? "";
+    if (key === "predictionType") return item.predictionType;
+    if (key === "isActive") return item.isActive ? 1 : 0;
+    return item.updatedAt ?? "";
+  });
+};
+
+const filterEnsembleConfigs = (query: ReturnType<typeof getQuery>, source: EnsembleConfig[]) => {
+  const filtered = source.filter((item) => {
+    if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
+    if (query.leagueId && item.leagueId !== query.leagueId) return false;
+    if (query.modelVersion && item.modelVersion !== query.modelVersion) return false;
+    if (query.isActive !== undefined && Boolean(item.isActive) !== query.isActive) return false;
+    if (!inDateRange(item.updatedAt ?? null, query.from, query.to, query.date)) return false;
+    return true;
+  });
+
+  return applySort(filtered, query.sortBy, query.sortOrder, (item, key) => {
+    if (key === "updatedAt") return item.updatedAt ?? "";
+    if (key === "modelVersion") return item.modelVersion ?? "";
+    return item.updatedAt ?? "";
+  });
+};
+
+const filterFeatureExperimentResults = (query: ReturnType<typeof getQuery>, source: FeatureExperimentResult[]) => {
+  const filtered = source.filter((item) => {
+    if (query.sport && query.sport !== "all") {
+      const league = leaguesMock.find((row) => row.id === item.leagueId);
+      if (!league || league.sportKey !== query.sport) return false;
+    }
+    if (query.leagueId && item.leagueId !== query.leagueId) return false;
+    if (query.modelVersion && item.modelVersion !== query.modelVersion) return false;
+    if (query.featureSetId && item.featureSetId !== query.featureSetId) return false;
+    if (query.experimentId && item.experimentId !== query.experimentId) return false;
+    if (!inDateRange(item.updatedAt ?? null, query.from, query.to, query.date)) return false;
+    return true;
+  });
+
+  return applySort(filtered, query.sortBy, query.sortOrder, (item, key) => {
+    if (key === "accuracy") return item.accuracy ?? 0;
+    if (key === "logLoss") return item.logLoss ?? 0;
+    if (key === "brierScore") return item.brierScore ?? 0;
+    if (key === "sampleSize") return item.sampleSize ?? 0;
+    if (key === "updatedAt") return item.updatedAt ?? "";
+    return item.updatedAt ?? "";
+  });
+};
+
+export async function getMockResponse(path: string): Promise<ApiResponse<unknown>> {
+  const url = new URL(path, "http://localhost");
+  const query = getQuery(url);
+  const pathname = url.pathname;
+  const now = new Date();
+
+  if (pathname === "/api/v1/sports") {
+    return ok<Sport[]>(sportsMock);
+  }
+
+  if (pathname === "/api/v1/leagues") {
+    const list = leaguesMock.filter((item) => !query.sport || query.sport === "all" || item.sportKey === query.sport);
+    const pageItems = paginate<LeagueListItem>(list, query.page, query.pageSize);
+    return ok<LeagueListItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname.match(/^\/api\/v1\/leagues\/[^/]+$/)) {
+    const id = pathname.split("/")[4];
+    const league = leaguesMock.find((item) => item.id === id);
+    if (!league) return notFound<LeagueDetail>("League not found");
+    return ok<LeagueDetail>(league);
+  }
+
+  if (pathname.match(/^\/api\/v1\/leagues\/[^/]+\/standings$/)) {
+    const id = pathname.split("/")[4];
+    return ok<StandingRow[]>(standingsMock[id] ?? []);
+  }
+
+  if (pathname === "/api/v1/teams") {
+    const list = teamsMock.filter((item) => {
+      if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
+      if (query.leagueId && item.leagueId !== query.leagueId) return false;
+      return true;
+    });
+
+    const pageItems = paginate<TeamListItem>(list, query.page, query.pageSize);
+    return ok<TeamListItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname.match(/^\/api\/v1\/teams\/[^/]+$/)) {
+    const id = pathname.split("/")[4];
+    const team = teamsMock.find((item) => item.id === id);
+    if (!team) return notFound<TeamDetail>("Team not found");
+    return ok<TeamDetail>(team);
+  }
+
+  if (pathname.match(/^\/api\/v1\/teams\/[^/]+\/matches$/)) {
+    const id = pathname.split("/")[4];
+    const list = matchesMock.filter((item) => item.homeTeamId === id || item.awayTeamId === id);
+    const sorted = applySort(list, query.sortBy, query.sortOrder, (item, key) => {
+      if (key === "confidenceScore") return item.confidenceScore ?? 0;
+      return item.kickoffAt;
+    });
+    const pageItems = paginate<MatchListItem>(sorted, query.page, query.pageSize);
+    return ok<MatchListItem[]>(pageItems, createMeta(query.page, query.pageSize, sorted.length));
+  }
+
+  if (pathname.match(/^\/api\/v1\/teams\/[^/]+\/form$/)) {
+    const id = pathname.split("/")[4];
+    return ok<TeamFormPoint[]>(teamFormMock[id] ?? []);
+  }
+
+  if (pathname.match(/^\/api\/v1\/teams\/[^/]+\/squad$/)) {
+    const id = pathname.split("/")[4];
+    return ok<TeamSquadPlayer[]>(teamSquadMock[id] ?? []);
+  }
+
+  if (pathname === "/api/v1/matches") {
+    const list = filterMatches(query, matchesMock);
+    const pageItems = paginate<MatchListItem>(list, query.page, query.pageSize);
+    return ok<MatchListItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname === "/api/v1/matches/today") {
+    const today = now.toISOString().slice(0, 10);
+    const list = matchesMock.filter((item) => new Date(item.kickoffAt).toISOString().slice(0, 10) === today);
+    return ok<MatchListItem[]>(list);
+  }
+
+  if (pathname === "/api/v1/matches/tomorrow") {
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const day = tomorrow.toISOString().slice(0, 10);
+    const list = matchesMock.filter((item) => new Date(item.kickoffAt).toISOString().slice(0, 10) === day);
+    return ok<MatchListItem[]>(list);
+  }
+
+  if (pathname === "/api/v1/matches/live") {
+    return ok<MatchListItem[]>(matchesMock.filter((item) => item.status === "live"));
+  }
+
+  if (pathname === "/api/v1/matches/completed") {
+    return ok<MatchListItem[]>(matchesMock.filter((item) => item.status === "completed"));
+  }
+
+  if (pathname.match(/^\/api\/v1\/matches\/[^/]+$/)) {
+    const id = pathname.split("/")[4];
+    const match = matchesMock.find((item) => item.id === id);
+    if (!match) return notFound<MatchDetail>("Match not found");
+    return ok<MatchDetail>(match);
+  }
+
+  if (pathname.match(/^\/api\/v1\/matches\/[^/]+\/events$/)) {
+    const id = pathname.split("/")[4];
+    return ok<MatchEvent[]>(matchEventsMock[id] ?? []);
+  }
+
+  if (pathname.match(/^\/api\/v1\/matches\/[^/]+\/stats$/)) {
+    const id = pathname.split("/")[4];
+    return ok<MatchStats>(matchStatsMock[id] ?? {});
+  }
+
+  if (pathname.match(/^\/api\/v1\/matches\/[^/]+\/prediction$/)) {
+    const id = pathname.split("/")[4];
+    const prediction = matchPredictionMock[id];
+    if (!prediction) return notFound<MatchPrediction>("Prediction not found");
+    return ok<MatchPrediction>(prediction);
+  }
+
+  if (pathname === "/api/v1/predictions") {
+    const list = filterPredictions(query, predictionsMock);
+    const pageItems = paginate<PredictionItem>(list, query.page, query.pageSize);
+    return ok<PredictionItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname === "/api/v1/predictions/high-confidence") {
+    return ok<PredictionItem[]>(predictionsMock.filter((item) => (item.confidenceScore ?? 0) >= 78));
+  }
+
+  if (pathname === "/api/v1/analytics/dashboard") {
+    return ok<DashboardSummary>(dashboardMock);
+  }
+
+  if (pathname === "/api/v1/guide/summary") {
+    return ok<GuideSummary>(guideSummaryMock);
+  }
+
+  if (pathname === "/api/v1/admin/calibration/results") {
+    return ok<CalibrationResult[]>(calibrationResultsMock);
+  }
+
+  if (pathname === "/api/v1/admin/calibration/run") {
+    return ok<CalibrationRunResponse>(calibrationRunMock);
+  }
+
+  if (pathname === "/api/v1/admin/predictions/risk-summary") {
+    return ok<PredictionRiskSummary>(predictionRiskSummaryMock);
+  }
+
+  if (pathname === "/api/v1/admin/predictions/low-confidence") {
+    const lowList = predictionsMock.filter((item) => item.isLowConfidence || (item.confidenceScore ?? 0) < 67);
+    const list = filterPredictions(query, lowList);
+    const pageItems = paginate<PredictionItem>(list, query.page, query.pageSize);
+    return ok<PredictionItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname === "/api/v1/admin/models/comparison") {
+    const list = filterModelComparison(query, modelComparisonMock);
+    const pageItems = paginate<ModelComparisonItem>(list, query.page, query.pageSize);
+    return ok<ModelComparisonItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname === "/api/v1/admin/models/feature-importance") {
+    const list = filterFeatureImportance(query, featureImportanceMock);
+    const pageItems = paginate<FeatureImportanceItem>(list, query.page, query.pageSize);
+    return ok<FeatureImportanceItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname === "/api/v1/admin/predictions/failed") {
+    const list = filterFailedPredictions(query, failedPredictionsMock);
+    const pageItems = paginate<FailedPredictionItem>(list, query.page, query.pageSize);
+    return ok<FailedPredictionItem[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname.match(/^\/api\/v1\/admin\/predictions\/failed\/[^/]+$/)) {
+    const id = pathname.split("/")[6];
+    const detail = failedPredictionDetailsMock[id];
+    if (!detail) return notFound<FailedPredictionDetail>("Failed prediction detail not found");
+    return ok<FailedPredictionDetail>(detail);
+  }
+
+  if (pathname === "/api/v1/admin/models/performance-timeseries") {
+    const list = filterPerformancePoints(query, modelPerformanceTimeseriesMock);
+    const pageItems = paginate<ModelPerformancePoint>(list, query.page, query.pageSize);
+    return ok<ModelPerformancePoint[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname === "/api/v1/admin/models/drift-summary") {
+    return ok<PerformanceDriftSummary>(modelDriftSummaryMock);
+  }
+
+  if (pathname === "/api/v1/admin/models/strategies") {
+    const list = filterModelStrategies(query, modelStrategiesMock);
+    const pageItems = paginate<ModelStrategy>(list, query.page, query.pageSize);
+    return ok<ModelStrategy[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname === "/api/v1/admin/models/strategies/auto-select") {
+    return ok<StrategySummary>(strategySummaryMock);
+  }
+
+  if (pathname.match(/^\/api\/v1\/admin\/models\/strategies\/[^/]+$/)) {
+    const id = pathname.split("/")[6];
+    const strategy = modelStrategiesMock.find((item) => item.id === id);
+    if (!strategy) return notFound<ModelStrategy>("Model strategy not found");
+    return ok<ModelStrategy>({
+      ...strategy,
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  if (pathname === "/api/v1/admin/models/ensemble-configs") {
+    const list = filterEnsembleConfigs(query, ensembleConfigsMock);
+    const pageItems = paginate<EnsembleConfig>(list, query.page, query.pageSize);
+    return ok<EnsembleConfig[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  if (pathname.match(/^\/api\/v1\/admin\/models\/ensemble-configs\/[^/]+$/)) {
+    const id = pathname.split("/")[6];
+    const config = ensembleConfigsMock.find((item) => item.id === id);
+    if (!config) return notFound<EnsembleConfig>("Ensemble config not found");
+    return ok<EnsembleConfig>({
+      ...config,
+      normalizedWeightTotal: Number(config.weights.reduce((sum, item) => sum + item.weight, 0).toFixed(4)),
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  if (pathname === "/api/v1/admin/features/lab") {
+    return ok<FeatureLab>(featureLabMock);
+  }
+
+  if (pathname === "/api/v1/admin/features/lab/experiment") {
+    return ok<FeatureExperiment>({
+      ...featureExperimentMock,
+      id: `exp-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  if (pathname === "/api/v1/admin/features/lab/results") {
+    const list = filterFeatureExperimentResults(query, featureExperimentResultsMock);
+    const pageItems = paginate<FeatureExperimentResult>(list, query.page, query.pageSize);
+    return ok<FeatureExperimentResult[]>(pageItems, createMeta(query.page, query.pageSize, list.length));
+  }
+
+  return {
+    success: false,
+    data: null,
+    error: {
+      code: "UNSUPPORTED_ENDPOINT",
+      message: `${pathname} is not mocked`
+    }
+  };
+}
+
+
+
+===== FILE: lib/config/menu.ts =====
+export interface MenuItem {
+  title: string;
+  href: string;
+  description?: string;
+}
+
+export interface MenuSection {
+  title: string;
+  items: MenuItem[];
+}
+
+export const sidebarMenu: MenuSection[] = [
+  {
+    title: "Genel",
+    items: [
+      { title: "Anasayfa", href: "/dashboard", description: "Ozet ve canli durum" },
+      { title: "Maclar", href: "/matches", description: "Takvim ve durum filtreleri" },
+      { title: "Tahminler", href: "/predictions", description: "Model ciktilari" },
+      { title: "Canli Analiz", href: "/live", description: "Canli istatistik akisi" }
+    ]
+  },
+  {
+    title: "Futbol",
+    items: [
+      { title: "Futbol Analizi", href: "/football" },
+      { title: "Mac On Analiz", href: "/football/pre-match" },
+      { title: "Takim Karsilastirma", href: "/football/team-comparison" },
+      { title: "Form Analizi", href: "/football/form-analysis" },
+      { title: "Gol Beklentisi", href: "/football/goal-expectation" }
+    ]
+  },
+  {
+    title: "Basketbol",
+    items: [
+      { title: "Basketbol Analizi", href: "/basketball" },
+      { title: "Mac On Analiz", href: "/basketball/pre-match" },
+      { title: "Takim Karsilastirma", href: "/basketball/team-comparison" },
+      { title: "Tempo", href: "/basketball/pace" },
+      { title: "Verimlilik", href: "/basketball/efficiency" },
+      { title: "Ceyrek Analizi", href: "/basketball/quarters" }
+    ]
+  },
+  {
+    title: "Veri Modulleri",
+    items: [
+      { title: "Ligler", href: "/leagues" },
+      { title: "Takimlar", href: "/teams" },
+      { title: "Modeller", href: "/models" },
+      { title: "Performans", href: "/performance" },
+      { title: "Rehber", href: "/guide" }
+    ]
+  },
+  {
+    title: "Admin",
+    items: [
+      { title: "Calibration", href: "/admin/calibration", description: "Model calibration sonuclari" },
+      { title: "Risk Monitor", href: "/admin/risk-monitor", description: "Risk dagilimi ve bayraklar" },
+      { title: "Low Confidence", href: "/admin/low-confidence", description: "Dusuk guvenli prediction listesi" },
+      { title: "Model Comparison", href: "/admin/models/comparison", description: "Model versiyon karsilastirmasi" },
+      { title: "Feature Importance", href: "/admin/models/feature-importance", description: "Ozellik katki agirliklari" },
+      { title: "Failed Predictions", href: "/admin/predictions/failed", description: "Yanlis tahmin analizi" },
+      { title: "Model Performance", href: "/admin/models/performance", description: "Zaman serisi performans trendi" },
+      { title: "Model Drift", href: "/admin/models/drift", description: "Performance ve calibration drift ozeti" },
+      { title: "Strategies", href: "/admin/models/strategies", description: "Model strategy yonetimi" },
+      { title: "Ensemble Config", href: "/admin/models/ensemble", description: "Ensemble agirlik kontrol paneli" },
+      { title: "Feature Lab", href: "/admin/features/lab", description: "Feature group ve set yonetimi" },
+      { title: "Feature Experiments", href: "/admin/features/experiments", description: "Feature experiment sonuclari" }
+    ]
+  },
+  {
+    title: "Hesap",
+    items: [
+      { title: "Uyelik", href: "/membership" },
+      { title: "Hesabim", href: "/account" }
+    ]
+  }
+];
+
+
+
+===== FILE: lib/hooks/use-admin-query-state.ts =====
+"use client";
+
+import { useCallback, useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { SportKey } from "@/types/api-contract";
+
+const parsePositiveInt = (value: string | null, fallback: number) => {
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? num : fallback;
+};
+
+const parseBooleanOrUndefined = (value: string | null) => {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return undefined;
+};
+
+export type AdminFilters = {
+  sport: "all" | SportKey;
+  leagueId: string;
+  modelVersion: string;
+  predictionType: string;
+  isActive?: boolean;
+  from: string;
+  to: string;
+  page: number;
+  pageSize: number;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+  onlyHighConfidenceFailed?: boolean;
+};
+
+export function useAdminQueryState(defaultSortBy = "updatedAt") {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const filters = useMemo<AdminFilters>(
+    () => ({
+      sport: (searchParams.get("sport") as "all" | SportKey) ?? "all",
+      leagueId: searchParams.get("leagueId") ?? "",
+      modelVersion: searchParams.get("modelVersion") ?? "",
+      predictionType: searchParams.get("predictionType") ?? "",
+      isActive: parseBooleanOrUndefined(searchParams.get("isActive")),
+      from: searchParams.get("from") ?? "",
+      to: searchParams.get("to") ?? "",
+      page: parsePositiveInt(searchParams.get("page"), 1),
+      pageSize: parsePositiveInt(searchParams.get("pageSize"), 20),
+      sortBy: searchParams.get("sortBy") ?? defaultSortBy,
+      sortOrder: (searchParams.get("sortOrder") ?? "desc") as "asc" | "desc",
+      onlyHighConfidenceFailed: parseBooleanOrUndefined(searchParams.get("onlyHighConfidenceFailed"))
+    }),
+    [defaultSortBy, searchParams]
+  );
+
+  const setFilters = useCallback(
+    (partial: Partial<AdminFilters>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(partial).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === "" || value === "all") {
+          params.delete(key);
+        } else {
+          params.set(key, String(value));
+        }
+      });
+
+      if (partial.page === undefined && partial.pageSize === undefined) {
+        params.set("page", "1");
+      }
+
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
+  return { filters, setFilters };
+}
+
+
+
+===== FILE: components/admin/StrategyTable.tsx =====
+import type { ModelStrategy } from "@/types/api-contract";
+import { formatDateTime } from "@/lib/utils";
+
+export function StrategyTable({
+  rows,
+  busyId,
+  onEdit,
+  onToggle
+}: {
+  rows: ModelStrategy[];
+  busyId?: string | null;
+  onEdit: (item: ModelStrategy) => void;
+  onToggle: (item: ModelStrategy, nextActive: boolean) => void;
+}) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+      <table className="min-w-full text-sm">
+        <thead className="bg-[color:var(--surface-alt)] text-left text-xs uppercase tracking-[0.08em] text-[color:var(--muted)]">
+          <tr>
+            <th className="px-3 py-2">Sport</th>
+            <th className="px-3 py-2">League</th>
+            <th className="px-3 py-2">Prediction Type</th>
+            <th className="px-3 py-2">Primary Model</th>
+            <th className="px-3 py-2">Fallback Model</th>
+            <th className="px-3 py-2">Status</th>
+            <th className="px-3 py-2">Updated</th>
+            <th className="px-3 py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((item) => (
+            <tr key={item.id} className="border-t border-[var(--border)]">
+              <td className="px-3 py-2">{item.sportKey}</td>
+              <td className="px-3 py-2">{item.leagueName ?? "-"}</td>
+              <td className="px-3 py-2">{item.predictionType}</td>
+              <td className="px-3 py-2 font-semibold text-[color:var(--foreground)]">{item.primaryModel}</td>
+              <td className="px-3 py-2">{item.fallbackModel ?? "-"}</td>
+              <td className="px-3 py-2">
+                <span
+                  className={`rounded-md border px-2 py-1 text-[11px] ${
+                    item.isActive
+                      ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-200"
+                      : "border-amber-500/35 bg-amber-500/10 text-amber-200"
+                  }`}
+                >
+                  {item.isActive ? "Active" : "Inactive"}
+                </span>
+              </td>
+              <td className="px-3 py-2">{formatDateTime(item.updatedAt)}</td>
+              <td className="px-3 py-2">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onEdit(item)}
+                    className="rounded-md border border-[var(--border)] px-2 py-1 text-xs"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onToggle(item, !item.isActive)}
+                    disabled={busyId === item.id}
+                    className="rounded-md border border-[var(--border)] px-2 py-1 text-xs"
+                  >
+                    {busyId === item.id ? "Saving..." : item.isActive ? "Deactivate" : "Activate"}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
+
+===== FILE: components/admin/EnsembleWeightEditor.tsx =====
+import { useMemo } from "react";
+import type { EnsembleConfig, EnsembleWeight } from "@/types/api-contract";
+
+export function EnsembleWeightEditor({
+  config,
+  draft,
+  saving,
+  onChange,
+  onNormalize,
+  onSave
+}: {
+  config: EnsembleConfig;
+  draft: EnsembleWeight[];
+  saving?: boolean;
+  onChange: (model: string, nextWeight: number) => void;
+  onNormalize: () => void;
+  onSave: () => void;
+}) {
+  const total = useMemo(() => draft.reduce((sum, item) => sum + item.weight, 0), [draft]);
+  const normalized = Math.abs(total - 1) <= 0.001;
+
+  return (
+    <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface)] p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-[color:var(--foreground)]">
+            {config.leagueName ?? "Tum ligler"} - {config.modelVersion ?? "-"}
+          </p>
+          <p className="text-xs text-[color:var(--muted)]">{config.sportKey}</p>
+        </div>
+        <span
+          className={`rounded-md border px-2 py-1 text-[11px] ${
+            normalized
+              ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-200"
+              : "border-amber-500/35 bg-amber-500/10 text-amber-200"
+          }`}
+        >
+          Total: {total.toFixed(3)}
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        {draft.map((item) => (
+          <label key={item.model} className="grid gap-2 sm:grid-cols-[130px_1fr_90px] sm:items-center">
+            <span className="text-sm text-[color:var(--foreground)]">{item.model}</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={item.weight}
+              onChange={(event) => onChange(item.model, Number(event.target.value))}
+              className="w-full"
+            />
+            <input
+              type="number"
+              min={0}
+              max={1}
+              step={0.01}
+              value={item.weight}
+              onChange={(event) => onChange(item.model, Number(event.target.value))}
+              className="h-9 w-full rounded-md border border-[var(--border)] bg-[color:var(--surface-alt)] px-2 text-sm"
+            />
+          </label>
+        ))}
+      </div>
+
+      <div className="mt-4 flex flex-wrap justify-end gap-2">
+        <button
+          type="button"
+          onClick={onNormalize}
+          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm"
+        >
+          Normalize
+        </button>
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving}
+          className="rounded-md border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-1.5 text-sm"
+        >
+          {saving ? "Saving..." : "Kaydet"}
+        </button>
+      </div>
+    </article>
+  );
+}
+
+
+
+===== FILE: components/admin/FeatureToggleList.tsx =====
+import type { FeatureEntry } from "@/types/api-contract";
+
+export function FeatureToggleList({
+  items,
+  onToggle,
+  disabled
+}: {
+  items: FeatureEntry[];
+  onToggle: (key: string, enabled: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <ul className="space-y-2">
+      {items.map((item) => (
+        <li key={item.key} className="flex items-center justify-between gap-3 rounded-md border border-[var(--border)] px-3 py-2">
+          <div>
+            <p className="text-sm text-[color:var(--foreground)]">{item.label}</p>
+            <p className="text-xs text-[color:var(--muted)]">{item.key}</p>
+          </div>
+          <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-[color:var(--muted)]">
+            <input
+              type="checkbox"
+              checked={item.enabled}
+              disabled={disabled}
+              onChange={(event) => onToggle(item.key, event.target.checked)}
+            />
+            {item.enabled ? "On" : "Off"}
+          </label>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+
+
+===== FILE: components/admin/FeatureGroupCard.tsx =====
+import type { FeatureGroup } from "@/types/api-contract";
+import { FeatureToggleList } from "@/components/admin/FeatureToggleList";
+import { formatDateTime } from "@/lib/utils";
+
+export function FeatureGroupCard({
+  group,
+  onToggleGroup,
+  onToggleFeature
+}: {
+  group: FeatureGroup;
+  onToggleGroup: (groupId: string, enabled: boolean) => void;
+  onToggleFeature: (groupId: string, featureKey: string, enabled: boolean) => void;
+}) {
+  return (
+    <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface)] p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-[color:var(--foreground)]">{group.name}</h3>
+          <p className="text-xs text-[color:var(--muted)]">{group.description ?? "Aciklama bulunmuyor."}</p>
+        </div>
+        <label className="inline-flex items-center gap-2 text-xs text-[color:var(--muted)]">
+          <input
+            type="checkbox"
+            checked={group.isEnabled}
+            onChange={(event) => onToggleGroup(group.id, event.target.checked)}
+          />
+          Group {group.isEnabled ? "On" : "Off"}
+        </label>
+      </div>
+
+      <FeatureToggleList
+        items={group.features}
+        disabled={!group.isEnabled}
+        onToggle={(featureKey, enabled) => onToggleFeature(group.id, featureKey, enabled)}
+      />
+
+      <p className="mt-3 text-xs text-[color:var(--muted)]">Updated: {formatDateTime(group.updatedAt)}</p>
+    </article>
+  );
+}
+
+
+
+===== FILE: components/admin/ModelSelector.tsx =====
+export function ModelSelector({
+  value,
+  options,
+  onChange
+}: {
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="space-y-1">
+      <span className="text-xs text-[color:var(--muted)]">Model</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+      >
+        <option value="">Model sec</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+
+
+===== FILE: components/admin/LeagueSelector.tsx =====
+import type { LeagueListItem } from "@/types/api-contract";
+
+export function LeagueSelector({
+  value,
+  leagues,
+  onChange
+}: {
+  value: string;
+  leagues: LeagueListItem[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="space-y-1">
+      <span className="text-xs text-[color:var(--muted)]">League</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+      >
+        <option value="">Lig sec</option>
+        {leagues.map((league) => (
+          <option key={league.id} value={league.id}>
+            {league.name}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+
+
+===== FILE: components/admin/ExperimentForm.tsx =====
+import type { FeatureSet, LeagueListItem } from "@/types/api-contract";
+import { ModelSelector } from "@/components/admin/ModelSelector";
+import { LeagueSelector } from "@/components/admin/LeagueSelector";
+
+export interface ExperimentDraft {
+  modelVersion: string;
+  featureSetId: string;
+  leagueId: string;
+  from: string;
+  to: string;
+}
+
+export function ExperimentForm({
+  modelOptions,
+  featureSets,
+  leagues,
+  draft,
+  running,
+  onChange,
+  onSubmit
+}: {
+  modelOptions: string[];
+  featureSets: FeatureSet[];
+  leagues: LeagueListItem[];
+  draft: ExperimentDraft;
+  running?: boolean;
+  onChange: (next: Partial<ExperimentDraft>) => void;
+  onSubmit: () => void;
+}) {
+  const disabled =
+    running ||
+    !draft.modelVersion ||
+    !draft.featureSetId ||
+    !draft.leagueId ||
+    !draft.from ||
+    !draft.to;
+
+  return (
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <ModelSelector value={draft.modelVersion} options={modelOptions} onChange={(value) => onChange({ modelVersion: value })} />
+
+      <label className="space-y-1">
+        <span className="text-xs text-[color:var(--muted)]">Feature set</span>
+        <select
+          value={draft.featureSetId}
+          onChange={(event) => onChange({ featureSetId: event.target.value })}
+          className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+        >
+          <option value="">Feature set sec</option>
+          {featureSets.map((set) => (
+            <option key={set.id} value={set.id}>
+              {set.name}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <LeagueSelector value={draft.leagueId} leagues={leagues} onChange={(value) => onChange({ leagueId: value })} />
+
+      <label className="space-y-1">
+        <span className="text-xs text-[color:var(--muted)]">From</span>
+        <input
+          type="date"
+          value={draft.from}
+          onChange={(event) => onChange({ from: event.target.value })}
+          className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+        />
+      </label>
+
+      <label className="space-y-1">
+        <span className="text-xs text-[color:var(--muted)]">To</span>
+        <input
+          type="date"
+          value={draft.to}
+          onChange={(event) => onChange({ to: event.target.value })}
+          className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+        />
+      </label>
+
+      <div className="flex items-end">
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={disabled}
+          className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm font-semibold disabled:opacity-60"
+        >
+          {running ? "Calisiyor..." : "Experiment Baslat"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+
+===== FILE: components/admin/ExperimentResultsTable.tsx =====
+import type { FeatureExperimentResult } from "@/types/api-contract";
+import { formatDateTime } from "@/lib/utils";
+
+const valueText = (value?: number | null, digits = 3, suffix = "") =>
+  value == null || Number.isNaN(value) ? "-" : `${value.toFixed(digits)}${suffix}`;
+
+export function ExperimentResultsTable({ rows }: { rows: FeatureExperimentResult[] }) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
+      <table className="min-w-full text-sm">
+        <thead className="bg-[color:var(--surface-alt)] text-left text-xs uppercase tracking-[0.08em] text-[color:var(--muted)]">
+          <tr>
+            <th className="px-3 py-2">Feature Set</th>
+            <th className="px-3 py-2">Model</th>
+            <th className="px-3 py-2">League</th>
+            <th className="px-3 py-2">Accuracy</th>
+            <th className="px-3 py-2">LogLoss</th>
+            <th className="px-3 py-2">Brier</th>
+            <th className="px-3 py-2">Sample</th>
+            <th className="px-3 py-2">Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((item) => (
+            <tr
+              key={item.id}
+              className={`border-t border-[var(--border)] ${item.isWinner ? "bg-emerald-500/10" : ""}`}
+            >
+              <td className="px-3 py-2 font-semibold text-[color:var(--foreground)]">
+                {item.featureSetName ?? item.featureSetId}
+                {item.isWinner ? <span className="ml-2 rounded-md border border-emerald-500/35 px-1.5 py-0.5 text-[11px] text-emerald-200">Winner</span> : null}
+              </td>
+              <td className="px-3 py-2">{item.modelVersion}</td>
+              <td className="px-3 py-2">{item.leagueName ?? item.leagueId}</td>
+              <td className="px-3 py-2">{valueText(item.accuracy, 1, "%")}</td>
+              <td className="px-3 py-2">{valueText(item.logLoss)}</td>
+              <td className="px-3 py-2">{valueText(item.brierScore)}</td>
+              <td className="px-3 py-2">{valueText(item.sampleSize, 0)}</td>
+              <td className="px-3 py-2">{formatDateTime(item.updatedAt)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
+
+===== FILE: components/admin/ConfirmDialog.tsx =====
+import { useEffect } from "react";
+
+export function ConfirmDialog({
+  open,
+  title,
+  description,
+  confirmLabel = "Onayla",
+  cancelLabel = "Iptal",
+  isProcessing,
+  onCancel,
+  onConfirm
+}: {
+  open: boolean;
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  isProcessing?: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onCancel, open]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] grid place-items-center bg-black/60 px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      onClick={(event) => {
+        if (event.currentTarget === event.target && !isProcessing) {
+          onCancel();
+        }
+      }}
+    >
+      <article className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[color:var(--surface)] p-4">
+        <h3 className="text-lg font-semibold text-[color:var(--foreground)]">{title}</h3>
+        <p className="mt-2 text-sm text-[color:var(--muted)]">{description}</p>
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isProcessing}
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm"
+          >
+            {cancelLabel}
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isProcessing}
+            className="rounded-md border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-1.5 text-sm font-semibold"
+          >
+            {isProcessing ? "Isleniyor..." : confirmLabel}
+          </button>
+        </div>
+      </article>
+    </div>
+  );
+}
+
+
+
+===== FILE: app/admin/models/strategies/page.tsx =====
+"use client";
+
+import { Suspense, useMemo, useState } from "react";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { FilterPanel } from "@/components/filters/FilterPanel";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { DataFeedback } from "@/components/states/DataFeedback";
+import { LoadingSkeleton } from "@/components/states/LoadingSkeleton";
+import { EmptyState } from "@/components/states/EmptyState";
+import { SportLeagueFilters } from "@/components/admin/SportLeagueFilters";
+import { StrategyTable } from "@/components/admin/StrategyTable";
+import { MetricCard } from "@/components/admin/MetricCard";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { useToast } from "@/components/providers/ToastProvider";
+import { useAdminQueryState } from "@/lib/hooks/use-admin-query-state";
+import { useAutoSelectStrategyMutation, useLeagues, useModelStrategies, useUpdateStrategyMutation } from "@/lib/hooks/use-api";
+import type { ModelStrategy } from "@/types/api-contract";
+
+type ConfirmState =
+  | { type: "auto-select" }
+  | { type: "toggle"; strategy: ModelStrategy; nextActive: boolean }
+  | { type: "save-edit"; strategyId: string; primaryModel: string; fallbackModel: string; isActive: boolean }
+  | null;
+
+function StrategiesPageContent() {
+  const { filters, setFilters } = useAdminQueryState("updatedAt");
+  const { showToast } = useToast();
+
+  const leaguesQuery = useLeagues({ sport: filters.sport, pageSize: 200 });
+  const strategiesQuery = useModelStrategies({
+    sport: filters.sport,
+    leagueId: filters.leagueId || undefined,
+    predictionType: filters.predictionType || undefined,
+    isActive: filters.isActive,
+    from: filters.from || undefined,
+    to: filters.to || undefined,
+    page: filters.page,
+    pageSize: filters.pageSize,
+    sortBy: filters.sortBy,
+    sortOrder: filters.sortOrder
+  });
+
+  const autoSelectMutation = useAutoSelectStrategyMutation();
+  const updateMutation = useUpdateStrategyMutation();
+
+  const [editing, setEditing] = useState<ModelStrategy | null>(null);
+  const [editPrimaryModel, setEditPrimaryModel] = useState("");
+  const [editFallbackModel, setEditFallbackModel] = useState("");
+  const [editActive, setEditActive] = useState(true);
+  const [confirmState, setConfirmState] = useState<ConfirmState>(null);
+
+  const rows = useMemo(() => strategiesQuery.data?.data ?? [], [strategiesQuery.data?.data]);
+  const meta = strategiesQuery.data?.meta;
+
+  const predictionTypes = useMemo(
+    () => Array.from(new Set(rows.map((item) => item.predictionType))).sort((a, b) => a.localeCompare(b)),
+    [rows]
+  );
+
+  const activeCount = rows.filter((item) => item.isActive).length;
+  const inactiveCount = rows.length - activeCount;
+
+  const openEditModal = (item: ModelStrategy) => {
+    setEditing(item);
+    setEditPrimaryModel(item.primaryModel);
+    setEditFallbackModel(item.fallbackModel ?? "");
+    setEditActive(item.isActive);
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmState) return;
+
+    if (confirmState.type === "auto-select") {
+      autoSelectMutation.mutate(undefined, {
+        onSuccess: (response) => {
+          showToast({
+            tone: "success",
+            title: "Auto-select tamamlandi",
+            description: response.data.note ?? "Model strategy secimi guncellendi."
+          });
+          setConfirmState(null);
+        },
+        onError: (error) => {
+          showToast({
+            tone: "error",
+            title: "Auto-select basarisiz",
+            description: error instanceof Error ? error.message : "Bilinmeyen hata"
+          });
+          setConfirmState(null);
+        }
+      });
+      return;
+    }
+
+    if (confirmState.type === "toggle") {
+      updateMutation.mutate(
+        {
+          strategyId: confirmState.strategy.id,
+          data: {
+            primaryModel: confirmState.strategy.primaryModel,
+            fallbackModel: confirmState.strategy.fallbackModel ?? "",
+            isActive: confirmState.nextActive
+          }
+        },
+        {
+          onSuccess: () => {
+            showToast({ tone: "success", title: "Strategy guncellendi" });
+            setConfirmState(null);
+          },
+          onError: (error) => {
+            showToast({
+              tone: "error",
+              title: "Guncelleme basarisiz",
+              description: error instanceof Error ? error.message : "Bilinmeyen hata"
+            });
+            setConfirmState(null);
+          }
+        }
+      );
+      return;
+    }
+
+    updateMutation.mutate(
+      {
+        strategyId: confirmState.strategyId,
+        data: {
+          primaryModel: confirmState.primaryModel,
+          fallbackModel: confirmState.fallbackModel,
+          isActive: confirmState.isActive
+        }
+      },
+      {
+        onSuccess: () => {
+          showToast({ tone: "success", title: "Strategy kaydedildi" });
+          setEditing(null);
+          setConfirmState(null);
+        },
+        onError: (error) => {
+          showToast({
+            tone: "error",
+            title: "Kayit basarisiz",
+            description: error instanceof Error ? error.message : "Bilinmeyen hata"
+          });
+          setConfirmState(null);
+        }
+      }
+    );
+  };
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Model Strategies"
+        description="Primary/fallback model secimi, prediction type ve aktiflik yonetimi"
+        actions={
+          <button
+            type="button"
+            onClick={() => setConfirmState({ type: "auto-select" })}
+            className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-2 text-sm font-semibold"
+            disabled={autoSelectMutation.isPending}
+          >
+            {autoSelectMutation.isPending ? "Calisiyor..." : "Auto-select"}
+          </button>
+        }
+      />
+
+      <section className="grid gap-3 sm:grid-cols-3">
+        <MetricCard title="Toplam Strategy" value={String(meta?.total ?? rows.length)} />
+        <MetricCard title="Active" value={String(activeCount)} tone="success" />
+        <MetricCard title="Inactive" value={String(inactiveCount)} tone="warning" />
+      </section>
+
+      <FilterPanel
+        description="Sport, league ve prediction type filtreleri"
+        footer={
+          <div className="flex items-center justify-between text-xs text-[color:var(--muted)]">
+            <span>Sayfa {meta?.page ?? filters.page} / {meta?.totalPages ?? 1}</span>
+            <span>Toplam {meta?.total ?? rows.length}</span>
+          </div>
+        }
+      >
+        <SportLeagueFilters
+          sport={filters.sport}
+          leagueId={filters.leagueId}
+          leagues={leaguesQuery.data?.data ?? []}
+          onChange={(value) => setFilters(value)}
+        />
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Prediction type</span>
+          <select
+            value={filters.predictionType}
+            onChange={(event) => setFilters({ predictionType: event.target.value })}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            <option value="">Tum tipler</option>
+            {predictionTypes.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Aktiflik</span>
+          <select
+            value={filters.isActive === undefined ? "all" : filters.isActive ? "true" : "false"}
+            onChange={(event) => {
+              const value = event.target.value;
+              setFilters({ isActive: value === "all" ? undefined : value === "true" });
+            }}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            <option value="all">Tum kayitlar</option>
+            <option value="true">Sadece active</option>
+            <option value="false">Sadece inactive</option>
+          </select>
+        </label>
+      </FilterPanel>
+
+      <SectionCard title="Strategy Table" subtitle="Endpoint: /api/v1/admin/models/strategies">
+        <DataFeedback
+          isLoading={strategiesQuery.isLoading}
+          error={strategiesQuery.error as Error | undefined}
+          isEmpty={rows.length === 0}
+          emptyTitle="Strategy kaydi bulunamadi"
+          emptyDescription="Secili filtrelerde strategy verisi yok."
+          onRetry={() => void strategiesQuery.refetch()}
+          loadingVariant="table"
+          loadingCount={6}
+        >
+          <StrategyTable
+            rows={rows}
+            busyId={updateMutation.isPending ? updateMutation.variables?.strategyId ?? null : null}
+            onEdit={openEditModal}
+            onToggle={(item, nextActive) => setConfirmState({ type: "toggle", strategy: item, nextActive })}
+          />
+
+          {rows.some((item) => !item.fallbackModel) ? (
+            <EmptyState
+              tone="warning"
+              title="Config Uyarisi"
+              description="Bazi strategy kayitlarinda fallback model tanimli degil. Fail-safe akisini gozden gecirmenizi oneririz."
+            />
+          ) : null}
+        </DataFeedback>
+      </SectionCard>
+
+      {editing ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-4">
+          <article className="w-full max-w-lg rounded-xl border border-[var(--border)] bg-[color:var(--surface)] p-4">
+            <h2 className="text-lg font-semibold text-[color:var(--foreground)]">Strategy Duzenle</h2>
+            <p className="mt-1 text-sm text-[color:var(--muted)]">{editing.leagueName ?? "Tum ligler"} - {editing.predictionType}</p>
+
+            <div className="mt-4 space-y-3">
+              <label className="space-y-1">
+                <span className="text-xs text-[color:var(--muted)]">Primary model</span>
+                <input
+                  value={editPrimaryModel}
+                  onChange={(event) => setEditPrimaryModel(event.target.value)}
+                  className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+                />
+              </label>
+
+              <label className="space-y-1">
+                <span className="text-xs text-[color:var(--muted)]">Fallback model</span>
+                <input
+                  value={editFallbackModel}
+                  onChange={(event) => setEditFallbackModel(event.target.value)}
+                  className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+                />
+              </label>
+
+              <label className="inline-flex items-center gap-2 text-sm text-[color:var(--foreground)]">
+                <input type="checkbox" checked={editActive} onChange={(event) => setEditActive(event.target.checked)} />
+                Active strategy
+              </label>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditing(null)}
+                className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm"
+              >
+                Kapat
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setConfirmState({
+                    type: "save-edit",
+                    strategyId: editing.id,
+                    primaryModel: editPrimaryModel.trim(),
+                    fallbackModel: editFallbackModel.trim(),
+                    isActive: editActive
+                  })
+                }
+                disabled={!editPrimaryModel.trim()}
+                className="rounded-md border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-1.5 text-sm font-semibold"
+              >
+                Kaydet
+              </button>
+            </div>
+          </article>
+        </div>
+      ) : null}
+
+      <ConfirmDialog
+        open={Boolean(confirmState)}
+        title={
+          confirmState?.type === "auto-select"
+            ? "Auto-select onayi"
+            : confirmState?.type === "toggle"
+              ? "Strategy durumunu guncelle"
+              : "Strategy degisikliklerini kaydet"
+        }
+        description={
+          confirmState?.type === "auto-select"
+            ? "Sistem strategy secimini son performans metriklerine gore otomatik guncelleyecek. Devam etmek istiyor musunuz?"
+            : confirmState?.type === "toggle"
+              ? `Bu strategy kaydi ${confirmState.nextActive ? "active" : "inactive"} yapilacak.`
+              : "Primary/fallback model degisiklikleri kaydedilecek."
+        }
+        confirmLabel="Onayla"
+        isProcessing={autoSelectMutation.isPending || updateMutation.isPending}
+        onCancel={() => setConfirmState(null)}
+        onConfirm={() => void handleConfirm()}
+      />
+    </div>
+  );
+}
+
+export default function StrategiesPage() {
+  return (
+    <Suspense fallback={<LoadingSkeleton className="h-36" />}>
+      <StrategiesPageContent />
+    </Suspense>
+  );
+}
+
+
+
+===== FILE: app/admin/models/ensemble/page.tsx =====
+"use client";
+
+import { Suspense, useMemo, useState } from "react";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { FilterPanel } from "@/components/filters/FilterPanel";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { DataFeedback } from "@/components/states/DataFeedback";
+import { LoadingSkeleton } from "@/components/states/LoadingSkeleton";
+import { EmptyState } from "@/components/states/EmptyState";
+import { SportLeagueFilters } from "@/components/admin/SportLeagueFilters";
+import { ModelSelector } from "@/components/admin/ModelSelector";
+import { EnsembleWeightEditor } from "@/components/admin/EnsembleWeightEditor";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { useToast } from "@/components/providers/ToastProvider";
+import { useAdminQueryState } from "@/lib/hooks/use-admin-query-state";
+import { useEnsembleConfigs, useLeagues, useUpdateEnsembleConfig } from "@/lib/hooks/use-api";
+import type { EnsembleConfig, EnsembleWeight } from "@/types/api-contract";
+
+function EnsemblePageContent() {
+  const { filters, setFilters } = useAdminQueryState("updatedAt");
+  const { showToast } = useToast();
+
+  const leaguesQuery = useLeagues({ sport: filters.sport, pageSize: 200 });
+  const ensembleQuery = useEnsembleConfigs({
+    sport: filters.sport,
+    leagueId: filters.leagueId || undefined,
+    modelVersion: filters.modelVersion || undefined,
+    isActive: filters.isActive,
+    from: filters.from || undefined,
+    to: filters.to || undefined,
+    page: filters.page,
+    pageSize: filters.pageSize,
+    sortBy: filters.sortBy,
+    sortOrder: filters.sortOrder
+  });
+  const updateMutation = useUpdateEnsembleConfig();
+
+  const rows = useMemo(() => ensembleQuery.data?.data ?? [], [ensembleQuery.data?.data]);
+  const meta = ensembleQuery.data?.meta;
+
+  const modelOptions = useMemo(
+    () => Array.from(new Set(rows.map((item) => item.modelVersion).filter((value): value is string => Boolean(value)))),
+    [rows]
+  );
+
+  const [drafts, setDrafts] = useState<Record<string, EnsembleWeight[]>>({});
+  const [confirmConfigId, setConfirmConfigId] = useState<string | null>(null);
+
+  const setWeight = (configId: string, fallback: EnsembleWeight[], model: string, value: number) => {
+    setDrafts((current) => ({
+      ...current,
+      [configId]: (current[configId] ?? fallback).map((item) =>
+        item.model === model ? { ...item, weight: Number.isFinite(value) ? value : item.weight } : item
+      )
+    }));
+  };
+
+  const normalizeWeights = (configId: string, fallback: EnsembleWeight[]) => {
+    setDrafts((current) => {
+      const row = current[configId] ?? fallback;
+      const total = row.reduce((sum, item) => sum + item.weight, 0);
+      if (total <= 0) return current;
+      return {
+        ...current,
+        [configId]: row.map((item) => ({ ...item, weight: Number((item.weight / total).toFixed(4)) }))
+      };
+    });
+  };
+
+  const saveConfig = (config: EnsembleConfig) => {
+    const weights = drafts[config.id] ?? config.weights;
+    updateMutation.mutate(
+      {
+        configId: config.id,
+        data: { weights, isActive: config.isActive ?? true }
+      },
+      {
+        onSuccess: () => {
+          showToast({ tone: "success", title: "Ensemble config guncellendi" });
+          setConfirmConfigId(null);
+        },
+        onError: (error) => {
+          showToast({
+            tone: "error",
+            title: "Kayit basarisiz",
+            description: error instanceof Error ? error.message : "Bilinmeyen hata"
+          });
+          setConfirmConfigId(null);
+        }
+      }
+    );
+  };
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Ensemble Config Panel"
+        description="Model agirliklari, normalize kontrolu ve kaydetme islemleri"
+      />
+
+      <FilterPanel description="Sport, league ve model version filtreleri">
+        <SportLeagueFilters
+          sport={filters.sport}
+          leagueId={filters.leagueId}
+          leagues={leaguesQuery.data?.data ?? []}
+          onChange={(value) => setFilters(value)}
+        />
+
+        <ModelSelector
+          value={filters.modelVersion}
+          options={modelOptions}
+          onChange={(value) => setFilters({ modelVersion: value })}
+        />
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Aktiflik</span>
+          <select
+            value={filters.isActive === undefined ? "all" : filters.isActive ? "true" : "false"}
+            onChange={(event) => {
+              const value = event.target.value;
+              setFilters({ isActive: value === "all" ? undefined : value === "true" });
+            }}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            <option value="all">Tum kayitlar</option>
+            <option value="true">Sadece active</option>
+            <option value="false">Sadece inactive</option>
+          </select>
+        </label>
+      </FilterPanel>
+
+      <SectionCard title="Ensemble Config List" subtitle={`Toplam ${meta?.total ?? rows.length} kayit`}>
+        <DataFeedback
+          isLoading={ensembleQuery.isLoading}
+          error={ensembleQuery.error as Error | undefined}
+          isEmpty={rows.length === 0}
+          emptyTitle="Ensemble config verisi bulunamadi"
+          emptyDescription="Config endpoint'i secili filtrelerde veri dondurmuyor."
+          onRetry={() => void ensembleQuery.refetch()}
+          loadingVariant="list"
+          loadingCount={4}
+        >
+          <div className="space-y-4">
+            {rows.map((config) => {
+              const draft = drafts[config.id] ?? config.weights;
+              const total = draft.reduce((sum, item) => sum + item.weight, 0);
+
+              return (
+                <div key={config.id} className="space-y-2">
+                  <EnsembleWeightEditor
+                    config={config}
+                    draft={draft}
+                    saving={updateMutation.isPending && updateMutation.variables?.configId === config.id}
+                    onChange={(model, weight) => setWeight(config.id, config.weights, model, weight)}
+                    onNormalize={() => normalizeWeights(config.id, config.weights)}
+                    onSave={() => setConfirmConfigId(config.id)}
+                  />
+
+                  {Math.abs(total - 1) > 0.001 ? (
+                    <EmptyState
+                      tone="warning"
+                      title="Weight Uyarisi"
+                      description="Toplam agirlik 1.0 degil. Normalize islemi yapmadan kaydetmek canli tahmin dengesini bozabilir."
+                    />
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </DataFeedback>
+      </SectionCard>
+
+      <ConfirmDialog
+        open={Boolean(confirmConfigId)}
+        title="Ensemble config guncellenecek"
+        description="Agirlik degisiklikleri model ciktilarini etkileyecektir. Kaydetmek istiyor musunuz?"
+        isProcessing={updateMutation.isPending}
+        onCancel={() => setConfirmConfigId(null)}
+        onConfirm={() => {
+          const config = rows.find((item) => item.id === confirmConfigId);
+          if (!config) {
+            setConfirmConfigId(null);
+            return;
+          }
+          saveConfig(config);
+        }}
+      />
+    </div>
+  );
+}
+
+export default function EnsemblePage() {
+  return (
+    <Suspense fallback={<LoadingSkeleton className="h-36" />}>
+      <EnsemblePageContent />
+    </Suspense>
+  );
+}
+
+
+
+===== FILE: app/admin/features/lab/page.tsx =====
+"use client";
+
+import { Suspense, useMemo, useState } from "react";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { FilterPanel } from "@/components/filters/FilterPanel";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { DataFeedback } from "@/components/states/DataFeedback";
+import { LoadingSkeleton } from "@/components/states/LoadingSkeleton";
+import { EmptyState } from "@/components/states/EmptyState";
+import { FeatureGroupCard } from "@/components/admin/FeatureGroupCard";
+import { MetricCard } from "@/components/admin/MetricCard";
+import { useToast } from "@/components/providers/ToastProvider";
+import { useAdminQueryState } from "@/lib/hooks/use-admin-query-state";
+import { useFeatureLab } from "@/lib/hooks/use-api";
+import type { FeatureGroup, FeatureSet } from "@/types/api-contract";
+import { formatDateTime } from "@/lib/utils";
+
+function FeatureLabPageContent() {
+  const { filters, setFilters } = useAdminQueryState("updatedAt");
+  const { showToast } = useToast();
+
+  const featureLabQuery = useFeatureLab({ sport: filters.sport });
+  const lab = featureLabQuery.data?.data;
+
+  const [groupOverrides, setGroupOverrides] = useState<Record<string, FeatureGroup>>({});
+  const [customFeatureSets, setCustomFeatureSets] = useState<FeatureSet[]>([]);
+  const [activeFeatureSetIdOverride, setActiveFeatureSetIdOverride] = useState<string | null>(null);
+  const [newSetName, setNewSetName] = useState("");
+  const [templateId, setTemplateId] = useState("");
+
+  const groups = useMemo(() => {
+    const base = lab?.featureGroups ?? [];
+    return base.map((group) => groupOverrides[group.id] ?? group);
+  }, [groupOverrides, lab?.featureGroups]);
+
+  const activeFeatureSetId = activeFeatureSetIdOverride ?? lab?.activeFeatureSetId ?? "";
+
+  const featureSets = useMemo(() => {
+    const base = lab?.featureSets ?? [];
+    const mergedBase = base.map((set) => ({ ...set, isActive: set.id === activeFeatureSetId }));
+    const mergedCustom = customFeatureSets.map((set) => ({ ...set, isActive: set.id === activeFeatureSetId }));
+    return [...mergedCustom, ...mergedBase];
+  }, [activeFeatureSetId, customFeatureSets, lab?.featureSets]);
+
+  const filteredGroups = useMemo(
+    () => groups.filter((group) => filters.sport === "all" || group.sportKey === filters.sport),
+    [groups, filters.sport]
+  );
+
+  const filteredFeatureSets = useMemo(
+    () => featureSets.filter((set) => filters.sport === "all" || set.sportKey === filters.sport),
+    [featureSets, filters.sport]
+  );
+
+  const templates = useMemo(
+    () => (lab?.templates ?? []).filter((item) => filters.sport === "all" || item.sportKey === filters.sport),
+    [filters.sport, lab?.templates]
+  );
+
+  const toggleGroup = (groupId: string, enabled: boolean) => {
+    const current = groups.find((group) => group.id === groupId);
+    if (!current) return;
+
+    setGroupOverrides((prev) => ({
+      ...prev,
+      [groupId]: {
+        ...current,
+        isEnabled: enabled,
+        features: current.features.map((feature) => ({
+          ...feature,
+          enabled: enabled ? feature.enabled : false
+        }))
+      }
+    }));
+  };
+
+  const toggleFeature = (groupId: string, featureKey: string, enabled: boolean) => {
+    const current = groups.find((group) => group.id === groupId);
+    if (!current) return;
+
+    setGroupOverrides((prev) => ({
+      ...prev,
+      [groupId]: {
+        ...current,
+        features: current.features.map((feature) =>
+          feature.key === featureKey ? { ...feature, enabled } : feature
+        )
+      }
+    }));
+  };
+
+  const createFeatureSet = () => {
+    const name = newSetName.trim();
+    if (!name) {
+      showToast({ tone: "error", title: "Feature set adi gerekli" });
+      return;
+    }
+
+    const enabledFeatureKeys = filteredGroups
+      .flatMap((group) => group.features)
+      .filter((feature) => feature.enabled)
+      .map((feature) => feature.key);
+
+    if (enabledFeatureKeys.length === 0) {
+      showToast({ tone: "error", title: "En az bir feature aktif olmali" });
+      return;
+    }
+
+    const id = `fs-local-${Date.now()}`;
+    const sport = filters.sport === "all" ? filteredGroups[0]?.sportKey ?? "football" : filters.sport;
+
+    const created: FeatureSet = {
+      id,
+      sportKey: sport,
+      name,
+      template: templateId || null,
+      featureKeys: enabledFeatureKeys,
+      isActive: false,
+      updatedAt: new Date().toISOString()
+    };
+
+    setCustomFeatureSets((current) => [created, ...current]);
+    setNewSetName("");
+    setTemplateId("");
+    showToast({
+      tone: "success",
+      title: "Feature set olusturuldu",
+      description: `${enabledFeatureKeys.length} feature secildi.`
+    });
+  };
+
+  const setActiveFeatureSet = (featureSetId: string) => {
+    setActiveFeatureSetIdOverride(featureSetId);
+    showToast({ tone: "info", title: "Aktif feature set guncellendi" });
+  };
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Feature Lab"
+        description="Feature group toggle, set olusturma ve aktif feature set yonetimi"
+      />
+
+      <section className="grid gap-3 sm:grid-cols-3">
+        <MetricCard title="Feature Group" value={String(filteredGroups.length)} />
+        <MetricCard title="Feature Set" value={String(filteredFeatureSets.length)} />
+        <MetricCard title="Active Set" value={activeFeatureSetId || "-"} tone="success" />
+      </section>
+
+      <FilterPanel description="Sport bazli lab calisma alani">
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Spor</span>
+          <select
+            value={filters.sport}
+            onChange={(event) => setFilters({ sport: event.target.value as "all" | "football" | "basketball" })}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            <option value="all">Tum sporlar</option>
+            <option value="football">Futbol</option>
+            <option value="basketball">Basketbol</option>
+          </select>
+        </label>
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Template</span>
+          <select
+            value={templateId}
+            onChange={(event) => setTemplateId(event.target.value)}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            <option value="">Template sec (opsiyonel)</option>
+            {templates.map((template) => (
+              <option key={template.id} value={template.id}>{template.label}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Yeni feature set adi</span>
+          <input
+            value={newSetName}
+            onChange={(event) => setNewSetName(event.target.value)}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+            placeholder="Orn: Football Core v2"
+          />
+        </label>
+
+        <div className="flex items-end">
+          <button
+            type="button"
+            onClick={createFeatureSet}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm font-semibold"
+          >
+            Feature Set Olustur
+          </button>
+        </div>
+      </FilterPanel>
+
+      <DataFeedback
+        isLoading={featureLabQuery.isLoading}
+        error={featureLabQuery.error as Error | undefined}
+        isEmpty={!lab}
+        emptyTitle="Feature lab verisi bulunamadi"
+        emptyDescription="Endpoint su an feature lab datasini dondurmuyor."
+        onRetry={() => void featureLabQuery.refetch()}
+        loadingVariant="list"
+        loadingCount={4}
+      >
+        <SectionCard title="Feature Groups" subtitle="Enable/disable toggle ve feature bazli kontrol">
+          {filteredGroups.length > 0 ? (
+            <div className="grid gap-3 xl:grid-cols-2">
+              {filteredGroups.map((group) => (
+                <FeatureGroupCard
+                  key={group.id}
+                  group={group}
+                  onToggleGroup={toggleGroup}
+                  onToggleFeature={toggleFeature}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="Feature group yok" description="Secili sport icin feature group tanimi bulunmuyor." />
+          )}
+        </SectionCard>
+
+        <SectionCard title="Feature Sets" subtitle="Aktif set gostergesi ve set listesi">
+          {filteredFeatureSets.length > 0 ? (
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {filteredFeatureSets.map((set) => (
+                <article key={set.id} className={`rounded-xl border p-3 ${set.id === activeFeatureSetId ? "border-emerald-500/40 bg-emerald-500/10" : "border-[var(--border)] bg-[color:var(--surface)]"}`}>
+                  <p className="text-sm font-semibold text-[color:var(--foreground)]">{set.name}</p>
+                  <p className="mt-1 text-xs text-[color:var(--muted)]">Template: {set.template ?? "-"}</p>
+                  <p className="text-xs text-[color:var(--muted)]">Features: {set.featureKeys.length}</p>
+                  <p className="text-xs text-[color:var(--muted)]">Updated: {formatDateTime(set.updatedAt)}</p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveFeatureSet(set.id)}
+                    className="mt-2 rounded-md border border-[var(--border)] px-2 py-1 text-xs"
+                  >
+                    {set.id === activeFeatureSetId ? "Aktif" : "Aktif Yap"}
+                  </button>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="Feature set bulunamadi" description="Secili filtrelerde feature set listesi bos." />
+          )}
+        </SectionCard>
+      </DataFeedback>
+    </div>
+  );
+}
+
+export default function FeatureLabPage() {
+  return (
+    <Suspense fallback={<LoadingSkeleton className="h-36" />}>
+      <FeatureLabPageContent />
+    </Suspense>
+  );
+}
+
+
+
+===== FILE: app/admin/features/experiments/page.tsx =====
+"use client";
+
+import { Suspense, useMemo, useState } from "react";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { FilterPanel } from "@/components/filters/FilterPanel";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { DataFeedback } from "@/components/states/DataFeedback";
+import { LoadingSkeleton } from "@/components/states/LoadingSkeleton";
+import { EmptyState } from "@/components/states/EmptyState";
+import { SportLeagueFilters } from "@/components/admin/SportLeagueFilters";
+import { ExperimentForm, type ExperimentDraft } from "@/components/admin/ExperimentForm";
+import { ExperimentResultsTable } from "@/components/admin/ExperimentResultsTable";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { MetricCard } from "@/components/admin/MetricCard";
+import { useToast } from "@/components/providers/ToastProvider";
+import { useAdminQueryState } from "@/lib/hooks/use-admin-query-state";
+import {
+  useFeatureExperimentResults,
+  useFeatureLab,
+  useLeagues,
+  useModelStrategies,
+  useRunFeatureExperiment
+} from "@/lib/hooks/use-api";
+
+function FeatureExperimentsPageContent() {
+  const { filters, setFilters } = useAdminQueryState("updatedAt");
+  const { showToast } = useToast();
+
+  const leaguesQuery = useLeagues({ sport: filters.sport, pageSize: 200 });
+  const labQuery = useFeatureLab({ sport: filters.sport });
+  const strategiesQuery = useModelStrategies({ sport: filters.sport, pageSize: 200 });
+  const resultsQuery = useFeatureExperimentResults({
+    sport: filters.sport,
+    leagueId: filters.leagueId || undefined,
+    modelVersion: filters.modelVersion || undefined,
+    from: filters.from || undefined,
+    to: filters.to || undefined,
+    page: filters.page,
+    pageSize: filters.pageSize,
+    sortBy: filters.sortBy,
+    sortOrder: filters.sortOrder
+  });
+  const runMutation = useRunFeatureExperiment();
+
+  const [confirmRun, setConfirmRun] = useState(false);
+  const [draft, setDraft] = useState<ExperimentDraft>({
+    modelVersion: "",
+    featureSetId: "",
+    leagueId: "",
+    from: "",
+    to: ""
+  });
+
+  const results = useMemo(() => resultsQuery.data?.data ?? [], [resultsQuery.data?.data]);
+  const meta = resultsQuery.data?.meta;
+
+  const modelOptions = useMemo(
+    () =>
+      Array.from(
+        new Set((strategiesQuery.data?.data ?? []).map((item) => item.primaryModel).filter(Boolean))
+      ).sort((a, b) => a.localeCompare(b)),
+    [strategiesQuery.data?.data]
+  );
+
+  const featureSets = useMemo(
+    () =>
+      (labQuery.data?.data.featureSets ?? []).filter(
+        (set) => filters.sport === "all" || set.sportKey === filters.sport
+      ),
+    [filters.sport, labQuery.data?.data.featureSets]
+  );
+
+  const bestRow = useMemo(() => {
+    return [...results]
+      .filter((row) => row.accuracy != null)
+      .sort((a, b) => (b.accuracy ?? 0) - (a.accuracy ?? 0))[0];
+  }, [results]);
+
+  const executeRun = () => {
+    runMutation.mutate(
+      {
+        modelVersion: draft.modelVersion,
+        featureSetId: draft.featureSetId,
+        leagueId: draft.leagueId,
+        from: draft.from,
+        to: draft.to
+      },
+      {
+        onSuccess: (response) => {
+          showToast({
+            tone: "success",
+            title: "Experiment baslatildi",
+            description: `Experiment ID: ${response.data.id}`
+          });
+          setConfirmRun(false);
+          void resultsQuery.refetch();
+        },
+        onError: (error) => {
+          showToast({
+            tone: "error",
+            title: "Experiment baslatilamadi",
+            description: error instanceof Error ? error.message : "Bilinmeyen hata"
+          });
+          setConfirmRun(false);
+        }
+      }
+    );
+  };
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Feature Experiments"
+        description="Feature set karsilastirma deneyleri ve metrik sonuclari"
+      />
+
+      <section className="grid gap-3 sm:grid-cols-3">
+        <MetricCard title="Experiment Result" value={String(meta?.total ?? results.length)} />
+        <MetricCard title="Model Option" value={String(modelOptions.length)} />
+        <MetricCard
+          title="Best Feature Set"
+          value={bestRow?.featureSetName ?? "-"}
+          subtitle={bestRow?.accuracy != null ? `Accuracy ${bestRow.accuracy.toFixed(1)}%` : undefined}
+          tone="success"
+        />
+      </section>
+
+      <FilterPanel description="Sonuc tablosu icin sport, league ve model filtreleri">
+        <SportLeagueFilters
+          sport={filters.sport}
+          leagueId={filters.leagueId}
+          leagues={leaguesQuery.data?.data ?? []}
+          onChange={(value) => setFilters(value)}
+        />
+
+        <label className="space-y-1">
+          <span className="text-xs text-[color:var(--muted)]">Model version</span>
+          <select
+            value={filters.modelVersion}
+            onChange={(event) => setFilters({ modelVersion: event.target.value })}
+            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
+          >
+            <option value="">Tum modeller</option>
+            {modelOptions.map((item) => (
+              <option key={item} value={item}>{item}</option>
+            ))}
+          </select>
+        </label>
+      </FilterPanel>
+
+      <SectionCard title="Experiment Form" subtitle="Endpoint: /api/v1/admin/features/lab/experiment">
+        <ExperimentForm
+          modelOptions={modelOptions}
+          featureSets={featureSets}
+          leagues={leaguesQuery.data?.data ?? []}
+          draft={draft}
+          running={runMutation.isPending}
+          onChange={(next) => setDraft((current) => ({ ...current, ...next }))}
+          onSubmit={() => setConfirmRun(true)}
+        />
+      </SectionCard>
+
+      <SectionCard title="Experiment Results" subtitle="Accuracy, logLoss, brierScore ve sampleSize">
+        <DataFeedback
+          isLoading={resultsQuery.isLoading}
+          error={resultsQuery.error as Error | undefined}
+          isEmpty={results.length === 0}
+          emptyTitle="Experiment sonucu bulunamadi"
+          emptyDescription="Secili filtrelerde experiment result listesi bos."
+          onRetry={() => void resultsQuery.refetch()}
+          loadingVariant="table"
+          loadingCount={5}
+        >
+          <ExperimentResultsTable rows={results} />
+        </DataFeedback>
+      </SectionCard>
+
+      {results.length > 0 ? (
+        <EmptyState
+          title="Kazanan Feature Set"
+          description={bestRow?.featureSetName ? `${bestRow.featureSetName} su anda en yuksek accuracy degeri ile one cikiyor.` : "Kazanan set henuz net degil."}
+        />
+      ) : null}
+
+      <ConfirmDialog
+        open={confirmRun}
+        title="Experiment baslatilsin mi?"
+        description="Bu islem secili model ve feature set ile yeni deney calistirir. Islem tamamlanana kadar sonuc paneli gecikmeli guncellenebilir."
+        isProcessing={runMutation.isPending}
+        onCancel={() => setConfirmRun(false)}
+        onConfirm={executeRun}
+      />
+    </div>
+  );
+}
+
+export default function FeatureExperimentsPage() {
+  return (
+    <Suspense fallback={<LoadingSkeleton className="h-36" />}>
+      <FeatureExperimentsPageContent />
+    </Suspense>
+  );
+}
+
+
+
