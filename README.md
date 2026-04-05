@@ -50,3 +50,9 @@ npm run infra:down
 
 - Bu proje Betlify'den bagimsizdir.
 - Frontend ve backend ayni depoda ama ayri servis olarak calisir.
+
+## Coolify Notu (Production)
+
+- Self-hosted Supabase endpoint'i Coolify uzerinde `:8001` ile kullanilmalidir.
+- Frontend env: `NEXT_PUBLIC_SUPABASE_URL=http://supabasekong-<service-id>.<host>:8001`
+- Backend env: `SUPABASE_URL=http://supabasekong-<service-id>.<host>:8001`
