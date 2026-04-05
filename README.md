@@ -30,6 +30,14 @@ npm run dev:all
 
 Not: Frontend, `next.config.ts` rewrite ile `/api/v1/*` isteklerini `http://localhost:3002/api/v1/*` adresine yonlendirir.
 
+Production/preview notu:
+
+- Browser tarafinda `NEXT_PUBLIC_API_BASE_URL` icin tercihen `/api/v1` kullanin.
+- Frontend ve backend ayri servis ise Next proxy hedefini `INTERNAL_API_BASE_URL` ile verin.
+- Ornek: `NEXT_PUBLIC_API_BASE_URL=/api/v1`
+- Ornek: `INTERNAL_API_BASE_URL=http://backend:3002/api/v1`
+- `sslip.io` preview domainlerinde absolute preview API URL'si verilmis olsa bile browser tarafi ayni origin `/api/v1` yoluna geri dusurulur.
+
 ## Yararlı Komutlar
 
 ```bash
