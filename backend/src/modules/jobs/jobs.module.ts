@@ -20,7 +20,11 @@ const workerEnabled = isWorkerRole(runtimeRole);
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        connection: configService.get('redis.connection'),
+        connection:
+          configService.get('redis.connection') ?? {
+            host: '127.0.0.1',
+            port: 6379,
+          },
         defaultJobOptions: {
           attempts: 4,
           backoff: {
