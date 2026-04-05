@@ -9,6 +9,7 @@ import * as Sentry from '@sentry/node';
 import { AppModule } from './app.module';
 import { PrismaService } from './database/prisma.service';
 import { initOpenTelemetry } from './common/logger/otel.bootstrap';
+import { buildCorsOriginDelegate } from './config/connection.util';
 
 async function bootstrap() {
   await initOpenTelemetry();
@@ -47,7 +48,14 @@ async function bootstrap() {
   }
 
   app.enableCors({
-    origin: configService.get<string[] | true>('app.corsAllowlist') || true,
+    origin: buildCorsOriginDelegate({
+      allowlist: configService.get<string[] | true>('app.corsAllowlist') || true,
+      baseUrls: [
+        configService.get<string>('app.baseUrl'),
+        configService.get<string>('app.publicBaseUrl'),
+        configService.get<string>('app.adminBaseUrl'),
+      ],
+    }),
     methods: String(configService.get<string>('app.corsMethods') || 'GET,POST,PATCH,PUT,DELETE,OPTIONS').split(','),
     allowedHeaders: String(configService.get<string>('app.corsHeaders') || 'Content-Type,Authorization,X-Correlation-Id').split(','),
     credentials: true,

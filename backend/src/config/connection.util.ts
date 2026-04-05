@@ -6,6 +6,9 @@ export interface RedisConnectionConfig {
   tlsEnabled: boolean;
 }
 
+type CorsOriginCallback = (error: Error | null, allow?: boolean) => void;
+type CorsOriginDelegate = (origin: string | undefined, callback: CorsOriginCallback) => void;
+
 const withSslMode = (value: string, sslMode: 'disable' | 'prefer' | 'require'): string => {
   if (!value) {
     return value;
@@ -74,6 +77,108 @@ export const resolveCorsOrigins = (corsOrigin: string, corsAllowList?: string): 
   }
 
   return list.length ? list : true;
+};
+
+const normalizeOrigin = (value?: string): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+};
+
+const toComparablePort = (value: URL | { protocol: string; port?: string }): string =>
+  value.port || (value.protocol === 'https:' ? '443' : value.protocol === 'http:' ? '80' : '');
+
+export const matchesCorsOrigin = (origin: string, allowedOrigin: string): boolean => {
+  const normalizedOrigin = normalizeOrigin(origin);
+  if (!normalizedOrigin) {
+    return false;
+  }
+
+  if (allowedOrigin === '*') {
+    return true;
+  }
+
+  const wildcardMatch = allowedOrigin.match(/^(https?):\/\/\*\.([^/:]+)(?::(\d+))?$/i);
+  if (wildcardMatch) {
+    const candidate = new URL(normalizedOrigin);
+    const [, protocol, hostnameSuffix, port] = wildcardMatch;
+
+    return (
+      candidate.protocol === `${protocol.toLowerCase()}:` &&
+      toComparablePort(candidate) === (port || (protocol.toLowerCase() === 'https' ? '443' : '80')) &&
+      candidate.hostname.toLowerCase().endsWith(`.${hostnameSuffix.toLowerCase()}`)
+    );
+  }
+
+  const normalizedAllowed = normalizeOrigin(allowedOrigin);
+  if (normalizedAllowed) {
+    return normalizedOrigin === normalizedAllowed;
+  }
+
+  return false;
+};
+
+const deriveSslipCorsPatterns = (urls: Array<string | undefined>): string[] => {
+  const patterns = new Set<string>();
+
+  for (const candidate of urls) {
+    const normalized = normalizeOrigin(candidate);
+    if (!normalized) {
+      continue;
+    }
+
+    const parsed = new URL(normalized);
+    if (!parsed.hostname.endsWith('.sslip.io')) {
+      continue;
+    }
+
+    const firstDot = parsed.hostname.indexOf('.');
+    if (firstDot <= 0 || firstDot === parsed.hostname.length - 1) {
+      continue;
+    }
+
+    const siblingSuffix = parsed.hostname.slice(firstDot + 1);
+    patterns.add(`http://*.${siblingSuffix}`);
+    patterns.add(`https://*.${siblingSuffix}`);
+  }
+
+  return [...patterns];
+};
+
+export const buildCorsOriginDelegate = (input: {
+  allowlist: string[] | true;
+  baseUrls?: Array<string | undefined>;
+}): true | CorsOriginDelegate => {
+  if (input.allowlist === true) {
+    return true;
+  }
+
+  const patterns = new Set<string>(input.allowlist);
+  for (const derived of deriveSslipCorsPatterns(input.baseUrls || [])) {
+    patterns.add(derived);
+  }
+
+  if (patterns.has('*') || !patterns.size) {
+    return true;
+  }
+
+  return (origin, callback) => {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    callback(
+      null,
+      [...patterns].some((pattern) => matchesCorsOrigin(origin, pattern)),
+    );
+  };
 };
 
 export const parseTrustProxy = (value: string): boolean | number | string => {
