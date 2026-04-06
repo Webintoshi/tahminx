@@ -52,11 +52,17 @@ export interface FeatureExperimentResultsQuery extends AdminAnalyticsQuery {
   experimentId?: string;
 }
 
+const MAX_PAGE_SIZE = 100;
+
 export const toQueryString = (query?: Record<string, string | number | boolean | undefined | null>) => {
   if (!query) return "";
   const params = new URLSearchParams();
   Object.entries(query).forEach(([key, value]) => {
     if (value === undefined || value === null || value === "" || value === "all") return;
+    if (key === "pageSize" && typeof value === "number") {
+      params.set(key, String(Math.min(Math.max(1, value), MAX_PAGE_SIZE)));
+      return;
+    }
     params.set(key, String(value));
   });
   const text = params.toString();
