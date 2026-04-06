@@ -3,83 +3,92 @@
 import { useState, type ReactNode } from "react";
 
 export function FilterPanel({
-  title = "Filtreler",
-  description,
-  children,
+  primaryFilters,
+  advancedFilters,
   footer
 }: {
-  title?: string;
-  description?: string;
-  children: ReactNode;
+  primaryFilters: ReactNode;
+  advancedFilters: ReactNode;
   footer?: ReactNode;
 }) {
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
-      <section className="rounded-2xl border border-[var(--border)] bg-[color:var(--surface)] p-4">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)]">{title}</h3>
-            {description ? <p className="mt-1 text-xs text-[color:var(--muted)]">{description}</p> : null}
+      {/* Desktop View */}
+      <section className="hidden lg:block rounded-xl border border-[#2A3035] bg-[#171C1F] p-4">
+        {/* Primary Filters */}
+        <div className="flex flex-wrap items-end gap-3">
+          {primaryFilters}
+        </div>
+
+        {/* Advanced Filters Toggle */}
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="mt-3 text-xs font-medium text-[#9CA3AF] transition-colors hover:text-[#ECEDEF]"
+        >
+          {showAdvanced ? "▲ Gelişmiş filtreleri gizle" : "▼ Gelişmiş filtreleri göster"}
+        </button>
+
+        {/* Advanced Filters */}
+        {showAdvanced && (
+          <div className="mt-3 flex flex-wrap items-end gap-3 border-t border-[#2A3035] pt-3">
+            {advancedFilters}
           </div>
+        )}
+
+        {footer && <div className="mt-3 border-t border-[#2A3035] pt-3">{footer}</div>}
+      </section>
+
+      {/* Mobile View */}
+      <section className="lg:hidden rounded-xl border border-[#2A3035] bg-[#171C1F] p-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-sm font-semibold text-[#ECEDEF]">Filtreler</h3>
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-alt)] lg:hidden"
-            aria-label={`${title} panelini ac`}
-            aria-haspopup="dialog"
-            aria-expanded={isOpen}
+            className="rounded-lg border border-[#2A3035] bg-[#1F2529] px-3 py-1.5 text-xs font-medium text-[#ECEDEF]"
           >
-            Filtreyi Ac
+            Filtrele
           </button>
         </div>
-
-        <div className="hidden gap-3 md:grid-cols-2 xl:grid-cols-5 lg:grid">{children}</div>
-
-        {footer ? <div className="mt-3 border-t border-[var(--border)] pt-3">{footer}</div> : null}
       </section>
 
-      {isOpen ? (
+      {/* Mobile Drawer */}
+      {isOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/55 lg:hidden"
+          className="fixed inset-0 z-50 bg-black/60 lg:hidden"
           role="dialog"
           aria-modal="true"
-          aria-label={`${title} drawer`}
           onClick={(event) => {
             if (event.currentTarget === event.target) {
               setIsOpen(false);
             }
           }}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              setIsOpen(false);
-            }
-          }}
-          tabIndex={-1}
         >
-          <aside className="ml-auto h-full w-[min(92vw,460px)] overflow-y-auto border-l border-[var(--border)] bg-[color:var(--surface)] p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-[color:var(--muted)]">{title}</h3>
-                {description ? <p className="mt-1 text-xs text-[color:var(--muted)]">{description}</p> : null}
-              </div>
+          <aside className="ml-auto h-full w-[min(92vw,400px)] overflow-y-auto border-l border-[#2A3035] bg-[#171C1F] p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-[#ECEDEF]">Filtreler</h3>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[color:var(--foreground)] transition hover:bg-[color:var(--surface-alt)]"
+                className="rounded-lg border border-[#2A3035] px-3 py-1.5 text-sm text-[#ECEDEF]"
               >
                 Kapat
               </button>
             </div>
 
-            <div className="grid gap-3">{children}</div>
+            <div className="space-y-4">
+              {primaryFilters}
+              {advancedFilters}
+            </div>
 
-            {footer ? <div className="mt-3 border-t border-[var(--border)] pt-3">{footer}</div> : null}
+            {footer && <div className="mt-4 border-t border-[#2A3035] pt-4">{footer}</div>}
           </aside>
         </div>
-      ) : null}
+      )}
     </>
   );
 }
-
