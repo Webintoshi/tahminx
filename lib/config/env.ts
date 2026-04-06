@@ -2,7 +2,7 @@ const SSLIP_SUFFIX = ".sslip.io";
 
 const isAbsoluteUrl = (value: string) => /^https?:\/\//i.test(value);
 
-const toRuntimeRelativeUrl = (value: string) => {
+export const normalizeBrowserUrl = (value: string, preferRelative = true) => {
   if (!value || typeof window === "undefined" || !isAbsoluteUrl(value)) {
     return value;
   }
@@ -13,9 +13,20 @@ const toRuntimeRelativeUrl = (value: string) => {
     const sameOrigin = targetUrl.origin === currentUrl.origin;
     const samePreviewNetwork =
       currentUrl.hostname.endsWith(SSLIP_SUFFIX) && targetUrl.hostname.endsWith(SSLIP_SUFFIX);
+    const httpsUpgradeCandidate = currentUrl.protocol === "https:" && targetUrl.protocol === "http:";
 
-    if (sameOrigin || samePreviewNetwork) {
+    if (preferRelative && (sameOrigin || samePreviewNetwork)) {
       return `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+    }
+
+    if (httpsUpgradeCandidate) {
+      targetUrl.protocol = "https:";
+
+      if (preferRelative && targetUrl.origin === currentUrl.origin) {
+        return `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+      }
+
+      return targetUrl.toString();
     }
   } catch {
     return value;
@@ -23,6 +34,8 @@ const toRuntimeRelativeUrl = (value: string) => {
 
   return value;
 };
+
+const toRuntimeRelativeUrl = (value: string) => normalizeBrowserUrl(value, true);
 
 const rawApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api/v1";
 const rawLiveSseUrl = process.env.NEXT_PUBLIC_LIVE_SSE_URL ?? "";

@@ -1,11 +1,11 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { apiEnvelopeSchema } from "@/lib/api/schemas";
-import { env } from "@/lib/config/env";
+import { env, normalizeBrowserUrl } from "@/lib/config/env";
 
 const makeUrl = (path: string) => {
   const safePath = path.startsWith("/") ? path : `/${path}`;
   const base = env.apiBaseUrl.endsWith("/") ? env.apiBaseUrl.slice(0, -1) : env.apiBaseUrl;
-  return `${base}${safePath}`;
+  return normalizeBrowserUrl(`${base}${safePath}`);
 };
 
 export async function getJson<T extends z.ZodTypeAny>(path: string, schema: T, init?: RequestInit) {
@@ -31,4 +31,3 @@ export async function getJson<T extends z.ZodTypeAny>(path: string, schema: T, i
 
   return (parsed.data as { data: z.infer<T> }).data;
 }
-

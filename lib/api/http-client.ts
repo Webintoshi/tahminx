@@ -1,6 +1,6 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { apiResponseSchema } from "@/lib/api/contract-schemas";
-import { env } from "@/lib/config/env";
+import { env, normalizeBrowserUrl } from "@/lib/config/env";
 import { getMockResponse } from "@/lib/api/mock-adapter";
 import type { ApiError, ApiResponse } from "@/types/api-contract";
 
@@ -20,7 +20,7 @@ const normalizePath = (path: string) => (path.startsWith("/") ? path : `/${path}
 
 const withBase = (path: string) => {
   const base = env.apiBaseUrl.endsWith("/") ? env.apiBaseUrl.slice(0, -1) : env.apiBaseUrl;
-  return `${base}${normalizePath(path)}`;
+  return normalizeBrowserUrl(`${base}${normalizePath(path)}`);
 };
 
 const parseEnvelope = <T extends z.ZodTypeAny>(raw: unknown, schema: T): ApiResponse<z.infer<T>> => {
@@ -73,7 +73,11 @@ async function requestCore<T extends z.ZodTypeAny>(
     const parsed = parseEnvelope(raw, schema);
 
     if (!response.ok || !parsed.success) {
-      throw new ApiClientError(parsed.error?.message ?? `Request failed (${response.status})`, response.status, parsed.error ?? undefined);
+      throw new ApiClientError(
+        parsed.error?.message ?? `Request failed (${response.status})`,
+        response.status,
+        parsed.error ?? undefined
+      );
     }
 
     return parsed;

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { env } from "@/lib/config/env";
+import { env, normalizeBrowserUrl } from "@/lib/config/env";
 import type { ApiResponse, MatchEvent, MatchListItem } from "@/types/api-contract";
 
 type StreamMode = "sse" | "polling";
@@ -84,7 +84,7 @@ export function useLiveStream({
       };
     }
 
-    const streamUrl = new URL(env.liveSseUrl, window.location.origin);
+    const streamUrl = new URL(normalizeBrowserUrl(env.liveSseUrl, false), window.location.origin);
     if (selectedMatchId) {
       streamUrl.searchParams.set("matchId", selectedMatchId);
     }
@@ -161,4 +161,3 @@ export function useLiveStream({
     [hasSse, lastUpdatedAt, messageCount, mode, status]
   );
 }
-
