@@ -61,7 +61,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '0 3 * * *' },
         removeOnComplete: 100,
         removeOnFail: 300,
-        jobId: `repeatable:${JOB_NAMES.syncLeagues}`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.syncLeagues),
       },
     );
 
@@ -72,7 +72,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '20 3 * * *' },
         removeOnComplete: 100,
         removeOnFail: 300,
-        jobId: `repeatable:${JOB_NAMES.syncTeams}`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.syncTeams),
       },
     );
 
@@ -83,7 +83,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '40 3 * * *' },
         removeOnComplete: 100,
         removeOnFail: 300,
-        jobId: `repeatable:${JOB_NAMES.syncPlayers}`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.syncPlayers),
       },
     );
 
@@ -94,7 +94,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '20 4 * * *' },
         removeOnComplete: 100,
         removeOnFail: 300,
-        jobId: `repeatable:${JOB_NAMES.syncStandings}`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.syncStandings),
       },
     );
 
@@ -105,7 +105,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '5 * * * *' },
         removeOnComplete: 150,
         removeOnFail: 400,
-        jobId: `repeatable:${JOB_NAMES.syncFixtures}`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.syncFixtures),
       },
     );
 
@@ -116,7 +116,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '20 * * * *' },
         removeOnComplete: 150,
         removeOnFail: 400,
-        jobId: `repeatable:${JOB_NAMES.syncResults}`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.syncResults),
       },
     );
 
@@ -127,7 +127,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '*/30 * * * *' },
         removeOnComplete: 150,
         removeOnFail: 300,
-        jobId: `repeatable:${JOB_NAMES.syncTeamStats}`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.syncTeamStats),
       },
     );
 
@@ -138,7 +138,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '0 * * * *' },
         removeOnComplete: 150,
         removeOnFail: 300,
-        jobId: `repeatable:${JOB_NAMES.syncPlayerStats}`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.syncPlayerStats),
       },
     );
 
@@ -149,7 +149,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '*/10 * * * *' },
         removeOnComplete: 200,
         removeOnFail: 400,
-        jobId: `repeatable:${JOB_NAMES.syncMatchEvents}:base`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.syncMatchEvents, 'base'),
       },
     );
 
@@ -160,7 +160,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '*/2 * * * 0,1,5,6' },
         removeOnComplete: 200,
         removeOnFail: 400,
-        jobId: `repeatable:${JOB_NAMES.syncMatchEvents}:matchday`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.syncMatchEvents, 'matchday'),
       },
     );
 
@@ -171,7 +171,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '30 4 * * *' },
         removeOnComplete: 100,
         removeOnFail: 200,
-        jobId: `repeatable:${JOB_NAMES.recalculateForms}`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.recalculateForms),
       },
     );
 
@@ -182,7 +182,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '*/20 * * * *' },
         removeOnComplete: 150,
         removeOnFail: 300,
-        jobId: `repeatable:${JOB_NAMES.generateFeatures}`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.generateFeatures),
       },
     );
 
@@ -193,7 +193,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '*/20 * * * *' },
         removeOnComplete: 150,
         removeOnFail: 300,
-        jobId: `repeatable:${JOB_NAMES.generatePredictions}`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.generatePredictions),
       },
     );
 
@@ -204,7 +204,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         repeat: { pattern: '*/5 * * * *' },
         removeOnComplete: 150,
         removeOnFail: 300,
-        jobId: `repeatable:${JOB_NAMES.providerHealthCheck}`,
+        jobId: this.safeJobId('repeatable', JOB_NAMES.providerHealthCheck),
       },
     );
   }
@@ -218,7 +218,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
       JOB_NAMES.syncLeagues,
       { source: 'startup-hydration' },
       {
-        jobId: `startup:${JOB_NAMES.syncLeagues}:${dayKey}`,
+        jobId: this.safeJobId('startup', JOB_NAMES.syncLeagues, dayKey),
         priority: 5,
         removeOnComplete: 25,
         removeOnFail: 100,
@@ -229,7 +229,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
       JOB_NAMES.syncTeams,
       { source: 'startup-hydration' },
       {
-        jobId: `startup:${JOB_NAMES.syncTeams}:${dayKey}`,
+        jobId: this.safeJobId('startup', JOB_NAMES.syncTeams, dayKey),
         delay: 15_000,
         priority: 5,
         removeOnComplete: 25,
@@ -241,7 +241,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
       JOB_NAMES.syncStandings,
       { source: 'startup-hydration' },
       {
-        jobId: `startup:${JOB_NAMES.syncStandings}:${dayKey}`,
+        jobId: this.safeJobId('startup', JOB_NAMES.syncStandings, dayKey),
         delay: 30_000,
         priority: 4,
         removeOnComplete: 25,
@@ -253,7 +253,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
       JOB_NAMES.syncFixtures,
       { source: 'startup-hydration' },
       {
-        jobId: `startup:${JOB_NAMES.syncFixtures}:${hourKey}`,
+        jobId: this.safeJobId('startup', JOB_NAMES.syncFixtures, hourKey),
         delay: 45_000,
         priority: 3,
         removeOnComplete: 50,
@@ -265,7 +265,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
       JOB_NAMES.syncResults,
       { source: 'startup-hydration' },
       {
-        jobId: `startup:${JOB_NAMES.syncResults}:${hourKey}`,
+        jobId: this.safeJobId('startup', JOB_NAMES.syncResults, hourKey),
         delay: 60_000,
         priority: 3,
         removeOnComplete: 50,
@@ -277,7 +277,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
       JOB_NAMES.generateFeatures,
       { source: 'startup-hydration' },
       {
-        jobId: `startup:${JOB_NAMES.generateFeatures}:${hourKey}`,
+        jobId: this.safeJobId('startup', JOB_NAMES.generateFeatures, hourKey),
         delay: 90_000,
         priority: 3,
         removeOnComplete: 50,
@@ -289,7 +289,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
       JOB_NAMES.generatePredictions,
       { source: 'startup-hydration' },
       {
-        jobId: `startup:${JOB_NAMES.generatePredictions}:${hourKey}`,
+        jobId: this.safeJobId('startup', JOB_NAMES.generatePredictions, hourKey),
         delay: 120_000,
         priority: 2,
         removeOnComplete: 50,
@@ -301,7 +301,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
       JOB_NAMES.providerHealthCheck,
       { source: 'startup-hydration' },
       {
-        jobId: `startup:${JOB_NAMES.providerHealthCheck}:${hourKey}`,
+        jobId: this.safeJobId('startup', JOB_NAMES.providerHealthCheck, hourKey),
         priority: 4,
         removeOnComplete: 25,
         removeOnFail: 100,
@@ -310,7 +310,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
   }
 
   async enqueueIngestionJob(ingestionJobId: string, jobName: string, payload: Record<string, unknown>): Promise<void> {
-    const idempotentJobId = `${jobName}:${ingestionJobId}`;
+    const idempotentJobId = this.safeJobId(jobName, ingestionJobId);
 
     await this.ingestionQueue.add(jobName, payload, {
       jobId: idempotentJobId,
@@ -337,7 +337,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
       JOB_NAMES.generateFeatures,
       { matchIds: dedupedIds, source },
       {
-        jobId: `${JOB_NAMES.generateFeatures}:batch:${batchKey}:${Date.now()}`,
+        jobId: this.safeJobId(JOB_NAMES.generateFeatures, 'batch', batchKey, Date.now()),
         attempts: 3,
         priority: 3,
         backoff: {
@@ -355,7 +355,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
       JOB_NAMES.generatePredictions,
       { matchId },
       {
-        jobId: `${JOB_NAMES.generatePredictions}:${matchId}`,
+        jobId: this.safeJobId(JOB_NAMES.generatePredictions, matchId),
         attempts: 4,
         priority: 1,
         backoff: {
@@ -380,7 +380,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
       JOB_NAMES.generatePredictions,
       { matchIds: dedupedIds, source },
       {
-        jobId: `${JOB_NAMES.generatePredictions}:batch:${batchKey}:${Date.now()}`,
+        jobId: this.safeJobId(JOB_NAMES.generatePredictions, 'batch', batchKey, Date.now()),
         attempts: 3,
         priority: 2,
         backoff: {
@@ -442,7 +442,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         createdAt: new Date().toISOString(),
       },
       {
-        jobId: `dead-letter:${ingestionJobId}:${Date.now()}`,
+        jobId: this.safeJobId('dead-letter', ingestionJobId, Date.now()),
         removeOnComplete: 500,
         removeOnFail: 1000,
       },
@@ -516,5 +516,12 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         },
       });
     }
+  }
+
+  private safeJobId(...parts: Array<string | number>): string {
+    return parts
+      .map((part) => String(part).replace(/[^a-zA-Z0-9_-]/g, '-'))
+      .filter(Boolean)
+      .join('-');
   }
 }
