@@ -1,18 +1,33 @@
 ﻿"use client";
 
-import { Suspense } from "react";
+import { Suspense, useMemo } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SportTabs } from "@/components/filters/SportTabs";
 import { DataFeedback } from "@/components/states/DataFeedback";
 import { LoadingSkeleton } from "@/components/states/LoadingSkeleton";
 import { useLeagues } from "@/lib/hooks/use-api";
-import { mapFiltersToMatchQuery, useFilterQueryState } from "@/lib/hooks/use-query-state";
+import { useFilterQueryState } from "@/lib/hooks/use-query-state";
 
 function LeaguesPageContent() {
   const { filters, setFilters } = useFilterQueryState();
-  const leaguesQuery = useLeagues(mapFiltersToMatchQuery(filters));
-  const leagues = leaguesQuery.data?.data ?? [];
+  const leaguesQuery = useLeagues({
+    sport: filters.sport,
+    page: filters.page,
+    pageSize: filters.pageSize
+  });
+  const leagues = useMemo(() => {
+    const items = [...(leaguesQuery.data?.data ?? [])];
+    const direction = filters.sortOrder === "asc" ? 1 : -1;
+
+    items.sort((left, right) => {
+      if (filters.sortBy === "name") return left.name.localeCompare(right.name) * direction;
+      if (filters.sortBy === "country") return left.country.localeCompare(right.country) * direction;
+      return (left.updatedAt ?? "").localeCompare(right.updatedAt ?? "") * direction;
+    });
+
+    return items;
+  }, [filters.sortBy, filters.sortOrder, leaguesQuery.data?.data]);
   const meta = leaguesQuery.data?.meta;
 
   return (

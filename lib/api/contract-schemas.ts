@@ -93,6 +93,48 @@ const normalizeLeagueListItem = (value: unknown): unknown => {
   };
 };
 
+const normalizeTeamListItem = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  if ("leagueId" in record && "sportKey" in record) {
+    return record;
+  }
+
+  const sport = asRecord(record.sport);
+  const inferredSportKey = inferSportKey({ ...record, sport });
+
+  return {
+    id: asString(record.id),
+    leagueId: asString(record.leagueId, "unknown"),
+    sportId: asString(record.sportId, "unknown"),
+    sportKey: asString(record.sportKey, inferredSportKey),
+    name: asString(record.name, "Team"),
+    shortName: asNullableString(record.shortName),
+    city: asNullableString(record.city ?? record.country),
+    logoUrl: asNullableString(record.logoUrl)
+  };
+};
+
+const normalizeTeamDetail = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  const normalized = asRecord(normalizeTeamListItem(record));
+  if (!normalized) return value;
+
+  return {
+    ...normalized,
+    country: asNullableString(record.country),
+    foundedYear: asNumber(record.foundedYear),
+    coach: asNullableString(record.coach),
+    homeMetric: asNumber(record.homeMetric),
+    awayMetric: asNumber(record.awayMetric),
+    attackMetric: asNumber(record.attackMetric),
+    defenseMetric: asNumber(record.defenseMetric)
+  };
+};
+
 const normalizeMatchListItem = (value: unknown): unknown => {
   const record = asRecord(value);
   if (!record) return value;
@@ -440,7 +482,7 @@ export const standingRowSchema = z.object({
   form: z.array(z.enum(["W", "D", "L"]))
 });
 
-export const teamListItemSchema = z.object({
+export const teamListItemSchema = z.preprocess(normalizeTeamListItem, z.object({
   id: z.string(),
   leagueId: z.string(),
   sportId: z.string(),
@@ -449,9 +491,17 @@ export const teamListItemSchema = z.object({
   shortName: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
   logoUrl: z.string().nullable().optional()
-});
+}));
 
-export const teamDetailSchema = teamListItemSchema.extend({
+export const teamDetailSchema = z.preprocess(normalizeTeamDetail, z.object({
+  id: z.string(),
+  leagueId: z.string(),
+  sportId: z.string(),
+  sportKey: z.string(),
+  name: z.string(),
+  shortName: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  logoUrl: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
   foundedYear: z.number().nullable().optional(),
   coach: z.string().nullable().optional(),
@@ -459,7 +509,7 @@ export const teamDetailSchema = teamListItemSchema.extend({
   awayMetric: z.number().nullable().optional(),
   attackMetric: z.number().nullable().optional(),
   defenseMetric: z.number().nullable().optional()
-});
+}));
 
 export const teamFormPointSchema = z.object({
   date: z.string(),

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { Suspense } from "react";
+import { Suspense, useMemo } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { TeamFormCard } from "@/components/cards/TeamFormCard";
@@ -8,7 +8,7 @@ import { DataFeedback } from "@/components/states/DataFeedback";
 import { SportTabs } from "@/components/filters/SportTabs";
 import { LoadingSkeleton } from "@/components/states/LoadingSkeleton";
 import { useLeagues, useTeamForm, useTeams } from "@/lib/hooks/use-api";
-import { mapFiltersToMatchQuery, useFilterQueryState } from "@/lib/hooks/use-query-state";
+import { useFilterQueryState } from "@/lib/hooks/use-query-state";
 import type { TeamListItem } from "@/types/api-contract";
 
 function TeamCardWithForm({ team }: { team: TeamListItem }) {
@@ -26,10 +26,25 @@ function TeamCardWithForm({ team }: { team: TeamListItem }) {
 
 function TeamsPageContent() {
   const { filters, setFilters } = useFilterQueryState();
-  const teamsQuery = useTeams(mapFiltersToMatchQuery(filters));
+  const teamsQuery = useTeams({
+    sport: filters.sport,
+    leagueId: filters.leagueId || undefined,
+    page: filters.page,
+    pageSize: filters.pageSize
+  });
   const leaguesQuery = useLeagues({ sport: filters.sport, pageSize: 200 });
 
-  const teams = teamsQuery.data?.data ?? [];
+  const teams = useMemo(() => {
+    const items = [...(teamsQuery.data?.data ?? [])];
+    const direction = filters.sortOrder === "asc" ? 1 : -1;
+
+    items.sort((left, right) => {
+      if (filters.sortBy === "city") return (left.city ?? "").localeCompare(right.city ?? "") * direction;
+      return left.name.localeCompare(right.name) * direction;
+    });
+
+    return items;
+  }, [filters.sortBy, filters.sortOrder, teamsQuery.data?.data]);
   const meta = teamsQuery.data?.meta;
 
   return (
