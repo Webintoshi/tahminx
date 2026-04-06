@@ -21,10 +21,10 @@ export function LineChart({ data, height = 180 }: { data: LineChartPoint[]; heig
 
   return (
     <div className="space-y-2">
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full rounded-xl bg-[color:var(--surface-alt)] p-2" role="img" aria-label="Cizgi grafik">
-        <polyline fill="none" stroke="var(--accent)" strokeWidth="3" points={points} strokeLinejoin="round" strokeLinecap="round" />
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full rounded-xl bg-[#1F2529] p-2" role="img" aria-label="Çizgi grafik">
+        <polyline fill="none" stroke="#7A84FF" strokeWidth="3" points={points} strokeLinejoin="round" strokeLinecap="round" />
       </svg>
-      <div className="grid gap-2 text-center text-[11px] text-[color:var(--muted)]" style={{ gridTemplateColumns: `repeat(${data.length}, minmax(0, 1fr))` }}>
+      <div className="grid gap-2 text-center text-[11px] text-[#9CA3AF]" style={{ gridTemplateColumns: `repeat(${data.length}, minmax(0, 1fr))` }}>
         {data.map((point) => (
           <span key={point.label} className="truncate">{point.label}</span>
         ))}
@@ -32,4 +32,3 @@ export function LineChart({ data, height = 180 }: { data: LineChartPoint[]; heig
     </div>
   );
 }
-

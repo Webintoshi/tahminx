@@ -10,15 +10,18 @@
   --foreground-muted: #9CA3AF;
   
   --surface: #171C1F;
+  --surface-alt: #1F2529;
   --surface-hover: #1F2529;
   --surface-active: #2A3035;
   
   --accent: #7A84FF;
+  --accent-2: #8B94FF;
   --accent-hover: #8B94FF;
-  --accent-active: #6972E6;
   
   --border: #2A3035;
   --border-hover: #3A4047;
+  
+  --muted: #9CA3AF;
   
   --success: #34C759;
   --warning: #FF9500;
@@ -31,15 +34,16 @@
   --color-foreground: var(--foreground);
   --color-foreground-muted: var(--foreground-muted);
   --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
   --color-surface-hover: var(--surface-hover);
   --color-surface-active: var(--surface-active);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
-  --color-accent-active: var(--accent-active);
   --color-border: var(--border);
   --color-border-hover: var(--border-hover);
+  --color-muted: var(--muted);
   --font-sans: var(--font-body);
-  --font-display: var(--font-heading);
+  --font-display: var(--font-body);
 }
 
 /* Base Styles - Clean & Minimal */
