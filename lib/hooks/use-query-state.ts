@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import type { ReadonlyURLSearchParams } from "next/navigation";
 import type { MatchQuery, PredictionQuery } from "@/lib/api/query";
 
 const matchStatuses = new Set(["scheduled", "live", "completed", "postponed", "cancelled"]);
@@ -24,39 +25,45 @@ const parseBooleanOrUndefined = (value: string | null) => {
   return undefined;
 };
 
+const parseFiltersFromSearchParams = (searchParams: URLSearchParams | ReadonlyURLSearchParams) => {
+  const rawStatus = searchParams.get("status") ?? "all";
+  const rawRiskLevel = searchParams.get("riskLevel");
+  const riskLevel = rawRiskLevel ?? (riskLevels.has(rawStatus) ? rawStatus : "all");
+
+  return {
+    sport: searchParams.get("sport") ?? "all",
+    leagueId: searchParams.get("leagueId") ?? "",
+    teamId: searchParams.get("teamId") ?? "",
+    status: rawStatus,
+    riskLevel,
+    date: searchParams.get("date") ?? "",
+    from: searchParams.get("from") ?? "",
+    to: searchParams.get("to") ?? "",
+    minConfidence: parseNumberOrUndefined(searchParams.get("minConfidence")),
+    isLowConfidence: parseBooleanOrUndefined(searchParams.get("isLowConfidence")),
+    isRecommended: parseBooleanOrUndefined(searchParams.get("isRecommended")),
+    page: parsePositiveInt(searchParams.get("page"), 1),
+    pageSize: parsePositiveInt(searchParams.get("pageSize"), 20),
+    sortBy: searchParams.get("sortBy") ?? "kickoffAt",
+    sortOrder: (searchParams.get("sortOrder") ?? "desc") as "asc" | "desc"
+  };
+};
+
+type FilterState = ReturnType<typeof parseFiltersFromSearchParams>;
+
 export function useFilterQueryState() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
 
-  const filters = useMemo(() => {
-    const rawStatus = searchParams.get("status") ?? "all";
-    const rawRiskLevel = searchParams.get("riskLevel");
-    const riskLevel = rawRiskLevel ?? (riskLevels.has(rawStatus) ? rawStatus : "all");
+  const parsedFilters = useMemo(() => parseFiltersFromSearchParams(searchParams), [searchParams]);
+  const [filters, setFiltersState] = useState<FilterState>(parsedFilters);
 
-    const base = {
-      sport: searchParams.get("sport") ?? "all",
-      leagueId: searchParams.get("leagueId") ?? "",
-      teamId: searchParams.get("teamId") ?? "",
-      status: rawStatus,
-      riskLevel,
-      date: searchParams.get("date") ?? "",
-      from: searchParams.get("from") ?? "",
-      to: searchParams.get("to") ?? "",
-      minConfidence: parseNumberOrUndefined(searchParams.get("minConfidence")),
-      isLowConfidence: parseBooleanOrUndefined(searchParams.get("isLowConfidence")),
-      isRecommended: parseBooleanOrUndefined(searchParams.get("isRecommended")),
-      page: parsePositiveInt(searchParams.get("page"), 1),
-      pageSize: parsePositiveInt(searchParams.get("pageSize"), 20),
-      sortBy: searchParams.get("sortBy") ?? "kickoffAt",
-      sortOrder: (searchParams.get("sortOrder") ?? "desc") as "asc" | "desc"
-    };
-
-    return base;
-  }, [searchParams]);
+  useEffect(() => {
+    setFiltersState(parsedFilters);
+  }, [parsedFilters]);
 
   const setFilters = useCallback(
-    (partial: Partial<typeof filters>) => {
+    (partial: Partial<FilterState>) => {
       const params = new URLSearchParams(searchParams.toString());
       Object.entries(partial).forEach(([key, value]) => {
         if (value === undefined || value === null || value === "" || value === "all") {
@@ -71,9 +78,14 @@ export function useFilterQueryState() {
       }
 
       const query = params.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      const nextFilters = parseFiltersFromSearchParams(params);
+      setFiltersState(nextFilters);
+
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
+      }
     },
-    [pathname, router, searchParams]
+    [pathname, searchParams]
   );
 
   return { filters, setFilters };
