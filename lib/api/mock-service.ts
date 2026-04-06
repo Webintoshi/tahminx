@@ -17,12 +17,23 @@ export interface PredictionFilters {
 }
 
 const normalize = (value: string) => value.trim().toLowerCase();
+const normalizeMatchStatus = (value?: string) => {
+  if (!value) return value;
+  if (value === "scheduled") return "upcoming";
+  return value;
+};
 
 export const queryMatches = (filters: MatchFilters = {}): Match[] => {
   return matches.filter((match) => {
     if (filters.sport && filters.sport !== "all" && match.sport !== filters.sport) return false;
     if (filters.league && match.leagueId !== filters.league) return false;
-    if (filters.status && filters.status !== "all" && match.status !== filters.status) return false;
+    if (
+      filters.status &&
+      filters.status !== "all" &&
+      normalizeMatchStatus(match.status) !== normalizeMatchStatus(filters.status)
+    ) {
+      return false;
+    }
     if (
       filters.team &&
       !normalize(match.homeTeam).includes(normalize(filters.team)) &&

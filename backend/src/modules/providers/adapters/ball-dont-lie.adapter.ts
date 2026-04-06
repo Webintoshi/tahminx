@@ -82,6 +82,11 @@ export class BallDontLieProviderAdapter implements ProviderAdapter {
 
   async getStandings(_: string, seasonExternalId?: string) {
     try {
+      if (!this.client.hasApiKeyConfigured()) {
+        const response = (await this.client.getStandings(process.env.PROVIDER_RAW_DEBUG === 'true')) as { data?: unknown[] };
+        return mapRawStandings(response.data || []);
+      }
+
       const response = (await this.client.getGames({
         season: seasonExternalId || String(new Date().getUTCFullYear()),
         rawDebug: process.env.PROVIDER_RAW_DEBUG === 'true',

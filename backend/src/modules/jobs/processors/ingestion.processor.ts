@@ -465,7 +465,7 @@ export class IngestionProcessor extends WorkerHost {
     let review = 0;
 
     const today = new Date();
-    const from = mode === 'fixtures' ? formatDate(today) : formatDate(new Date(today.getTime() - 7 * 86400000));
+    const from = mode === 'fixtures' ? formatDate(today) : formatDate(new Date(today.getTime() - 30 * 86400000));
     const to = mode === 'fixtures' ? formatDate(new Date(today.getTime() + 7 * 86400000)) : formatDate(today);
 
     for (const leagueMapping of leagueMappings) {
@@ -897,23 +897,8 @@ export class IngestionProcessor extends WorkerHost {
   }
 
   private async upsertNormalizedMatch(providerId: string, sportId: string, leagueId: string, match: NormalizedMatch): Promise<string | null> {
-    const homeTeamMapping = await this.prisma.providerTeamMapping.findUnique({
-      where: {
-        providerId_externalId: {
-          providerId,
-          externalId: match.homeTeamExternalId,
-        },
-      },
-    });
-
-    const awayTeamMapping = await this.prisma.providerTeamMapping.findUnique({
-      where: {
-        providerId_externalId: {
-          providerId,
-          externalId: match.awayTeamExternalId,
-        },
-      },
-    });
+    const homeTeamId = await this.resolveTeamIdForMatch(providerId, sportId, match.homeTeamExternalId, match.rawPayload, 'home');
+    const awayTeamId = await this.resolveTeamIdForMatch(providerId, sportId, match.awayTeamExternalId, match.rawPayload, 'away');
 
     const seasonId = await this.mappingService.resolveSeason(leagueId, match.seasonExternalId, new Date(match.matchDate));
 
@@ -923,8 +908,8 @@ export class IngestionProcessor extends WorkerHost {
       leagueId,
       seasonId,
       externalId: match.externalId,
-      homeTeamId: homeTeamMapping?.teamId || undefined,
-      awayTeamId: awayTeamMapping?.teamId || undefined,
+      homeTeamId: homeTeamId || undefined,
+      awayTeamId: awayTeamId || undefined,
       matchDate: new Date(match.matchDate),
       status: match.status as MatchStatus,
       homeScore: match.homeScore,
@@ -932,6 +917,74 @@ export class IngestionProcessor extends WorkerHost {
       venue: match.venue,
       rawPayload: match.rawPayload,
     });
+  }
+
+  private async resolveTeamIdForMatch(
+    providerId: string,
+    sportId: string,
+    externalId: string,
+    rawPayload: Record<string, unknown> | undefined,
+    side: 'home' | 'away',
+  ): Promise<string | null> {
+    const existing = await this.prisma.providerTeamMapping.findUnique({
+      where: {
+        providerId_externalId: {
+          providerId,
+          externalId,
+        },
+      },
+    });
+
+    if (existing?.teamId) {
+      return existing.teamId;
+    }
+
+    const rawTeam = this.extractRawTeamPayload(rawPayload, side) as Record<string, unknown> | null;
+    const externalName = String(rawTeam?.name ?? rawTeam?.displayName ?? '').trim();
+    if (!externalId || !externalName) {
+      return null;
+    }
+
+    return this.mappingService.resolveTeam({
+      providerId,
+      sportId,
+      externalId,
+      externalName,
+      shortName: String(rawTeam?.tla ?? rawTeam?.abbreviation ?? '').trim() || undefined,
+      country: String(rawTeam?.country ?? '').trim() || undefined,
+      logoUrl: String(rawTeam?.crest ?? rawTeam?.logo ?? '').trim() || undefined,
+      venue: String(rawTeam?.venue ?? '').trim() || undefined,
+      rawPayload: rawTeam as Record<string, unknown>,
+    });
+  }
+
+  private extractRawTeamPayload(rawPayload: Record<string, unknown> | undefined, side: 'home' | 'away') {
+    if (!rawPayload) {
+      return null;
+    }
+
+    const directKey = side === 'home' ? 'home_team' : 'away_team';
+    const directPayload = rawPayload[directKey];
+    if (directPayload && typeof directPayload === 'object') {
+      return directPayload;
+    }
+
+    const nestedTeams = rawPayload.teams;
+    if (nestedTeams && typeof nestedTeams === 'object') {
+      const nestedKey = side === 'home' ? 'home' : 'away';
+      const nestedPayload = (nestedTeams as Record<string, unknown>)[nestedKey];
+      if (nestedPayload && typeof nestedPayload === 'object') {
+        return nestedPayload;
+      }
+    }
+
+    const ballDontLieKey = side === 'home' ? 'home_team' : 'visitor_team';
+    const ballDontLiePayload = rawPayload[ballDontLieKey];
+    if (ballDontLiePayload && typeof ballDontLiePayload === 'object') {
+      return ballDontLiePayload;
+    }
+
+    return null;
   }
 
   private async upsertPlayerFromProvider(providerCode: string, player: NormalizedPlayer, teamId: string) {

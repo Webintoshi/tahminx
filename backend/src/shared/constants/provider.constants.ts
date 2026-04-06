@@ -10,7 +10,7 @@ export interface ProviderPolicy {
 export const PROVIDER_POLICIES: ProviderPolicy[] = [
   {
     code: 'football_data',
-    requiredApiKey: true,
+    requiredApiKey: false,
     defaultActive: true,
     primary: true,
     envKey: 'FOOTBALL_DATA_API_KEY',
@@ -18,7 +18,7 @@ export const PROVIDER_POLICIES: ProviderPolicy[] = [
   },
   {
     code: 'ball_dont_lie',
-    requiredApiKey: true,
+    requiredApiKey: false,
     defaultActive: true,
     primary: true,
     envKey: 'BALL_DONT_LIE_API_KEY',

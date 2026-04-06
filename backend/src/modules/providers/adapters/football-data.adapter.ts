@@ -154,7 +154,11 @@ export class FootballDataProviderAdapter implements ProviderAdapter {
   async healthCheck() {
     const start = Date.now();
     try {
-      await this.client.getLeagues();
+      if (this.client.hasApiKeyConfigured()) {
+        await this.client.getLeagues();
+      } else {
+        await this.client.getTeams('PL');
+      }
       return { healthy: true, latencyMs: Date.now() - start };
     } catch (error) {
       return { healthy: false, latencyMs: Date.now() - start, message: (error as Error).message };

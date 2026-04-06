@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { resolveApiProxyBase } from "@/lib/config/api-proxy";
 
 const API_PREFIX = "/api/v1";
+const DEFAULT_API_MODE = process.env.NODE_ENV === "production" ? "real" : "mock";
 
-const isRealMode = () => (process.env.NEXT_PUBLIC_API_MODE ?? "mock") === "real";
+const isRealMode = () => (process.env.NEXT_PUBLIC_API_MODE ?? DEFAULT_API_MODE) === "real";
 
 const buildUpstreamUrl = (requestUrl: string) => {
   const incomingUrl = new URL(requestUrl);

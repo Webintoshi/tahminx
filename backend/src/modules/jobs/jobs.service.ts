@@ -35,6 +35,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit(): Promise<void> {
     if (this.schedulerEnabled) {
       await this.ensureRepeatableJobs();
+      await this.enqueueStartupHydration();
       this.logger.log(`Queue scheduler enabled for role=${this.runtimeRole}`);
     } else {
       this.logger.log(`Queue scheduler skipped for role=${this.runtimeRole}`);
@@ -204,6 +205,106 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         removeOnComplete: 150,
         removeOnFail: 300,
         jobId: `repeatable:${JOB_NAMES.providerHealthCheck}`,
+      },
+    );
+  }
+
+  private async enqueueStartupHydration(): Promise<void> {
+    const now = new Date();
+    const dayKey = now.toISOString().slice(0, 10);
+    const hourKey = now.toISOString().slice(0, 13).replace(/[-:T]/g, '');
+
+    await this.ingestionQueue.add(
+      JOB_NAMES.syncLeagues,
+      { source: 'startup-hydration' },
+      {
+        jobId: `startup:${JOB_NAMES.syncLeagues}:${dayKey}`,
+        priority: 5,
+        removeOnComplete: 25,
+        removeOnFail: 100,
+      },
+    );
+
+    await this.ingestionQueue.add(
+      JOB_NAMES.syncTeams,
+      { source: 'startup-hydration' },
+      {
+        jobId: `startup:${JOB_NAMES.syncTeams}:${dayKey}`,
+        delay: 15_000,
+        priority: 5,
+        removeOnComplete: 25,
+        removeOnFail: 100,
+      },
+    );
+
+    await this.ingestionQueue.add(
+      JOB_NAMES.syncStandings,
+      { source: 'startup-hydration' },
+      {
+        jobId: `startup:${JOB_NAMES.syncStandings}:${dayKey}`,
+        delay: 30_000,
+        priority: 4,
+        removeOnComplete: 25,
+        removeOnFail: 100,
+      },
+    );
+
+    await this.ingestionQueue.add(
+      JOB_NAMES.syncFixtures,
+      { source: 'startup-hydration' },
+      {
+        jobId: `startup:${JOB_NAMES.syncFixtures}:${hourKey}`,
+        delay: 45_000,
+        priority: 3,
+        removeOnComplete: 50,
+        removeOnFail: 150,
+      },
+    );
+
+    await this.ingestionQueue.add(
+      JOB_NAMES.syncResults,
+      { source: 'startup-hydration' },
+      {
+        jobId: `startup:${JOB_NAMES.syncResults}:${hourKey}`,
+        delay: 60_000,
+        priority: 3,
+        removeOnComplete: 50,
+        removeOnFail: 150,
+      },
+    );
+
+    await this.predictionQueue.add(
+      JOB_NAMES.generateFeatures,
+      { source: 'startup-hydration' },
+      {
+        jobId: `startup:${JOB_NAMES.generateFeatures}:${hourKey}`,
+        delay: 90_000,
+        priority: 3,
+        removeOnComplete: 50,
+        removeOnFail: 150,
+      },
+    );
+
+    await this.predictionQueue.add(
+      JOB_NAMES.generatePredictions,
+      { source: 'startup-hydration' },
+      {
+        jobId: `startup:${JOB_NAMES.generatePredictions}:${hourKey}`,
+        delay: 120_000,
+        priority: 2,
+        removeOnComplete: 50,
+        removeOnFail: 150,
+      },
+    );
+
+    await this.healthQueue.add(
+      JOB_NAMES.providerHealthCheck,
+      { source: 'startup-hydration' },
+      {
+        jobId: `startup:${JOB_NAMES.providerHealthCheck}:${hourKey}`,
+        priority: 4,
+        removeOnComplete: 25,
+        removeOnFail: 100,
       },
     );
   }

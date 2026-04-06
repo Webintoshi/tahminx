@@ -39,10 +39,11 @@ const toRuntimeRelativeUrl = (value: string) => normalizeBrowserUrl(value, true)
 
 const rawApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api/v1";
 const rawLiveSseUrl = process.env.NEXT_PUBLIC_LIVE_SSE_URL ?? "";
+const defaultApiMode = process.env.NODE_ENV === "production" ? "real" : "mock";
 
 export const env = {
   apiBaseUrl: toRuntimeRelativeUrl(rawApiBaseUrl),
-  apiMode: (process.env.NEXT_PUBLIC_API_MODE ?? "mock") as "mock" | "real",
+  apiMode: (process.env.NEXT_PUBLIC_API_MODE ?? defaultApiMode) as "mock" | "real",
   mockFallback: (process.env.NEXT_PUBLIC_API_MOCK_FALLBACK ?? "true") === "true",
   liveSseUrl: toRuntimeRelativeUrl(rawLiveSseUrl),
   livePollingMs: Number(process.env.NEXT_PUBLIC_LIVE_POLLING_MS ?? 12_000),
