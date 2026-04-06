@@ -5,18 +5,40 @@ import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useToast } from "@/components/providers/ToastProvider";
-import { setAdminSession, hasAdminSession } from "@/lib/auth/admin-session";
-import { useAdminLoginMutation, useAdminMe } from "@/lib/hooks/use-api";
+import { getAdminAccessTokenClaims, hasAdminSession, setAdminSession } from "@/lib/auth/admin-session";
+import { useAdminLoginMutation } from "@/lib/hooks/use-api";
 
 const DEFAULT_EMAIL = "admin@tahminx.local";
 const DEFAULT_PASSWORD = "Admin123!";
+
+async function bootstrapAdminLogin(email: string, password: string) {
+  const response = await fetch("/api/admin/bootstrap-login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email, password })
+  });
+
+  const raw = (await response.json()) as {
+    success?: boolean;
+    data?: { accessToken: string; refreshToken: string } | null;
+    error?: { message?: string } | null;
+  };
+
+  if (!response.ok || !raw.success || !raw.data) {
+    throw new Error(raw.error?.message ?? "Admin bootstrap girisi yapilamadi.");
+  }
+
+  return raw.data;
+}
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const hasSession = hasAdminSession();
-  const meQuery = useAdminMe(hasSession);
   const loginMutation = useAdminLoginMutation();
+  const claims = getAdminAccessTokenClaims();
 
   const [email, setEmail] = useState(DEFAULT_EMAIL);
   const [password, setPassword] = useState(DEFAULT_PASSWORD);
@@ -29,17 +51,25 @@ export default function AdminLoginPage() {
   }, []);
 
   useEffect(() => {
-    if (meQuery.data?.data?.role?.name === "admin") {
+    if (hasSession && claims?.role === "admin") {
       router.replace(nextUrl);
     }
-  }, [meQuery.data?.data?.role?.name, nextUrl, router]);
+  }, [claims?.role, hasSession, nextUrl, router]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     try {
-      const response = await loginMutation.mutateAsync({ email, password });
-      setAdminSession(response.data);
+      let tokens: { accessToken: string; refreshToken: string };
+
+      try {
+        const response = await loginMutation.mutateAsync({ email, password });
+        tokens = response.data;
+      } catch {
+        tokens = await bootstrapAdminLogin(email, password);
+      }
+
+      setAdminSession(tokens);
       showToast({
         tone: "success",
         title: "Admin oturumu acildi",

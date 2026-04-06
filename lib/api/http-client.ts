@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { apiResponseSchema } from "@/lib/api/contract-schemas";
-import { getAdminAccessToken, getAdminRefreshToken, clearAdminSession, setAdminSession } from "@/lib/auth/admin-session";
+import {
+  clearAdminSession,
+  getAdminAccessToken,
+  getAdminRefreshToken,
+  isBootstrapAdminSession,
+  setAdminSession
+} from "@/lib/auth/admin-session";
 import { env, normalizeBrowserUrl } from "@/lib/config/env";
 import { getMockResponse } from "@/lib/api/mock-adapter";
 import type { ApiError, ApiResponse } from "@/types/api-contract";
@@ -136,7 +142,7 @@ export async function privateRequest<T extends z.ZodTypeAny>(
     }
 
     const refreshToken = getAdminRefreshToken();
-    if (!refreshToken) {
+    if (!refreshToken || isBootstrapAdminSession()) {
       clearAdminSession();
       throw error;
     }
