@@ -8,6 +8,7 @@ export class MatchesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(query: MatchListQueryDto) {
+    const sortField = query.sortBy === 'kickoffAt' ? 'matchDate' : query.sortBy || 'matchDate';
     const where: Prisma.MatchWhereInput = {
       deletedAt: null,
       ...(query.sport ? { sport: { code: query.sport.toUpperCase() as never } } : {}),
@@ -44,7 +45,7 @@ export class MatchesRepository {
     };
 
     const skip = (query.page - 1) * query.pageSize;
-    const orderBy = { [query.sortBy || 'matchDate']: query.sortOrder || 'asc' } as Prisma.MatchOrderByWithRelationInput;
+    const orderBy = { [sortField]: query.sortOrder || 'asc' } as Prisma.MatchOrderByWithRelationInput;
 
     const [items, total] = await Promise.all([
       this.prisma.match.findMany({

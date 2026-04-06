@@ -8,6 +8,15 @@ export class PredictionsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(query: PredictionListQueryDto, highConfidence = false) {
+    const sortDirection = query.sortOrder || 'desc';
+    const sortField = query.sortBy || 'confidenceScore';
+    const orderBy: Prisma.PredictionOrderByWithRelationInput =
+      sortField === 'confidenceScore'
+        ? { confidenceScore: sortDirection }
+        : sortField === 'updatedAt' || sortField === 'createdAt'
+          ? { [sortField]: sortDirection }
+          : { match: { matchDate: sortDirection } };
+
     const matchWhere: Prisma.MatchWhereInput = {
       ...(query.date
         ? {
@@ -17,19 +26,32 @@ export class PredictionsRepository {
             },
           }
         : {}),
+      ...(query.from || query.to
+        ? {
+            matchDate: {
+              ...(query.from ? { gte: new Date(query.from) } : {}),
+              ...(query.to ? { lte: new Date(query.to) } : {}),
+            },
+          }
+        : {}),
       ...(query.sport ? { sport: { code: query.sport.toUpperCase() as never } } : {}),
       ...(query.leagueId ? { leagueId: query.leagueId } : {}),
+      ...(query.teamId
+        ? { OR: [{ homeTeamId: query.teamId }, { awayTeamId: query.teamId }] }
+        : {}),
+      ...(query.status ? { status: query.status.toUpperCase() as never } : {}),
     };
 
     const where: Prisma.PredictionWhereInput = {
       status: 'PUBLISHED',
       ...(query.minConfidence ? { confidenceScore: { gte: query.minConfidence } } : {}),
       ...(highConfidence ? { confidenceScore: { gte: Math.max(query.minConfidence || 0, 75) } } : {}),
+      ...(typeof query.isLowConfidence === 'boolean' ? { isLowConfidence: query.isLowConfidence } : {}),
+      ...(typeof query.isRecommended === 'boolean' ? { isRecommended: query.isRecommended } : {}),
       match: matchWhere,
     };
 
     const skip = (query.page - 1) * query.pageSize;
-    const sortField = query.sortBy === 'confidenceScore' ? 'confidenceScore' : 'updatedAt';
 
     const [items, total] = await Promise.all([
       this.prisma.prediction.findMany({
@@ -45,7 +67,7 @@ export class PredictionsRepository {
           },
           explanation: true,
         },
-        orderBy: { [sortField]: 'desc' },
+        orderBy,
         skip,
         take: query.pageSize,
       }),

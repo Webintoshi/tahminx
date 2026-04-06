@@ -35,7 +35,7 @@ export class MatchListQueryDto extends PaginationQueryDto {
   search?: string;
 
   @IsOptional()
-  @IsIn(['matchDate', 'confidenceScore', 'createdAt'])
+  @IsIn(['matchDate', 'kickoffAt', 'confidenceScore', 'createdAt'])
   sortBy?: string = 'matchDate';
 
   @IsOptional()
