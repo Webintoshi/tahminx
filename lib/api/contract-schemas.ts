@@ -120,18 +120,31 @@ const normalizeTeamDetail = (value: unknown): unknown => {
   const record = asRecord(value);
   if (!record) return value;
 
-  const normalized = asRecord(normalizeTeamListItem(record));
+  const source = asRecord(record.team) ?? record;
+  const metrics = asRecord(record.homeAwayMetrics);
+  const normalized = asRecord(normalizeTeamListItem(source));
   if (!normalized) return value;
+
+  const homeAvgScored = asNumber(metrics?.homeAvgScored);
+  const homeAvgConceded = asNumber(metrics?.homeAvgConceded);
+  const awayAvgScored = asNumber(metrics?.awayAvgScored);
+  const awayAvgConceded = asNumber(metrics?.awayAvgConceded);
+
+  const average = (values: Array<number | null>) => {
+    const valid = values.filter((item): item is number => item !== null);
+    if (valid.length === 0) return null;
+    return valid.reduce((sum, item) => sum + item, 0) / valid.length;
+  };
 
   return {
     ...normalized,
-    country: asNullableString(record.country),
-    foundedYear: asNumber(record.foundedYear),
-    coach: asNullableString(record.coach),
-    homeMetric: asNumber(record.homeMetric),
-    awayMetric: asNumber(record.awayMetric),
-    attackMetric: asNumber(record.attackMetric),
-    defenseMetric: asNumber(record.defenseMetric)
+    country: asNullableString(source.country),
+    foundedYear: asNumber(source.foundedYear),
+    coach: asNullableString(source.coach),
+    homeMetric: asNumber(source.homeMetric) ?? homeAvgScored,
+    awayMetric: asNumber(source.awayMetric) ?? awayAvgScored,
+    attackMetric: asNumber(source.attackMetric) ?? average([homeAvgScored, awayAvgScored]),
+    defenseMetric: asNumber(source.defenseMetric) ?? average([homeAvgConceded, awayAvgConceded])
   };
 };
 
