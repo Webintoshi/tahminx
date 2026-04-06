@@ -3,6 +3,18 @@ import { resolveApiProxyBase } from "@/lib/config/api-proxy";
 
 const API_PREFIX = "/api/v1";
 const DEFAULT_API_MODE = process.env.NODE_ENV === "production" ? "real" : "mock";
+const HOP_BY_HOP_RESPONSE_HEADERS = [
+  "connection",
+  "content-encoding",
+  "content-length",
+  "keep-alive",
+  "proxy-authenticate",
+  "proxy-authorization",
+  "te",
+  "trailer",
+  "transfer-encoding",
+  "upgrade"
+] as const;
 
 const isRealMode = () => (process.env.NEXT_PUBLIC_API_MODE ?? DEFAULT_API_MODE) === "real";
 
@@ -35,6 +47,16 @@ const buildUpstreamHeaders = (request: Request) => {
   return headers;
 };
 
+const sanitizeUpstreamHeaders = (headers: Headers) => {
+  const sanitizedHeaders = new Headers(headers);
+
+  for (const headerName of HOP_BY_HOP_RESPONSE_HEADERS) {
+    sanitizedHeaders.delete(headerName);
+  }
+
+  return sanitizedHeaders;
+};
+
 export async function proxyApiRequest(request: Request) {
   if (!isRealMode()) {
     return null;
@@ -50,7 +72,7 @@ export async function proxyApiRequest(request: Request) {
       redirect: "follow"
     });
     const body = await upstreamResponse.arrayBuffer();
-    const responseHeaders = new Headers(upstreamResponse.headers);
+    const responseHeaders = sanitizeUpstreamHeaders(upstreamResponse.headers);
     responseHeaders.set("x-tahminx-proxy", "frontend");
 
     return new NextResponse(body, {
