@@ -1,5 +1,280 @@
 ﻿import { z } from "zod";
 
+const asRecord = (value: unknown): Record<string, unknown> | null =>
+  value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+
+const asString = (value: unknown, fallback = "") => {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return fallback;
+};
+
+const asNullableString = (value: unknown) => {
+  const normalized = asString(value, "");
+  return normalized ? normalized : null;
+};
+
+const asNumber = (value: unknown) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+};
+
+const asStringArray = (value: unknown) =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+
+const normalizeStatus = (value: unknown) => {
+  switch (asString(value).toLowerCase()) {
+    case "live":
+      return "live";
+    case "completed":
+      return "completed";
+    case "postponed":
+      return "postponed";
+    case "cancelled":
+    case "canceled":
+      return "cancelled";
+    default:
+      return "scheduled";
+  }
+};
+
+const inferSportKey = (value: Record<string, unknown>) => {
+  const league = asRecord(value.league);
+  const nestedSport = asRecord(value.sport);
+  const candidates = [
+    value.sportKey,
+    value.sport,
+    value.sportCode,
+    nestedSport?.key,
+    nestedSport?.code,
+    league?.sportKey,
+    league?.sport
+  ]
+    .map((item) => asString(item).toLowerCase())
+    .filter(Boolean);
+
+  for (const candidate of candidates) {
+    if (candidate.includes("basket")) return "basketball";
+    if (candidate.includes("foot") || candidate.includes("soccer")) return "football";
+  }
+
+  const leagueName = asString(league?.name ?? value.leagueName).toLowerCase();
+  if (leagueName.includes("nba") || leagueName.includes("basket")) return "basketball";
+  return "football";
+};
+
+const deriveRiskLevel = (confidenceScore: number | null, isLowConfidence: boolean, riskFlags: string[]) => {
+  if (isLowConfidence || (confidenceScore ?? 0) < 67) return "high";
+  if (riskFlags.length > 0 || (confidenceScore ?? 0) < 82) return "medium";
+  return "low";
+};
+
+const normalizeLeagueListItem = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  if ("sportId" in record && "sportKey" in record && "country" in record && "season" in record) {
+    return record;
+  }
+
+  return {
+    id: asString(record.id),
+    sportId: asString(record.sportId, "unknown"),
+    sportKey: asString(record.sportKey, inferSportKey(record)),
+    name: asString(record.name, "League"),
+    country: asString(record.country, "-"),
+    season: asString(record.season, asString(record.slug, "-")),
+    logoUrl: asNullableString(record.logoUrl),
+    updatedAt: asNullableString(record.updatedAt)
+  };
+};
+
+const normalizeMatchListItem = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  if ("sportKey" in record && "leagueName" in record && "homeTeamName" in record && "kickoffAt" in record) {
+    return record;
+  }
+
+  const league = asRecord(record.league);
+  const homeTeam = asRecord(record.homeTeam);
+  const awayTeam = asRecord(record.awayTeam);
+
+  return {
+    id: asString(record.id ?? record.matchId),
+    sportKey: inferSportKey(record),
+    leagueId: asString(record.leagueId ?? league?.id),
+    leagueName: asString(record.leagueName ?? league?.name, "Lig bilgisi yok"),
+    homeTeamId: asString(record.homeTeamId ?? homeTeam?.id),
+    awayTeamId: asString(record.awayTeamId ?? awayTeam?.id),
+    homeTeamName: asString(record.homeTeamName ?? homeTeam?.name, "Ev sahibi"),
+    awayTeamName: asString(record.awayTeamName ?? awayTeam?.name, "Deplasman"),
+    homeLogoUrl: asNullableString(record.homeLogoUrl ?? homeTeam?.logoUrl ?? homeTeam?.logo),
+    awayLogoUrl: asNullableString(record.awayLogoUrl ?? awayTeam?.logoUrl ?? awayTeam?.logo),
+    kickoffAt: asString(record.kickoffAt ?? record.matchDate ?? record.date ?? record.updatedAt),
+    status: normalizeStatus(record.status),
+    scoreHome: asNumber(record.scoreHome ?? record.homeScore),
+    scoreAway: asNumber(record.scoreAway ?? record.awayScore),
+    confidenceScore: asNumber(record.confidenceScore)
+  };
+};
+
+const normalizePredictionItem = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  if ("sportKey" in record && "leagueId" in record && "homeTeamName" in record && "modelSummary" in record) {
+    return record;
+  }
+
+  const league = asRecord(record.league);
+  const homeTeam = asRecord(record.homeTeam);
+  const awayTeam = asRecord(record.awayTeam);
+  const expectedScore = asRecord(record.expectedScore);
+  const probabilities = asRecord(record.probabilities);
+  const confidenceScore = asNumber(record.confidenceScore);
+  const riskFlags = asStringArray(record.riskFlags);
+  const isLowConfidence = Boolean(record.isLowConfidence) || Boolean(record.avoidReason) || (confidenceScore ?? 0) < 67;
+
+  return {
+    id: asString(record.id ?? record.matchId),
+    matchId: asString(record.matchId ?? record.id),
+    sportKey: inferSportKey(record),
+    leagueId: asString(record.leagueId ?? league?.id),
+    leagueName: asString(record.leagueName ?? league?.name, "Lig bilgisi yok"),
+    homeTeamName: asString(record.homeTeamName ?? homeTeam?.name ?? record.homeTeam, "Ev"),
+    awayTeamName: asString(record.awayTeamName ?? awayTeam?.name ?? record.awayTeam, "Dep"),
+    kickoffAt: asString(record.kickoffAt ?? record.matchDate ?? record.updatedAt),
+    confidenceScore,
+    riskLevel:
+      asString(record.riskLevel) === "low" || asString(record.riskLevel) === "medium" || asString(record.riskLevel) === "high"
+        ? asString(record.riskLevel)
+        : deriveRiskLevel(confidenceScore, isLowConfidence, riskFlags),
+    expectedScore: {
+      home: asNumber(expectedScore?.home),
+      away: asNumber(expectedScore?.away)
+    },
+    probabilities: {
+      home: asNumber(probabilities?.home ?? probabilities?.homeWin) ?? 0,
+      draw: asNumber(probabilities?.draw),
+      away: asNumber(probabilities?.away ?? probabilities?.awayWin) ?? 0
+    },
+    modelSummary: asString(
+      record.modelSummary ?? record.summary ?? record.modelExplanation ?? record.avoidReason,
+      "Model notu bulunmuyor."
+    ),
+    riskFlags,
+    isLowConfidence,
+    isRecommended: Boolean(record.isRecommended) && !isLowConfidence
+  };
+};
+
+const normalizeCalibrationHealthSummary = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.length > 0 ? normalizeCalibrationHealthSummary(value[0]) : null;
+  }
+
+  const record = asRecord(value);
+  if (!record) return value ?? null;
+
+  return {
+    status: asNullableString(record.status),
+    brierScore: asNumber(record.brierScore),
+    ece: asNumber(record.ece),
+    reliability: asNumber(record.reliability),
+    note: asNullableString(record.note),
+    updatedAt: asNullableString(record.updatedAt)
+  };
+};
+
+const normalizeRiskDistributionSummary = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  if ("low" in record && "medium" in record && "high" in record) {
+    return record;
+  }
+
+  const total = Object.values(record).reduce<number>((sum, item) => sum + (asNumber(item) ?? 0), 0);
+  return {
+    low: 0,
+    medium: total,
+    high: 0,
+    updatedAt: null
+  };
+};
+
+const normalizeDashboardSummary = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  if (
+    "highConfidencePredictionCount" in record &&
+    "updatedLeagues" in record &&
+    "highConfidencePredictions" in record &&
+    "recentPredictions" in record
+  ) {
+    return record;
+  }
+
+  const highConfidencePredictions = Array.isArray(record.highConfidencePredictions)
+    ? record.highConfidencePredictions.map(normalizePredictionItem)
+    : [];
+  const recentPredictionsSource = Array.isArray(record.recentPredictions)
+    ? record.recentPredictions
+    : Array.isArray(record.recentPredictionOverview)
+      ? record.recentPredictionOverview
+      : [];
+  const recentPredictions = recentPredictionsSource.map(normalizePredictionItem);
+  const updatedLeagues = Array.isArray(record.updatedLeagues) ? record.updatedLeagues.map(normalizeLeagueListItem) : [];
+  const todayMatches = Array.isArray(record.todayMatches) ? record.todayMatches.map(normalizeMatchListItem) : [];
+  const calibratedHighConfidenceCount = asNumber(record.calibratedHighConfidenceCount);
+  const lowConfidenceCount = asNumber(record.lowConfidenceCount);
+  const rawRiskDistribution = asRecord(record.riskDistribution);
+
+  return {
+    todayMatchCount: asNumber(record.todayMatchCount) ?? todayMatches.length,
+    liveMatchCount: asNumber(record.liveMatchCount) ?? 0,
+    highConfidencePredictionCount:
+      asNumber(record.highConfidencePredictionCount) ??
+      calibratedHighConfidenceCount ??
+      highConfidencePredictions.length,
+    updatedLeagues,
+    highConfidencePredictions,
+    recentPredictions,
+    todayMatches,
+    miniTrends: Array.isArray(record.miniTrends)
+      ? record.miniTrends
+      : [
+          { label: "Matches", values: [asNumber(record.todayMatchCount) ?? 0, asNumber(record.liveMatchCount) ?? 0] },
+          {
+            label: "Predictions",
+            values: [calibratedHighConfidenceCount ?? highConfidencePredictions.length, lowConfidenceCount ?? 0]
+          }
+        ],
+    calibratedHighConfidenceCount,
+    lowConfidenceCount,
+    avgConfidenceScore: asNumber(record.avgConfidenceScore),
+    riskDistribution:
+      rawRiskDistribution && "low" in rawRiskDistribution && "medium" in rawRiskDistribution && "high" in rawRiskDistribution
+        ? rawRiskDistribution
+        : {
+            low: calibratedHighConfidenceCount ?? highConfidencePredictions.length,
+            medium: rawRiskDistribution
+              ? Object.values(rawRiskDistribution).reduce<number>((sum, item) => sum + (asNumber(item) ?? 0), 0)
+              : 0,
+            high: lowConfidenceCount ?? 0,
+            updatedAt: null
+          },
+    calibrationHealthSummary: normalizeCalibrationHealthSummary(record.calibrationHealthSummary)
+  };
+};
+
 export const apiErrorSchema = z.object({
   code: z.string(),
   message: z.string(),
@@ -30,7 +305,7 @@ export const sportSchema = z.object({
   logoUrl: z.string().nullable().optional()
 });
 
-export const leagueListItemSchema = z.object({
+const leagueListItemBaseSchema = z.object({
   id: z.string(),
   sportId: z.string(),
   sportKey: z.string(),
@@ -41,7 +316,9 @@ export const leagueListItemSchema = z.object({
   updatedAt: z.string().nullable().optional()
 });
 
-export const leagueDetailSchema = leagueListItemSchema.extend({
+export const leagueListItemSchema = z.preprocess(normalizeLeagueListItem, leagueListItemBaseSchema);
+
+export const leagueDetailSchema = z.preprocess(normalizeLeagueListItem, leagueListItemBaseSchema.extend({
   description: z.string().nullable().optional(),
   statsSummary: z
     .object({
@@ -51,7 +328,7 @@ export const leagueDetailSchema = leagueListItemSchema.extend({
       drawRate: z.number().nullable().optional()
     })
     .optional()
-});
+}));
 
 export const standingRowSchema = z.object({
   position: z.number(),
@@ -97,7 +374,7 @@ export const teamFormPointSchema = z.object({
   value: z.number().nullable().optional()
 });
 
-export const matchListItemSchema = z.object({
+const matchListItemBaseSchema = z.object({
   id: z.string(),
   sportKey: z.string(),
   leagueId: z.string(),
@@ -115,7 +392,9 @@ export const matchListItemSchema = z.object({
   confidenceScore: z.number().nullable().optional()
 });
 
-export const matchDetailSchema = matchListItemSchema.extend({
+export const matchListItemSchema = z.preprocess(normalizeMatchListItem, matchListItemBaseSchema);
+
+export const matchDetailSchema = z.preprocess(normalizeMatchListItem, matchListItemBaseSchema.extend({
   venue: z.string().nullable().optional(),
   round: z.string().nullable().optional(),
   summary: z.string().nullable().optional(),
@@ -123,7 +402,7 @@ export const matchDetailSchema = matchListItemSchema.extend({
   expectedScoreAway: z.number().nullable().optional(),
   riskFlags: z.array(z.string()).nullable().optional(),
   h2hSummary: z.string().nullable().optional()
-});
+}));
 
 export const matchEventSchema = z.object({
   id: z.string(),
@@ -169,7 +448,7 @@ export const matchPredictionSchema = z.object({
   isRecommended: z.boolean().optional()
 });
 
-export const predictionItemSchema = z.object({
+const predictionItemBaseSchema = z.object({
   id: z.string(),
   matchId: z.string(),
   sportKey: z.string(),
@@ -195,23 +474,25 @@ export const predictionItemSchema = z.object({
   isRecommended: z.boolean().optional()
 });
 
-export const calibrationHealthSummarySchema = z.object({
+export const predictionItemSchema = z.preprocess(normalizePredictionItem, predictionItemBaseSchema);
+
+export const calibrationHealthSummarySchema = z.preprocess(normalizeCalibrationHealthSummary, z.object({
   status: z.string().nullable().optional(),
   brierScore: z.number().nullable().optional(),
   ece: z.number().nullable().optional(),
   reliability: z.number().nullable().optional(),
   note: z.string().nullable().optional(),
   updatedAt: z.string().nullable().optional()
-});
+}).nullable());
 
-export const riskDistributionSummarySchema = z.object({
+export const riskDistributionSummarySchema = z.preprocess(normalizeRiskDistributionSummary, z.object({
   low: z.number(),
   medium: z.number(),
   high: z.number(),
   updatedAt: z.string().nullable().optional()
-});
+}));
 
-export const dashboardSummarySchema = z.object({
+const dashboardSummaryBaseSchema = z.object({
   todayMatchCount: z.number(),
   liveMatchCount: z.number(),
   highConfidencePredictionCount: z.number(),
@@ -231,6 +512,8 @@ export const dashboardSummarySchema = z.object({
   riskDistribution: riskDistributionSummarySchema.nullable().optional(),
   calibrationHealthSummary: calibrationHealthSummarySchema.nullable().optional()
 });
+
+export const dashboardSummarySchema = z.preprocess(normalizeDashboardSummary, dashboardSummaryBaseSchema);
 
 export const guideSummarySchema = z.object({
   title: z.string(),
