@@ -31,9 +31,12 @@ function getConfidenceLevel(score: number | undefined) {
 // Kazanan tahmini belirle
 function getWinner(prediction: PredictionItem) {
   const { home, draw, away } = prediction.probabilities;
-  if (home > draw && home > away) return { team: prediction.homeTeamName, prob: home, type: "home" };
-  if (away > draw && away > home) return { team: prediction.awayTeamName, prob: away, type: "away" };
-  return { team: "Beraberlik", prob: draw, type: "draw" };
+  const h = home ?? 0;
+  const d = draw ?? 0;
+  const a = away ?? 0;
+  if (h > d && h > a) return { team: prediction.homeTeamName, prob: h, type: "home" };
+  if (a > d && a > h) return { team: prediction.awayTeamName, prob: a, type: "away" };
+  return { team: "Beraberlik", prob: d, type: "draw" };
 }
 
 export function PredictionCard({ prediction }: { prediction: PredictionItem }) {
