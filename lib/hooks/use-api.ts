@@ -4,6 +4,8 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient, type UseQueryO
 import { apiClient } from "@/lib/api/client";
 import type {
   ApiResponse,
+  AuthTokens,
+  AuthUser,
   CalibrationResult,
   CalibrationRunResponse,
   DashboardSummary,
@@ -137,6 +139,19 @@ const legacyAccountData: AccountProfile = {
 };
 
 export const useSports = () => useQuery({ queryKey: ["sports"], queryFn: apiClient.getSports, ...listQueryOptions });
+
+export const useAdminMe = (enabled = true) =>
+  useQuery({
+    queryKey: ["admin-auth-me"],
+    queryFn: apiClient.getAdminMe,
+    enabled,
+    retry: false,
+    staleTime: 60_000,
+    gcTime: 10 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false
+  });
 
 export const useLeagues = (query?: MatchQuery) =>
   useQuery({ queryKey: buildListKey("leagues", query), queryFn: () => apiClient.getLeagues(query), ...listQueryOptions });
@@ -352,6 +367,21 @@ export const useRunCalibrationMutation = () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-model-comparison"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-model-performance-timeseries"] });
       void queryClient.invalidateQueries({ queryKey: ["admin-model-drift-summary"] });
+    }
+  });
+};
+
+export const useAdminLoginMutation = () =>
+  useMutation<ApiResponse<AuthTokens>, Error, { email: string; password: string }>({
+    mutationFn: apiClient.loginAdmin
+  });
+
+export const useAdminLogoutMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<{ loggedOut: boolean }>, Error, void>({
+    mutationFn: apiClient.logoutAdmin,
+    onSuccess: () => {
+      void queryClient.removeQueries({ queryKey: ["admin-auth-me"] });
     }
   });
 };

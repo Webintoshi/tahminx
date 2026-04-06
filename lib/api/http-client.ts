@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { apiResponseSchema } from "@/lib/api/contract-schemas";
+import { getAdminAccessToken, getAdminRefreshToken, clearAdminSession, setAdminSession } from "@/lib/auth/admin-session";
 import { env, normalizeBrowserUrl } from "@/lib/config/env";
 import { getMockResponse } from "@/lib/api/mock-adapter";
 import type { ApiError, ApiResponse } from "@/types/api-contract";
@@ -40,6 +41,11 @@ const toApiError = (error: unknown): ApiError => {
   if (error instanceof Error) return { code: "REQUEST_FAILED", message: error.message };
   return { code: "UNKNOWN", message: "Unknown error" };
 };
+
+const authTokensSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string()
+});
 
 async function requestCore<T extends z.ZodTypeAny>(
   path: string,
@@ -82,6 +88,10 @@ async function requestCore<T extends z.ZodTypeAny>(
 
     return parsed;
   } catch (error) {
+    if (error instanceof ApiClientError) {
+      throw error;
+    }
+
     if (env.mockFallback) {
       const fallback = await getMockResponse(fullPath);
       const parsed = parseEnvelope(fallback, schema);
@@ -106,8 +116,46 @@ export async function publicRequest<T extends z.ZodTypeAny>(
 export async function privateRequest<T extends z.ZodTypeAny>(
   path: string,
   schema: T,
-  token: string,
+  token?: string,
   init?: RequestInit
 ): Promise<ApiResponse<z.infer<T>>> {
-  return requestCore(path, schema, init, token);
+  const accessToken = token ?? getAdminAccessToken();
+
+  if (!accessToken) {
+    throw new ApiClientError("Admin oturumu gerekli", 401, {
+      code: "UNAUTHORIZED",
+      message: "Admin oturumu gerekli"
+    });
+  }
+
+  try {
+    return await requestCore(path, schema, init, accessToken);
+  } catch (error) {
+    if (!(error instanceof ApiClientError) || error.status !== 401) {
+      throw error;
+    }
+
+    const refreshToken = getAdminRefreshToken();
+    if (!refreshToken) {
+      clearAdminSession();
+      throw error;
+    }
+
+    try {
+      const refreshResponse = await requestCore(
+        "/auth/refresh",
+        authTokensSchema,
+        {
+          method: "POST",
+          body: JSON.stringify({ refreshToken })
+        }
+      );
+
+      setAdminSession(refreshResponse.data);
+      return await requestCore(path, schema, init, refreshResponse.data.accessToken);
+    } catch (refreshError) {
+      clearAdminSession();
+      throw refreshError instanceof ApiClientError ? refreshError : error;
+    }
+  }
 }

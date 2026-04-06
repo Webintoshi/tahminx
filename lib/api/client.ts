@@ -1,5 +1,7 @@
 ﻿import { z } from "zod";
 import {
+  authTokensSchema,
+  authUserSchema,
   calibrationResultSchema,
   calibrationRunResponseSchema,
   dashboardSummarySchema,
@@ -32,7 +34,7 @@ import {
   teamListItemSchema,
   teamSquadPlayerSchema
 } from "@/lib/api/contract-schemas";
-import { publicRequest } from "@/lib/api/http-client";
+import { privateRequest, publicRequest } from "@/lib/api/http-client";
 import {
   toQueryString,
   type AdminAnalyticsQuery,
@@ -56,6 +58,22 @@ const listQueryToPath = (
 ) => `${path}${toQueryString(query as Record<string, string | number | boolean | null | undefined> | undefined)}`;
 
 export const apiClient = {
+  loginAdmin: (payload: { email: string; password: string }) =>
+    publicRequest("/auth/login", authTokensSchema, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }),
+  getAdminMe: () => privateRequest("/auth/me", authUserSchema),
+  logoutAdmin: () =>
+    privateRequest(
+      "/auth/logout",
+      z.object({
+        loggedOut: z.boolean()
+      }),
+      undefined,
+      { method: "POST" }
+    ),
+
   getSports: () => publicRequest("/sports", z.array(sportSchema)),
 
   getLeagues: (query?: MatchQuery) => publicRequest(listQueryToPath("/leagues", query), z.array(leagueListItemSchema)),
@@ -92,53 +110,53 @@ export const apiClient = {
   getGuideSummary: () => publicRequest("/guide/summary", guideSummarySchema),
 
   getCalibrationResults: () =>
-    publicRequest("/admin/calibration/results", z.array(calibrationResultSchema)),
+    privateRequest("/admin/calibration/results", z.array(calibrationResultSchema)),
   runCalibration: () =>
-    publicRequest("/admin/calibration/run", calibrationRunResponseSchema, { method: "POST" }),
+    privateRequest("/admin/calibration/run", calibrationRunResponseSchema, undefined, { method: "POST" }),
   getPredictionRiskSummary: () =>
-    publicRequest("/admin/predictions/risk-summary", predictionRiskSummarySchema),
+    privateRequest("/admin/predictions/risk-summary", predictionRiskSummarySchema),
   getLowConfidencePredictions: (query?: PredictionQuery) =>
-    publicRequest(listQueryToPath("/admin/predictions/low-confidence", query), z.array(predictionItemSchema)),
+    privateRequest(listQueryToPath("/admin/predictions/low-confidence", query), z.array(predictionItemSchema)),
 
   getModelComparison: (query?: AdminAnalyticsQuery) =>
-    publicRequest(listQueryToPath("/admin/models/comparison", query), z.array(modelComparisonItemSchema)),
+    privateRequest(listQueryToPath("/admin/models/comparison", query), z.array(modelComparisonItemSchema)),
   getFeatureImportance: (query?: AdminAnalyticsQuery) =>
-    publicRequest(listQueryToPath("/admin/models/feature-importance", query), z.array(featureImportanceItemSchema)),
+    privateRequest(listQueryToPath("/admin/models/feature-importance", query), z.array(featureImportanceItemSchema)),
   getFailedPredictions: (query?: FailedPredictionQuery) =>
-    publicRequest(listQueryToPath("/admin/predictions/failed", query), z.array(failedPredictionItemSchema)),
+    privateRequest(listQueryToPath("/admin/predictions/failed", query), z.array(failedPredictionItemSchema)),
   getFailedPredictionDetail: (failedId: string) =>
-    publicRequest(`/admin/predictions/failed/${failedId}`, failedPredictionDetailSchema),
+    privateRequest(`/admin/predictions/failed/${failedId}`, failedPredictionDetailSchema),
   getModelPerformanceTimeseries: (query?: AdminAnalyticsQuery) =>
-    publicRequest(listQueryToPath("/admin/models/performance-timeseries", query), z.array(modelPerformancePointSchema)),
+    privateRequest(listQueryToPath("/admin/models/performance-timeseries", query), z.array(modelPerformancePointSchema)),
   getModelDriftSummary: (query?: AdminAnalyticsQuery) =>
-    publicRequest(listQueryToPath("/admin/models/drift-summary", query), performanceDriftSummarySchema),
+    privateRequest(listQueryToPath("/admin/models/drift-summary", query), performanceDriftSummarySchema),
 
   getModelStrategies: (query?: StrategyQuery) =>
-    publicRequest(listQueryToPath("/admin/models/strategies", query), z.array(modelStrategySchema)),
+    privateRequest(listQueryToPath("/admin/models/strategies", query), z.array(modelStrategySchema)),
   autoSelectModelStrategy: () =>
-    publicRequest("/admin/models/strategies/auto-select", strategySummarySchema, { method: "POST" }),
+    privateRequest("/admin/models/strategies/auto-select", strategySummarySchema, undefined, { method: "POST" }),
   updateModelStrategy: (
     strategyId: string,
     payload: { primaryModel: string; fallbackModel?: string | null; isActive: boolean }
   ) =>
-    publicRequest(`/admin/models/strategies/${strategyId}`, modelStrategySchema, {
+    privateRequest(`/admin/models/strategies/${strategyId}`, modelStrategySchema, undefined, {
       method: "PATCH",
       body: JSON.stringify(payload)
     }),
 
   getEnsembleConfigs: (query?: AdminAnalyticsQuery) =>
-    publicRequest(listQueryToPath("/admin/models/ensemble-configs", query), z.array(ensembleConfigSchema)),
+    privateRequest(listQueryToPath("/admin/models/ensemble-configs", query), z.array(ensembleConfigSchema)),
   updateEnsembleConfig: (
     configId: string,
     payload: { weights: Array<{ model: string; weight: number }>; isActive?: boolean }
   ) =>
-    publicRequest(`/admin/models/ensemble-configs/${configId}`, ensembleConfigSchema, {
+    privateRequest(`/admin/models/ensemble-configs/${configId}`, ensembleConfigSchema, undefined, {
       method: "PATCH",
       body: JSON.stringify(payload)
     }),
 
   getFeatureLab: (query?: AdminAnalyticsQuery) =>
-    publicRequest(listQueryToPath("/admin/features/lab", query), featureLabSchema),
+    privateRequest(listQueryToPath("/admin/features/lab", query), featureLabSchema),
   runFeatureExperiment: (payload: {
     modelVersion: string;
     featureSetId: string;
@@ -146,10 +164,10 @@ export const apiClient = {
     from: string;
     to: string;
   }) =>
-    publicRequest("/admin/features/lab/experiment", featureExperimentSchema, {
+    privateRequest("/admin/features/lab/experiment", featureExperimentSchema, undefined, {
       method: "POST",
       body: JSON.stringify(payload)
     }),
   getFeatureExperimentResults: (query?: FeatureExperimentResultsQuery) =>
-    publicRequest(listQueryToPath("/admin/features/lab/results", query), z.array(featureExperimentResultSchema))
+    privateRequest(listQueryToPath("/admin/features/lab/results", query), z.array(featureExperimentResultSchema))
 };
