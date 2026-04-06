@@ -45,6 +45,8 @@ import {
   type StrategyQuery
 } from "@/lib/api/query";
 
+type QueryPrimitive = string | number | boolean | null | undefined;
+
 const listQueryToPath = (
   path: string,
   query?:
@@ -56,6 +58,64 @@ const listQueryToPath = (
     | StrategyQuery
     | Record<string, string | number | boolean | null | undefined>
 ) => `${path}${toQueryString(query as Record<string, string | number | boolean | null | undefined> | undefined)}`;
+
+const pickQuery = (
+  query:
+    | MatchQuery
+    | PredictionQuery
+    | AdminAnalyticsQuery
+    | FeatureExperimentResultsQuery
+    | FailedPredictionQuery
+    | StrategyQuery
+    | Record<string, QueryPrimitive>
+    | undefined,
+  allowedKeys: string[]
+): Record<string, QueryPrimitive> | undefined => {
+  if (!query) return undefined;
+
+  const allowed = new Set(allowedKeys);
+  const result: Record<string, QueryPrimitive> = {};
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (!allowed.has(key)) return;
+    result[key] = value;
+  });
+
+  return result;
+};
+
+const adminComparisonPath = (query?: AdminAnalyticsQuery) =>
+  listQueryToPath("/admin/models/comparison", pickQuery(query, ["sport", "leagueId", "modelVersion", "from", "to", "page", "pageSize"]));
+
+const adminFeatureImportancePath = (query?: AdminAnalyticsQuery) =>
+  listQueryToPath("/admin/models/feature-importance", pickQuery(query, ["sport", "modelVersion", "from", "to"]));
+
+const adminFailedPredictionsPath = (query?: FailedPredictionQuery) =>
+  listQueryToPath(
+    "/admin/predictions/failed",
+    pickQuery(query, ["sport", "leagueId", "modelVersion", "onlyHighConfidenceFailed", "from", "to", "page", "pageSize"])
+  );
+
+const adminPerformanceTimeseriesPath = (query?: AdminAnalyticsQuery) =>
+  listQueryToPath("/admin/models/performance-timeseries", pickQuery(query, ["sport", "leagueId", "modelVersion", "from", "to"]));
+
+const adminDriftSummaryPath = (query?: AdminAnalyticsQuery) =>
+  listQueryToPath("/admin/models/drift-summary", pickQuery(query, ["sport", "leagueId", "modelVersion", "from", "to"]));
+
+const adminStrategiesPath = (query?: StrategyQuery) =>
+  listQueryToPath(
+    "/admin/models/strategies",
+    pickQuery(query, ["sport", "leagueId", "predictionType", "isActive", "from", "to", "page", "pageSize"])
+  );
+
+const adminFeatureLabPath = (query?: AdminAnalyticsQuery) =>
+  listQueryToPath("/admin/features/lab", pickQuery(query, ["sport"]));
+
+const adminFeatureExperimentResultsPath = (query?: FeatureExperimentResultsQuery) =>
+  listQueryToPath(
+    "/admin/features/lab/results",
+    pickQuery(query, ["sport", "leagueId", "modelVersion", "featureSetId", "experimentId", "from", "to", "page", "pageSize"])
+  );
 
 export const apiClient = {
   loginAdmin: (payload: { email: string; password: string }) =>
@@ -119,20 +179,20 @@ export const apiClient = {
     privateRequest(listQueryToPath("/admin/predictions/low-confidence", query), z.array(predictionItemSchema)),
 
   getModelComparison: (query?: AdminAnalyticsQuery) =>
-    privateRequest(listQueryToPath("/admin/models/comparison", query), z.array(modelComparisonItemSchema)),
+    privateRequest(adminComparisonPath(query), z.array(modelComparisonItemSchema)),
   getFeatureImportance: (query?: AdminAnalyticsQuery) =>
-    privateRequest(listQueryToPath("/admin/models/feature-importance", query), z.array(featureImportanceItemSchema)),
+    privateRequest(adminFeatureImportancePath(query), z.array(featureImportanceItemSchema)),
   getFailedPredictions: (query?: FailedPredictionQuery) =>
-    privateRequest(listQueryToPath("/admin/predictions/failed", query), z.array(failedPredictionItemSchema)),
+    privateRequest(adminFailedPredictionsPath(query), z.array(failedPredictionItemSchema)),
   getFailedPredictionDetail: (failedId: string) =>
     privateRequest(`/admin/predictions/failed/${failedId}`, failedPredictionDetailSchema),
   getModelPerformanceTimeseries: (query?: AdminAnalyticsQuery) =>
-    privateRequest(listQueryToPath("/admin/models/performance-timeseries", query), z.array(modelPerformancePointSchema)),
+    privateRequest(adminPerformanceTimeseriesPath(query), z.array(modelPerformancePointSchema)),
   getModelDriftSummary: (query?: AdminAnalyticsQuery) =>
-    privateRequest(listQueryToPath("/admin/models/drift-summary", query), performanceDriftSummarySchema),
+    privateRequest(adminDriftSummaryPath(query), performanceDriftSummarySchema),
 
   getModelStrategies: (query?: StrategyQuery) =>
-    privateRequest(listQueryToPath("/admin/models/strategies", query), z.array(modelStrategySchema)),
+    privateRequest(adminStrategiesPath(query), z.array(modelStrategySchema)),
   autoSelectModelStrategy: () =>
     privateRequest("/admin/models/strategies/auto-select", strategySummarySchema, undefined, { method: "POST" }),
   updateModelStrategy: (
@@ -156,7 +216,7 @@ export const apiClient = {
     }),
 
   getFeatureLab: (query?: AdminAnalyticsQuery) =>
-    privateRequest(listQueryToPath("/admin/features/lab", query), featureLabSchema),
+    privateRequest(adminFeatureLabPath(query), featureLabSchema),
   runFeatureExperiment: (payload: {
     modelVersion: string;
     featureSetId: string;
@@ -169,5 +229,5 @@ export const apiClient = {
       body: JSON.stringify(payload)
     }),
   getFeatureExperimentResults: (query?: FeatureExperimentResultsQuery) =>
-    privateRequest(listQueryToPath("/admin/features/lab/results", query), z.array(featureExperimentResultSchema))
+    privateRequest(adminFeatureExperimentResultsPath(query), z.array(featureExperimentResultSchema))
 };
