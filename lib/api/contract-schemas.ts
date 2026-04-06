@@ -281,14 +281,33 @@ export const apiErrorSchema = z.object({
   details: z.unknown().optional()
 });
 
-export const paginationMetaSchema = z.object({
+export const paginationMetaSchema = z.preprocess((value) => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  const page = asNumber(record.page) ?? 1;
+  const pageSize = asNumber(record.pageSize) ?? 0;
+  const total = asNumber(record.total) ?? 0;
+  const totalPages =
+    asNumber(record.totalPages) ??
+    (pageSize > 0 ? Math.max(1, Math.ceil(total / pageSize)) : 1);
+
+  return {
+    page,
+    pageSize,
+    total,
+    totalPages,
+    generatedAt: asNullableString(record.generatedAt) ?? undefined,
+    updatedAt: asNullableString(record.updatedAt) ?? undefined
+  };
+}, z.object({
   page: z.number(),
   pageSize: z.number(),
   total: z.number(),
   totalPages: z.number(),
   generatedAt: z.string().optional(),
   updatedAt: z.string().optional()
-});
+}));
 
 export const apiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
