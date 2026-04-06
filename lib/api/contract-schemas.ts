@@ -124,6 +124,36 @@ const normalizeMatchListItem = (value: unknown): unknown => {
   };
 };
 
+const normalizeMatchDetail = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  const source = asRecord(record.overview) ?? record;
+  const normalized = asRecord(normalizeMatchListItem(source));
+
+  if (!normalized) return value;
+
+  const prediction = asRecord(record.prediction);
+  const expectedScore = asRecord(prediction?.expectedScore);
+  const explanation = asRecord(prediction?.explanation);
+  const explanationPayload = asRecord(explanation?.explanation);
+
+  return {
+    ...normalized,
+    venue: asNullableString(source.venue),
+    round: asNullableString(source.round),
+    summary: asNullableString(
+      prediction?.summary ??
+      source.summary ??
+      explanationPayload?.summary
+    ),
+    expectedScoreHome: asNumber(source.expectedScoreHome ?? expectedScore?.home),
+    expectedScoreAway: asNumber(source.expectedScoreAway ?? expectedScore?.away),
+    riskFlags: asStringArray(source.riskFlags ?? record.riskFlags ?? prediction?.riskFlags),
+    h2hSummary: asNullableString(source.h2hSummary)
+  };
+};
+
 const normalizePredictionItem = (value: unknown): unknown => {
   const record = asRecord(value);
   if (!record) return value;
@@ -413,7 +443,7 @@ const matchListItemBaseSchema = z.object({
 
 export const matchListItemSchema = z.preprocess(normalizeMatchListItem, matchListItemBaseSchema);
 
-export const matchDetailSchema = z.preprocess(normalizeMatchListItem, matchListItemBaseSchema.extend({
+export const matchDetailSchema = z.preprocess(normalizeMatchDetail, matchListItemBaseSchema.extend({
   venue: z.string().nullable().optional(),
   round: z.string().nullable().optional(),
   summary: z.string().nullable().optional(),
