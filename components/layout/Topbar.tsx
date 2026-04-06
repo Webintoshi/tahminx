@@ -1,68 +1,82 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { MobileSidebar } from "@/components/layout/MobileSidebar";
-import { SearchInput } from "@/components/filters/SearchInput";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { initials } from "@/lib/utils";
 
 export function Topbar() {
-  const [query, setQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const { mode, setMode } = useTheme();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[color:var(--surface)]/95 px-4 py-3 backdrop-blur sm:px-6">
-      <div className="flex flex-wrap items-center gap-3">
+    <header className="sticky top-0 z-30 border-b border-[#2A3035] bg-[#000000]">
+      <div className="flex h-16 items-center gap-4 px-6">
         <MobileSidebar />
 
-        <div className="min-w-[240px] flex-1">
-          <SearchInput value={query} onChange={setQuery} placeholder="Mac, takim veya lig ara" />
+        {/* Breadcrumbs */}
+        <div className="flex-1">
+          <Breadcrumbs />
         </div>
 
-        <button
-          type="button"
-          className="h-10 rounded-lg border border-[var(--border)] px-3 text-sm text-[color:var(--foreground)]"
-          aria-label="Bildirimler"
-        >
-          Bildirim
-        </button>
-
-        <select
-          value={mode}
-          onChange={(event) => setMode(event.target.value as "dark" | "light" | "system")}
-          className="h-10 rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
-          aria-label="Tema sec"
-        >
-          <option value="system">Sistem</option>
-          <option value="dark">Dark</option>
-          <option value="light">Light</option>
-        </select>
-
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setMenuOpen((current) => !current)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[color:var(--surface-alt)] text-sm font-semibold text-[color:var(--foreground)]"
-            aria-expanded={menuOpen}
-            aria-haspopup="menu"
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <select
+            value={mode}
+            onChange={(event) => setMode(event.target.value as "dark" | "light" | "system")}
+            className="h-9 rounded-lg border border-[#2A3035] bg-[#171C1F] px-3 text-sm font-medium text-[#ECEDEF] outline-none transition-colors hover:border-[#3A4047] focus:border-[#7A84FF]"
+            aria-label="Tema seç"
           >
-            {initials("Mert Aydin")}
-          </button>
-          {menuOpen ? (
-            <div className="absolute right-0 mt-2 w-44 rounded-lg border border-[var(--border)] bg-[color:var(--surface)] p-2 shadow-xl" role="menu">
-              <a href="/account" className="block rounded px-2 py-1.5 text-sm hover:bg-[color:var(--surface-alt)]">Profil</a>
-              <a href="/membership" className="block rounded px-2 py-1.5 text-sm hover:bg-[color:var(--surface-alt)]">Planlar</a>
-            </div>
-          ) : null}
-        </div>
-      </div>
+            <option value="system">Sistem</option>
+            <option value="dark">Koyu</option>
+            <option value="light">Açık</option>
+          </select>
 
-      <div className="mt-3">
-        <Breadcrumbs />
+          {/* User Menu */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((current) => !current)}
+              className="flex h-9 items-center gap-2 rounded-lg border border-[#2A3035] bg-[#171C1F] px-3 text-sm font-medium text-[#ECEDEF] transition-colors hover:border-[#3A4047] hover:bg-[#1F2529]"
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7A84FF] text-xs font-semibold text-black">
+                {initials("Mert Aydin")}
+              </span>
+              <span className="hidden sm:inline">Mert Aydın</span>
+            </button>
+            
+            {menuOpen && (
+              <div 
+                className="absolute right-0 mt-2 w-48 rounded-lg border border-[#2A3035] bg-[#171C1F] py-1 shadow-xl" 
+                role="menu"
+              >
+                <a 
+                  href="/account" 
+                  className="block px-4 py-2 text-sm text-[#ECEDEF] transition-colors hover:bg-[#1F2529]"
+                >
+                  Profil
+                </a>
+                <a 
+                  href="/membership" 
+                  className="block px-4 py-2 text-sm text-[#ECEDEF] transition-colors hover:bg-[#1F2529]"
+                >
+                  Planlar
+                </a>
+                <div className="my-1 border-t border-[#2A3035]" />
+                <button 
+                  className="block w-full px-4 py-2 text-left text-sm text-[#9CA3AF] transition-colors hover:bg-[#1F2529] hover:text-[#ECEDEF]"
+                >
+                  Çıkış yap
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </header>
   );
 }
-

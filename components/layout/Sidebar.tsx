@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,17 +9,27 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden h-screen w-72 shrink-0 flex-col border-r border-[var(--border)] bg-[color:var(--surface)] lg:flex">
-      <div className="border-b border-[var(--border)] p-5">
-        <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--accent-2)]">TahminX</p>
-        <h1 className="mt-2 text-2xl text-[color:var(--foreground)] [font-family:var(--font-display)]">Analytics Hub</h1>
+    <aside className="hidden h-screen w-64 shrink-0 flex-col border-r border-[#2A3035] bg-[#171C1F] lg:flex">
+      {/* Logo */}
+      <div className="flex h-16 items-center border-b border-[#2A3035] px-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#7A84FF]">
+            <span className="text-sm font-bold text-black">T</span>
+          </div>
+          <span className="text-lg font-semibold tracking-tight text-[#ECEDEF]">
+            TahminX
+          </span>
+        </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-4">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
         {sidebarMenu.map((section) => (
-          <div key={section.title} className="mb-5">
-            <p className="mb-2 px-3 text-xs uppercase tracking-[0.13em] text-[color:var(--muted)]">{section.title}</p>
-            <ul className="space-y-1">
+          <div key={section.title} className="mb-6">
+            <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-[#9CA3AF]">
+              {section.title}
+            </p>
+            <ul className="space-y-0.5">
               {section.items.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
@@ -27,13 +37,13 @@ export function Sidebar() {
                     <Link
                       href={item.href}
                       className={cn(
-                        "block rounded-lg px-3 py-2 text-sm transition",
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150",
                         isActive
-                          ? "bg-[color:var(--accent)] text-black"
-                          : "text-[color:var(--muted)] hover:bg-[color:var(--surface-alt)] hover:text-[color:var(--foreground)]"
+                          ? "bg-[#7A84FF] text-black"
+                          : "text-[#9CA3AF] hover:bg-[#1F2529] hover:text-[#ECEDEF]"
                       )}
                     >
-                      {item.title}
+                      <span className="truncate">{item.title}</span>
                     </Link>
                   </li>
                 );
@@ -42,7 +52,14 @@ export function Sidebar() {
           </div>
         ))}
       </nav>
+
+      {/* Footer */}
+      <div className="border-t border-[#2A3035] p-4">
+        <div className="rounded-lg bg-[#1F2529] p-3">
+          <p className="text-xs font-medium text-[#ECEDEF]">Pro Plan</p>
+          <p className="mt-1 text-xs text-[#9CA3AF]">Sonraki ödeme: 15 gün</p>
+        </div>
+      </div>
     </aside>
   );
 }
-
