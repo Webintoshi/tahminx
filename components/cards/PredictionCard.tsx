@@ -3,7 +3,7 @@ import { formatDateTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 // Güven seviyesine göre renk ve emoji
-function getConfidenceLevel(score: number | undefined) {
+function getConfidenceLevel(score: number | null | undefined) {
   const s = score ?? 0;
   if (s >= 75) return { 
     label: "Yüksek", 
@@ -43,6 +43,7 @@ export function PredictionCard({ prediction }: { prediction: PredictionItem }) {
   const confidence = getConfidenceLevel(prediction.confidenceScore);
   const winner = getWinner(prediction);
   const riskCount = (prediction.riskFlags ?? []).length;
+  const drawProbability = prediction.probabilities.draw ?? 0;
   
   return (
     <article className={cn(
@@ -110,7 +111,7 @@ export function PredictionCard({ prediction }: { prediction: PredictionItem }) {
           />
           <div 
             className="bg-[#9CA3AF]" 
-            style={{ width: `${prediction.probabilities.draw}%` }}
+            style={{ width: `${drawProbability}%` }}
           />
           <div 
             className="bg-[#7A84FF]" 
@@ -119,7 +120,7 @@ export function PredictionCard({ prediction }: { prediction: PredictionItem }) {
         </div>
         <div className="mt-1.5 flex justify-between text-[10px] text-[#9CA3AF]">
           <span>Ev: %{Math.round(prediction.probabilities.home)}</span>
-          <span>Beraberlik: %{Math.round(prediction.probabilities.draw)}</span>
+          <span>Beraberlik: %{Math.round(drawProbability)}</span>
           <span>Deplasman: %{Math.round(prediction.probabilities.away)}</span>
         </div>
       </div>
