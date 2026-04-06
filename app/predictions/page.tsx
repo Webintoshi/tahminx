@@ -25,7 +25,11 @@ function PredictionsPageContent() {
   const leaguesQuery = useLeagues({ sport: filters.sport, pageSize: 200 });
   const teamsQuery = useTeams({ sport: filters.sport, leagueId: filters.leagueId || undefined, pageSize: 200 });
 
-  const predictions = predictionQuery.data?.data ?? [];
+  const allPredictions = predictionQuery.data?.data ?? [];
+  const predictions =
+    filters.riskLevel && filters.riskLevel !== "all"
+      ? allPredictions.filter((item) => item.riskLevel === filters.riskLevel)
+      : allPredictions;
   const highConfidence = highConfidenceQuery.data?.data ?? [];
   const meta = predictionQuery.data?.meta;
 
@@ -59,7 +63,7 @@ function PredictionsPageContent() {
         footer={
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-[color:var(--muted)]">
-              Sayfa {meta?.page ?? filters.page} / {meta?.totalPages ?? 1} - Toplam {meta?.total ?? predictions.length}
+              Sayfa {meta?.page ?? filters.page} / {meta?.totalPages ?? 1} - Toplam {filters.riskLevel !== "all" ? predictions.length : meta?.total ?? predictions.length}
             </p>
             <div className="flex gap-2">
               <button
@@ -115,8 +119,8 @@ function PredictionsPageContent() {
         <label className="space-y-1">
           <span className="text-xs text-[color:var(--muted)]">Risk</span>
           <select
-            value={filters.status}
-            onChange={(event) => setFilters({ status: event.target.value })}
+            value={filters.riskLevel}
+            onChange={(event) => setFilters({ riskLevel: event.target.value, status: undefined, page: 1 })}
             className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
           >
             {riskOptions.map((option) => (
@@ -240,4 +244,3 @@ export default function PredictionsPage() {
     </Suspense>
   );
 }
-

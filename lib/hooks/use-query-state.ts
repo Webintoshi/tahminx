@@ -4,6 +4,9 @@ import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { MatchQuery, PredictionQuery } from "@/lib/api/query";
 
+const matchStatuses = new Set(["scheduled", "live", "completed", "postponed", "cancelled"]);
+const riskLevels = new Set(["low", "medium", "high"]);
+
 const parsePositiveInt = (value: string | null, fallback: number) => {
   const num = Number(value);
   return Number.isFinite(num) && num > 0 ? num : fallback;
@@ -27,11 +30,16 @@ export function useFilterQueryState() {
   const pathname = usePathname();
 
   const filters = useMemo(() => {
+    const rawStatus = searchParams.get("status") ?? "all";
+    const rawRiskLevel = searchParams.get("riskLevel");
+    const riskLevel = rawRiskLevel ?? (riskLevels.has(rawStatus) ? rawStatus : "all");
+
     const base = {
       sport: searchParams.get("sport") ?? "all",
       leagueId: searchParams.get("leagueId") ?? "",
       teamId: searchParams.get("teamId") ?? "",
-      status: searchParams.get("status") ?? "all",
+      status: rawStatus,
+      riskLevel,
       date: searchParams.get("date") ?? "",
       from: searchParams.get("from") ?? "",
       to: searchParams.get("to") ?? "",
@@ -75,7 +83,7 @@ export const mapFiltersToMatchQuery = (filters: ReturnType<typeof useFilterQuery
   sport: filters.sport,
   leagueId: filters.leagueId || undefined,
   teamId: filters.teamId || undefined,
-  status: filters.status || undefined,
+  status: matchStatuses.has(filters.status) ? filters.status : undefined,
   date: filters.date || undefined,
   from: filters.from || undefined,
   to: filters.to || undefined,
@@ -92,7 +100,7 @@ export const mapFiltersToPredictionQuery = (
   sport: filters.sport,
   leagueId: filters.leagueId || undefined,
   teamId: filters.teamId || undefined,
-  status: filters.status || undefined,
+  status: matchStatuses.has(filters.status) ? filters.status : undefined,
   date: filters.date || undefined,
   from: filters.from || undefined,
   to: filters.to || undefined,
@@ -104,4 +112,3 @@ export const mapFiltersToPredictionQuery = (
   sortBy: filters.sortBy,
   sortOrder: filters.sortOrder
 });
-
