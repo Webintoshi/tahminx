@@ -63,11 +63,14 @@ export async function proxyApiRequest(request: Request) {
   }
 
   const upstreamUrl = buildUpstreamUrl(request.url);
+  const requestBody =
+    request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer();
 
   try {
     const upstreamResponse = await fetch(upstreamUrl, {
       method: request.method,
       headers: buildUpstreamHeaders(request),
+      body: requestBody,
       cache: "no-store",
       redirect: "follow"
     });

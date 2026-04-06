@@ -22,6 +22,21 @@ export interface ApiResponse<T> {
   error?: ApiError | null;
 }
 
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  username?: string | null;
+  fullName?: string | null;
+  role?: {
+    name: string;
+  } | null;
+}
+
 export interface Sport {
   id: string;
   key: SportKey;

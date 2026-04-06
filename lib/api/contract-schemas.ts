@@ -686,6 +686,21 @@ export const guideSummarySchema = z.object({
   )
 });
 
+export const authTokensSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string()
+});
+
+export const authUserSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  username: z.string().nullable().optional(),
+  fullName: z.string().nullable().optional(),
+  role: z.object({
+    name: z.string()
+  }).nullable().optional()
+}).passthrough();
+
 export const teamSquadPlayerSchema = z.object({
   id: z.string(),
   name: z.string(),
