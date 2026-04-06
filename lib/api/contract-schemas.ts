@@ -676,7 +676,7 @@ export const guideSummarySchema = z.object({
 export const teamSquadPlayerSchema = z.object({
   id: z.string(),
   name: z.string(),
-  position: z.string(),
+  position: z.string().nullable().optional(),
   number: z.number().nullable().optional(),
   status: z.string().nullable().optional()
 });
