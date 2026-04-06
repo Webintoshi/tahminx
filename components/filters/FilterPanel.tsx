@@ -2,48 +2,68 @@
 
 import { useState, type ReactNode } from "react";
 
-export function FilterPanel({
-  primaryFilters,
-  advancedFilters,
-  footer
-}: {
+type SplitFilterPanelProps = {
   primaryFilters: ReactNode;
   advancedFilters: ReactNode;
   footer?: ReactNode;
-}) {
+  description?: string;
+  children?: never;
+};
+
+type LegacyFilterPanelProps = {
+  children: ReactNode;
+  footer?: ReactNode;
+  description?: string;
+  primaryFilters?: never;
+  advancedFilters?: never;
+};
+
+type FilterPanelProps = SplitFilterPanelProps | LegacyFilterPanelProps;
+
+export function FilterPanel({
+  primaryFilters,
+  advancedFilters,
+  footer,
+  description,
+  children
+}: FilterPanelProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const hasLegacyLayout = children !== undefined;
 
   return (
     <>
-      {/* Desktop View */}
-      <section className="hidden lg:block rounded-xl border border-[#2A3035] bg-[#171C1F] p-4">
-        {/* Primary Filters */}
-        <div className="flex flex-wrap items-end gap-3">
-          {primaryFilters}
-        </div>
+      <section className="hidden rounded-xl border border-[#2A3035] bg-[#171C1F] p-4 lg:block">
+        {description ? <p className="mb-3 text-xs text-[#9CA3AF]">{description}</p> : null}
 
-        {/* Advanced Filters Toggle */}
-        <button
-          type="button"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="mt-3 text-xs font-medium text-[#9CA3AF] transition-colors hover:text-[#ECEDEF]"
-        >
-          {showAdvanced ? "▲ Gelişmiş filtreleri gizle" : "▼ Gelişmiş filtreleri göster"}
-        </button>
+        {hasLegacyLayout ? (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">{children}</div>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-end gap-3">{primaryFilters}</div>
 
-        {/* Advanced Filters */}
-        {showAdvanced && (
-          <div className="mt-3 flex flex-wrap items-end gap-3 border-t border-[#2A3035] pt-3">
-            {advancedFilters}
-          </div>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((current) => !current)}
+              className="mt-3 text-xs font-medium text-[#9CA3AF] transition-colors hover:text-[#ECEDEF]"
+            >
+              {showAdvanced ? "Gelismis filtreleri gizle" : "Gelismis filtreleri goster"}
+            </button>
+
+            {showAdvanced ? (
+              <div className="mt-3 flex flex-wrap items-end gap-3 border-t border-[#2A3035] pt-3">
+                {advancedFilters}
+              </div>
+            ) : null}
+          </>
         )}
 
-        {footer && <div className="mt-3 border-t border-[#2A3035] pt-3">{footer}</div>}
+        {footer ? (
+          <div className={hasLegacyLayout ? "mt-3" : "mt-3 border-t border-[#2A3035] pt-3"}>{footer}</div>
+        ) : null}
       </section>
 
-      {/* Mobile View */}
-      <section className="lg:hidden rounded-xl border border-[#2A3035] bg-[#171C1F] p-4">
+      <section className="rounded-xl border border-[#2A3035] bg-[#171C1F] p-4 lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <h3 className="text-sm font-semibold text-[#ECEDEF]">Filtreler</h3>
           <button
@@ -56,8 +76,7 @@ export function FilterPanel({
         </div>
       </section>
 
-      {/* Mobile Drawer */}
-      {isOpen && (
+      {isOpen ? (
         <div
           className="fixed inset-0 z-50 bg-black/60 lg:hidden"
           role="dialog"
@@ -80,15 +99,23 @@ export function FilterPanel({
               </button>
             </div>
 
+            {description ? <p className="mb-4 text-xs text-[#9CA3AF]">{description}</p> : null}
+
             <div className="space-y-4">
-              {primaryFilters}
-              {advancedFilters}
+              {hasLegacyLayout ? (
+                children
+              ) : (
+                <>
+                  {primaryFilters}
+                  {advancedFilters}
+                </>
+              )}
             </div>
 
-            {footer && <div className="mt-4 border-t border-[#2A3035] pt-4">{footer}</div>}
+            {footer ? <div className="mt-4 border-t border-[#2A3035] pt-4">{footer}</div> : null}
           </aside>
         </div>
-      )}
+      ) : null}
     </>
   );
 }
