@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Suspense, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -108,13 +108,13 @@ function FeatureExperimentsPageContent() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 p-6">
       <PageHeader
         title="Feature Experiments"
         description="Feature set karsilastirma deneyleri ve metrik sonuclari"
       />
 
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-3">
         <MetricCard title="Experiment Result" value={String(meta?.total ?? results.length)} />
         <MetricCard title="Model Option" value={String(modelOptions.length)} />
         <MetricCard
@@ -125,28 +125,30 @@ function FeatureExperimentsPageContent() {
         />
       </section>
 
-      <FilterPanel description="Sonuc tablosu icin sport, league ve model filtreleri">
-        <SportLeagueFilters
-          sport={filters.sport}
-          leagueId={filters.leagueId}
-          leagues={leaguesQuery.data?.data ?? []}
-          onChange={(value) => setFilters(value)}
-        />
+      <FilterPanel
+        primaryFilters={
+          <>
+            <SportLeagueFilters
+              sport={filters.sport}
+              leagueId={filters.leagueId}
+              leagues={leaguesQuery.data?.data ?? []}
+              onChange={(value) => setFilters(value)}
+            />
 
-        <label className="space-y-1">
-          <span className="text-xs text-[color:var(--muted)]">Model version</span>
-          <select
-            value={filters.modelVersion}
-            onChange={(event) => setFilters({ modelVersion: event.target.value })}
-            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
-          >
-            <option value="">Tum modeller</option>
-            {modelOptions.map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
-          </select>
-        </label>
-      </FilterPanel>
+            <select
+              value={filters.modelVersion}
+              onChange={(event) => setFilters({ modelVersion: event.target.value })}
+              className="h-11 w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm text-[#ECEDEF] focus:border-[#7A84FF] focus:outline-none"
+            >
+              <option value="">Tüm modeller</option>
+              {modelOptions.map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </>
+        }
+        advancedFilters={<></>}
+      />
 
       <SectionCard title="Experiment Form" subtitle="Endpoint: /api/v1/admin/features/lab/experiment">
         <ExperimentForm

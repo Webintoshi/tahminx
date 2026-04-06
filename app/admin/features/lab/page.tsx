@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Suspense, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -135,66 +135,60 @@ function FeatureLabPageContent() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 p-6">
       <PageHeader
         title="Feature Lab"
         description="Feature group toggle, set olusturma ve aktif feature set yonetimi"
       />
 
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-3">
         <MetricCard title="Feature Group" value={String(filteredGroups.length)} />
         <MetricCard title="Feature Set" value={String(filteredFeatureSets.length)} />
         <MetricCard title="Active Set" value={activeFeatureSetId || "-"} tone="success" />
       </section>
 
-      <FilterPanel description="Sport bazli lab calisma alani">
-        <label className="space-y-1">
-          <span className="text-xs text-[color:var(--muted)]">Spor</span>
-          <select
-            value={filters.sport}
-            onChange={(event) => setFilters({ sport: event.target.value as "all" | "football" | "basketball" })}
-            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
-          >
-            <option value="all">Tum sporlar</option>
-            <option value="football">Futbol</option>
-            <option value="basketball">Basketbol</option>
-          </select>
-        </label>
+      <FilterPanel
+        primaryFilters={
+          <>
+            <select
+              value={filters.sport}
+              onChange={(event) => setFilters({ sport: event.target.value as "all" | "football" | "basketball" })}
+              className="h-11 w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm text-[#ECEDEF] focus:border-[#7A84FF] focus:outline-none"
+            >
+              <option value="all">Tüm sporlar</option>
+              <option value="football">Futbol</option>
+              <option value="basketball">Basketbol</option>
+            </select>
 
-        <label className="space-y-1">
-          <span className="text-xs text-[color:var(--muted)]">Template</span>
-          <select
-            value={templateId}
-            onChange={(event) => setTemplateId(event.target.value)}
-            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
-          >
-            <option value="">Template sec (opsiyonel)</option>
-            {templates.map((template) => (
-              <option key={template.id} value={template.id}>{template.label}</option>
-            ))}
-          </select>
-        </label>
+            <select
+              value={templateId}
+              onChange={(event) => setTemplateId(event.target.value)}
+              className="h-11 w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm text-[#ECEDEF] focus:border-[#7A84FF] focus:outline-none"
+            >
+              <option value="">Template seç (opsiyonel)</option>
+              {templates.map((template) => (
+                <option key={template.id} value={template.id}>{template.label}</option>
+              ))}
+            </select>
 
-        <label className="space-y-1">
-          <span className="text-xs text-[color:var(--muted)]">Yeni feature set adi</span>
-          <input
-            value={newSetName}
-            onChange={(event) => setNewSetName(event.target.value)}
-            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
-            placeholder="Orn: Football Core v2"
-          />
-        </label>
+            <input
+              value={newSetName}
+              onChange={(event) => setNewSetName(event.target.value)}
+              className="h-11 w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm text-[#ECEDEF] placeholder:text-[#9CA3AF] focus:border-[#7A84FF] focus:outline-none"
+              placeholder="Yeni feature set adı"
+            />
 
-        <div className="flex items-end">
-          <button
-            type="button"
-            onClick={createFeatureSet}
-            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm font-semibold"
-          >
-            Feature Set Olustur
-          </button>
-        </div>
-      </FilterPanel>
+            <button
+              type="button"
+              onClick={createFeatureSet}
+              className="h-11 w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm font-semibold text-[#ECEDEF] transition-colors hover:border-[#7A84FF] hover:text-[#7A84FF]"
+            >
+              Feature Set Oluştur
+            </button>
+          </>
+        }
+        advancedFilters={<></>}
+      />
 
       <DataFeedback
         isLoading={featureLabQuery.isLoading}
@@ -208,7 +202,7 @@ function FeatureLabPageContent() {
       >
         <SectionCard title="Feature Groups" subtitle="Enable/disable toggle ve feature bazli kontrol">
           {filteredGroups.length > 0 ? (
-            <div className="grid gap-3 xl:grid-cols-2">
+            <div className="grid gap-4 xl:grid-cols-2">
               {filteredGroups.map((group) => (
                 <FeatureGroupCard
                   key={group.id}
@@ -225,17 +219,17 @@ function FeatureLabPageContent() {
 
         <SectionCard title="Feature Sets" subtitle="Aktif set gostergesi ve set listesi">
           {filteredFeatureSets.length > 0 ? (
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {filteredFeatureSets.map((set) => (
-                <article key={set.id} className={`rounded-xl border p-3 ${set.id === activeFeatureSetId ? "border-emerald-500/40 bg-emerald-500/10" : "border-[var(--border)] bg-[color:var(--surface)]"}`}>
-                  <p className="text-sm font-semibold text-[color:var(--foreground)]">{set.name}</p>
-                  <p className="mt-1 text-xs text-[color:var(--muted)]">Template: {set.template ?? "-"}</p>
-                  <p className="text-xs text-[color:var(--muted)]">Features: {set.featureKeys.length}</p>
-                  <p className="text-xs text-[color:var(--muted)]">Updated: {formatDateTime(set.updatedAt)}</p>
+                <article key={set.id} className={`rounded-xl border p-4 ${set.id === activeFeatureSetId ? "border-[#34C759]/30 bg-[#34C759]/10" : "border-[#2A3035] bg-[#171C1F]"}`}>
+                  <p className="text-sm font-semibold text-[#ECEDEF]">{set.name}</p>
+                  <p className="mt-1 text-xs text-[#9CA3AF]">Template: {set.template ?? "-"}</p>
+                  <p className="text-xs text-[#9CA3AF]">Features: {set.featureKeys.length}</p>
+                  <p className="text-xs text-[#9CA3AF]">Updated: {formatDateTime(set.updatedAt)}</p>
                   <button
                     type="button"
                     onClick={() => setActiveFeatureSet(set.id)}
-                    className="mt-2 rounded-md border border-[var(--border)] px-2 py-1 text-xs"
+                    className="mt-3 rounded-lg border border-[#2A3035] bg-[#1F2529] px-3 py-1.5 text-xs font-medium text-[#ECEDEF] transition-colors hover:border-[#7A84FF]"
                   >
                     {set.id === activeFeatureSetId ? "Aktif" : "Aktif Yap"}
                   </button>

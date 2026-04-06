@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -52,28 +52,33 @@ function AdminModelDriftPageContent() {
   ).sort((a, b) => a.localeCompare(b));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 p-6">
       <PageHeader
         title="Model Drift Summary"
         description="Son 7 gun ile onceki 30 gun performans degisimi"
       />
 
-      <FilterPanel description="Sport, league, model version ve tarih araligi filtreleri">
-        <SportLeagueFilters
-          sport={filters.sport}
-          leagueId={filters.leagueId}
-          leagues={leaguesQuery.data?.data ?? []}
-          onChange={(value) => setFilters(value)}
-        />
+      <FilterPanel
+        primaryFilters={
+          <>
+            <SportLeagueFilters
+              sport={filters.sport}
+              leagueId={filters.leagueId}
+              leagues={leaguesQuery.data?.data ?? []}
+              onChange={(value) => setFilters(value)}
+            />
 
-        <ModelVersionSelect
-          value={filters.modelVersion}
-          options={modelOptions}
-          onChange={(value) => setFilters({ modelVersion: value ?? "" })}
-        />
-
-        <DateRangeFilter from={filters.from} to={filters.to} onChange={(value) => setFilters(value)} />
-      </FilterPanel>
+            <ModelVersionSelect
+              value={filters.modelVersion}
+              options={modelOptions}
+              onChange={(value) => setFilters({ modelVersion: value ?? "" })}
+            />
+          </>
+        }
+        advancedFilters={
+          <DateRangeFilter from={filters.from} to={filters.to} onChange={(value) => setFilters(value)} />
+        }
+      />
 
       <DataFeedback
         isLoading={driftQuery.isLoading}
@@ -88,7 +93,7 @@ function AdminModelDriftPageContent() {
       >
         {drift ? (
           <>
-            <section className="grid gap-3 sm:grid-cols-3">
+            <section className="grid gap-4 sm:grid-cols-3">
               <MetricCard
                 title="Performance Drop"
                 value={indicatorText(drift.performanceDropDetected)}
@@ -108,7 +113,7 @@ function AdminModelDriftPageContent() {
 
             <SectionCard title="Drift Summary Cards" subtitle="7 gun vs onceki 30 gun karsilastirma">
               {(drift.summaries ?? []).length > 0 ? (
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {(drift.summaries ?? []).map((summary) => (
                     <DriftSummaryCard key={summary.metric} summary={summary} />
                   ))}
@@ -119,10 +124,10 @@ function AdminModelDriftPageContent() {
             </SectionCard>
 
             <SectionCard title="Operasyon Notu" subtitle="Profesyonel izleme yorumu">
-              <p className="text-sm text-[color:var(--muted)]">
+              <p className="text-sm text-[#9CA3AF]">
                 Drift sinyali kritik alarm anlamina gelmez. Bu panel, model davranisindaki degisimleri erken fark edip kalibrasyon ve veri kalite adimlarini planlamak icin kullanilir.
               </p>
-              <p className="mt-2 text-xs text-[color:var(--muted)]">Guncelleme: {formatDateTime(drift.updatedAt)}</p>
+              <p className="mt-2 text-xs text-[#9CA3AF]">Guncelleme: {formatDateTime(drift.updatedAt)}</p>
             </SectionCard>
           </>
         ) : null}

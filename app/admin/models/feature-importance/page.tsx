@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -34,58 +34,56 @@ function AdminFeatureImportancePageContent() {
   const modelOptions = Array.from(new Set(rows.map((row) => row.modelVersion))).sort((a, b) => a.localeCompare(b));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 p-6">
       <PageHeader
         title="Feature Importance"
         description="Top contributing feature listesi ve importance skor dagilimi"
       />
 
-      <FilterPanel description="Sport, model version ve tarih araligi filtreleri">
-        <label className="space-y-1">
-          <span className="text-xs text-[color:var(--muted)]">Spor</span>
-          <select
-            value={filters.sport}
-            onChange={(event) => setFilters({ sport: event.target.value as "all" | "football" | "basketball" })}
-            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
-          >
-            <option value="all">Tum sporlar</option>
-            <option value="football">Futbol</option>
-            <option value="basketball">Basketbol</option>
-          </select>
-        </label>
+      <FilterPanel
+        primaryFilters={
+          <>
+            <select
+              value={filters.sport}
+              onChange={(event) => setFilters({ sport: event.target.value as "all" | "football" | "basketball" })}
+              className="h-11 w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm text-[#ECEDEF] focus:border-[#7A84FF] focus:outline-none"
+            >
+              <option value="all">Tüm sporlar</option>
+              <option value="football">Futbol</option>
+              <option value="basketball">Basketbol</option>
+            </select>
 
-        <ModelVersionSelect
-          value={filters.modelVersion}
-          options={modelOptions}
-          onChange={(value) => setFilters({ modelVersion: value ?? "" })}
-        />
+            <ModelVersionSelect
+              value={filters.modelVersion}
+              options={modelOptions}
+              onChange={(value) => setFilters({ modelVersion: value ?? "" })}
+            />
+          </>
+        }
+        advancedFilters={
+          <>
+            <DateRangeFilter from={filters.from} to={filters.to} onChange={(value) => setFilters(value)} />
 
-        <DateRangeFilter from={filters.from} to={filters.to} onChange={(value) => setFilters(value)} />
+            <select
+              value={filters.sortBy}
+              onChange={(event) => setFilters({ sortBy: event.target.value })}
+              className="h-11 w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm text-[#ECEDEF] focus:border-[#7A84FF] focus:outline-none"
+            >
+              <option value="updatedAt">Updated</option>
+              <option value="modelVersion">Model version</option>
+            </select>
 
-        <label className="space-y-1">
-          <span className="text-xs text-[color:var(--muted)]">Sort by</span>
-          <select
-            value={filters.sortBy}
-            onChange={(event) => setFilters({ sortBy: event.target.value })}
-            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
-          >
-            <option value="updatedAt">Updated</option>
-            <option value="modelVersion">Model version</option>
-          </select>
-        </label>
-
-        <label className="space-y-1">
-          <span className="text-xs text-[color:var(--muted)]">Sort order</span>
-          <select
-            value={filters.sortOrder}
-            onChange={(event) => setFilters({ sortOrder: event.target.value as "asc" | "desc" })}
-            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
-          >
-            <option value="desc">Azalan</option>
-            <option value="asc">Artan</option>
-          </select>
-        </label>
-      </FilterPanel>
+            <select
+              value={filters.sortOrder}
+              onChange={(event) => setFilters({ sortOrder: event.target.value as "asc" | "desc" })}
+              className="h-11 w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm text-[#ECEDEF] focus:border-[#7A84FF] focus:outline-none"
+            >
+              <option value="desc">Azalan</option>
+              <option value="asc">Artan</option>
+            </select>
+          </>
+        }
+      />
 
       <DataFeedback
         isLoading={featureQuery.isLoading}
@@ -99,12 +97,12 @@ function AdminFeatureImportancePageContent() {
       >
         <SectionCard title="Futbol" subtitle="Football model feature katkisi">
           {footballRows.length > 0 ? (
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               {footballRows.map((item) => (
-                <article key={`${item.modelVersion}-${item.updatedAt ?? "na"}`} className="rounded-xl border border-[var(--border)] bg-[color:var(--surface)] p-3">
+                <article key={`${item.modelVersion}-${item.updatedAt ?? "na"}`} className="rounded-xl border border-[#2A3035] bg-[#171C1F] p-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
-                    <p className="font-semibold text-[color:var(--foreground)]">{item.modelVersion}</p>
-                    <p className="text-xs text-[color:var(--muted)]">{formatDateTime(item.updatedAt)}</p>
+                    <p className="font-semibold text-[#ECEDEF]">{item.modelVersion}</p>
+                    <p className="text-xs text-[#9CA3AF]">{formatDateTime(item.updatedAt)}</p>
                   </div>
                   <FeatureImportanceChart items={item.features.slice(0, 8)} />
                 </article>
@@ -117,12 +115,12 @@ function AdminFeatureImportancePageContent() {
 
         <SectionCard title="Basketbol" subtitle="Basketball model feature katkisi">
           {basketballRows.length > 0 ? (
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               {basketballRows.map((item) => (
-                <article key={`${item.modelVersion}-${item.updatedAt ?? "na"}`} className="rounded-xl border border-[var(--border)] bg-[color:var(--surface)] p-3">
+                <article key={`${item.modelVersion}-${item.updatedAt ?? "na"}`} className="rounded-xl border border-[#2A3035] bg-[#171C1F] p-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
-                    <p className="font-semibold text-[color:var(--foreground)]">{item.modelVersion}</p>
-                    <p className="text-xs text-[color:var(--muted)]">{formatDateTime(item.updatedAt)}</p>
+                    <p className="font-semibold text-[#ECEDEF]">{item.modelVersion}</p>
+                    <p className="text-xs text-[#9CA3AF]">{formatDateTime(item.updatedAt)}</p>
                   </div>
                   <FeatureImportanceChart items={item.features.slice(0, 8)} />
                 </article>

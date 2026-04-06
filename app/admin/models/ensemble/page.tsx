@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Suspense, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -92,42 +92,44 @@ function EnsemblePageContent() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 p-6">
       <PageHeader
         title="Ensemble Config Panel"
         description="Model agirliklari, normalize kontrolu ve kaydetme islemleri"
       />
 
-      <FilterPanel description="Sport, league ve model version filtreleri">
-        <SportLeagueFilters
-          sport={filters.sport}
-          leagueId={filters.leagueId}
-          leagues={leaguesQuery.data?.data ?? []}
-          onChange={(value) => setFilters(value)}
-        />
+      <FilterPanel
+        primaryFilters={
+          <>
+            <SportLeagueFilters
+              sport={filters.sport}
+              leagueId={filters.leagueId}
+              leagues={leaguesQuery.data?.data ?? []}
+              onChange={(value) => setFilters(value)}
+            />
 
-        <ModelSelector
-          value={filters.modelVersion}
-          options={modelOptions}
-          onChange={(value) => setFilters({ modelVersion: value })}
-        />
+            <ModelSelector
+              value={filters.modelVersion}
+              options={modelOptions}
+              onChange={(value) => setFilters({ modelVersion: value })}
+            />
 
-        <label className="space-y-1">
-          <span className="text-xs text-[color:var(--muted)]">Aktiflik</span>
-          <select
-            value={filters.isActive === undefined ? "all" : filters.isActive ? "true" : "false"}
-            onChange={(event) => {
-              const value = event.target.value;
-              setFilters({ isActive: value === "all" ? undefined : value === "true" });
-            }}
-            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
-          >
-            <option value="all">Tum kayitlar</option>
-            <option value="true">Sadece active</option>
-            <option value="false">Sadece inactive</option>
-          </select>
-        </label>
-      </FilterPanel>
+            <select
+              value={filters.isActive === undefined ? "all" : filters.isActive ? "true" : "false"}
+              onChange={(event) => {
+                const value = event.target.value;
+                setFilters({ isActive: value === "all" ? undefined : value === "true" });
+              }}
+              className="h-11 w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm text-[#ECEDEF] focus:border-[#7A84FF] focus:outline-none"
+            >
+              <option value="all">Tüm kayitlar</option>
+              <option value="true">Sadece active</option>
+              <option value="false">Sadece inactive</option>
+            </select>
+          </>
+        }
+        advancedFilters={<></>}
+      />
 
       <SectionCard title="Ensemble Config List" subtitle={`Toplam ${meta?.total ?? rows.length} kayit`}>
         <DataFeedback
