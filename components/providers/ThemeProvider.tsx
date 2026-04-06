@@ -18,27 +18,25 @@ const getSystemMode = (): "dark" | "light" =>
   window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 
 const getInitialMode = (): ThemeMode => {
-  if (typeof window === "undefined") {
-    return "system";
-  }
-  const stored = window.localStorage.getItem(storageKey) as ThemeMode | null;
-  if (stored === "dark" || stored === "light" || stored === "system") {
-    return stored;
-  }
   return "system";
 };
 
 const getInitialSystemMode = (): "dark" | "light" => {
-  if (typeof window === "undefined") {
-    return "dark";
-  }
-  return getSystemMode();
+  return "dark";
 };
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(getInitialMode);
   const [systemMode, setSystemMode] = useState<"dark" | "light">(getInitialSystemMode);
   const resolvedMode = mode === "system" ? systemMode : mode;
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(storageKey) as ThemeMode | null;
+    if (stored === "dark" || stored === "light" || stored === "system") {
+      setModeState(stored);
+    }
+    setSystemMode(getSystemMode());
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", resolvedMode);

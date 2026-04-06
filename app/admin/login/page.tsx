@@ -63,10 +63,10 @@ export default function AdminLoginPage() {
       let tokens: { accessToken: string; refreshToken: string };
 
       try {
+        tokens = await bootstrapAdminLogin(email, password);
+      } catch {
         const response = await loginMutation.mutateAsync({ email, password });
         tokens = response.data;
-      } catch {
-        tokens = await bootstrapAdminLogin(email, password);
       }
 
       setAdminSession(tokens);
