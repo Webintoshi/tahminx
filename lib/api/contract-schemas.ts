@@ -181,6 +181,26 @@ const normalizeMatchPrediction = (value: unknown): unknown => {
   };
 };
 
+const normalizeTeamFormList = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (record && "data" in record) {
+    return Array.isArray(record.data) ? record.data : [];
+  }
+
+  return Array.isArray(value) ? value : [];
+};
+
+const normalizeMatchStats = (value: unknown): unknown => {
+  if (Array.isArray(value) || value == null) {
+    return {};
+  }
+
+  const record = asRecord(value);
+  if (!record) return {};
+
+  return record;
+};
+
 const normalizePredictionItem = (value: unknown): unknown => {
   const record = asRecord(value);
   if (!record) return value;
@@ -450,6 +470,8 @@ export const teamFormPointSchema = z.object({
   value: z.number().nullable().optional()
 });
 
+export const teamFormListSchema = z.preprocess(normalizeTeamFormList, z.array(teamFormPointSchema));
+
 const matchListItemBaseSchema = z.object({
   id: z.string(),
   sportKey: z.string(),
@@ -490,7 +512,7 @@ export const matchEventSchema = z.object({
   description: z.string().nullable().optional()
 });
 
-export const matchStatsSchema = z.object({
+export const matchStatsSchema = z.preprocess(normalizeMatchStats, z.object({
   possessionHome: z.number().nullable().optional(),
   possessionAway: z.number().nullable().optional(),
   shotsHome: z.number().nullable().optional(),
@@ -503,7 +525,7 @@ export const matchStatsSchema = z.object({
   paceAway: z.number().nullable().optional(),
   efficiencyHome: z.number().nullable().optional(),
   efficiencyAway: z.number().nullable().optional()
-});
+}));
 
 export const matchPredictionSchema = z.preprocess(normalizeMatchPrediction, z.object({
   matchId: z.string(),

@@ -28,7 +28,7 @@ import {
   sportSchema,
   standingRowSchema,
   teamDetailSchema,
-  teamFormPointSchema,
+  teamFormListSchema,
   teamListItemSchema,
   teamSquadPlayerSchema
 } from "@/lib/api/contract-schemas";
@@ -66,7 +66,7 @@ export const apiClient = {
   getTeamDetail: (teamId: string) => publicRequest(`/teams/${teamId}`, teamDetailSchema),
   getTeamMatches: (teamId: string, query?: MatchQuery) =>
     publicRequest(listQueryToPath(`/teams/${teamId}/matches`, query), z.array(matchListItemSchema)),
-  getTeamForm: (teamId: string) => publicRequest(`/teams/${teamId}/form`, z.array(teamFormPointSchema)),
+  getTeamForm: (teamId: string) => publicRequest(`/teams/${teamId}/form`, teamFormListSchema),
   getTeamSquad: (teamId: string) => publicRequest(`/teams/${teamId}/squad`, z.array(teamSquadPlayerSchema)),
 
   getMatches: (query?: MatchQuery) => publicRequest(listQueryToPath("/matches", query), z.array(matchListItemSchema)),
