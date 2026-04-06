@@ -313,7 +313,7 @@ export const apiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
     success: z.boolean(),
     data: dataSchema,
-    meta: paginationMetaSchema.optional(),
+    meta: paginationMetaSchema.nullable().optional(),
     error: apiErrorSchema.nullable().optional()
   });
 
