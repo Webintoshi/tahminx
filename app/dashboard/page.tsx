@@ -53,9 +53,9 @@ export default function DashboardPage() {
   );
 
   const confidenceChartData = [
-    { label: "Low", value: dashboard?.riskDistribution?.low ?? 0 },
-    { label: "Medium", value: dashboard?.riskDistribution?.medium ?? 0 },
-    { label: "High", value: dashboard?.riskDistribution?.high ?? 0 }
+    { label: "Düşük", value: dashboard?.riskDistribution?.low ?? 0 },
+    { label: "Orta", value: dashboard?.riskDistribution?.medium ?? 0 },
+    { label: "Yüksek", value: dashboard?.riskDistribution?.high ?? 0 }
   ];
 
   const hasPartialData =
@@ -63,10 +63,10 @@ export default function DashboardPage() {
     (topPredictions.length === 0 || updatedLeagues.length === 0 || recentPredictions.length === 0);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 p-6">
       <PageHeader
         title="Dashboard"
-        description="Calibrated confidence, risk dagilimi ve guncel prediction ozeti"
+        description="Kalibre edilmiş güven skorları, risk dağılımı ve güncel tahmin özeti"
       />
 
       <DataFeedback
@@ -74,10 +74,10 @@ export default function DashboardPage() {
         error={(dashboardQuery.error as Error | undefined) ?? (todayMatchesQuery.error as Error | undefined)}
         isEmpty={!dashboard}
         isPartial={hasPartialData}
-        emptyTitle="Dashboard verisi bulunamadi"
-        emptyDescription="Analitik ozet su an alinamiyor."
-        partialTitle="Kismi dashboard verisi"
-        partialDescription="Bazi kartlar eksik gelebilir; sistem kalan verilerle gosterime devam ediyor."
+        emptyTitle="Dashboard verisi bulunamadı"
+        emptyDescription="Analitik özet şu an alınamıyor."
+        partialTitle="Kısmi dashboard verisi"
+        partialDescription="Bazı kartlar eksik gelebilir; sistem kalan verilerle gösterime devam ediyor."
         onRetry={() => {
           void dashboardQuery.refetch();
           void todayMatchesQuery.refetch();
@@ -86,33 +86,35 @@ export default function DashboardPage() {
         }}
         loadingCount={4}
       >
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {/* Stats Grid */}
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            title="Bugunun mac sayisi"
+            title="Bugünün Maç Sayısı"
             value={String(dashboard?.todayMatchCount ?? todayMatches.length)}
-            hint="Guncel gun takvimi"
+            hint="Güncel gün takvimi"
           />
           <StatCard
-            title="Canli mac"
+            title="Canlı Maç"
             value={String(dashboard?.liveMatchCount ?? liveMatches.length)}
-            hint="Anlik takipteki maclar"
+            hint="Anlık takipteki maçlar"
           />
           <StatCard
-            title="Calibrated high confidence"
+            title="Kalibre Yüksek Güven"
             value={String(dashboard?.calibratedHighConfidenceCount ?? dashboard?.highConfidencePredictionCount ?? topPredictions.length)}
-            hint="Calibration sonrasi yuksek guven"
+            hint="Kalibrasyon sonrası yüksek güven"
             tone="success"
           />
           <StatCard
-            title="Low confidence"
+            title="Düşük Güven"
             value={String(dashboard?.lowConfidenceCount ?? lowConfidencePredictions.length)}
             hint="Ek yorum gerektiren tahminler"
             tone="warning"
           />
         </section>
 
+        {/* Charts Row */}
         <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-          <SectionCard title="Sistem Performans Ozet Trendi" subtitle="Takim bazli mini trend alanlari">
+          <SectionCard title="Sistem Performans Trendi" subtitle="Takım bazlı mini trend alanları">
             {trendSeries.length > 0 ? (
               <LineChart data={trendSeries} />
             ) : (
@@ -120,112 +122,115 @@ export default function DashboardPage() {
             )}
           </SectionCard>
 
-          <SectionCard title="Risk Dagilimi" subtitle="Low / medium / high prediction count">
+          <SectionCard title="Risk Dağılımı" subtitle="Düşük / Orta / Yüksek tahmin sayısı">
             {(dashboard?.riskDistribution?.low ?? 0) + (dashboard?.riskDistribution?.medium ?? 0) + (dashboard?.riskDistribution?.high ?? 0) > 0 ? (
               <BarChart data={confidenceChartData} />
             ) : (
-              <EmptyState title="Risk dagilimi yok" description="Risk dagilimi verisi su an paylasilmadi." />
+              <EmptyState title="Risk dağılımı yok" description="Risk dağılımı verisi şu an paylaşılmadı." />
             )}
           </SectionCard>
         </section>
 
+        {/* Calibration & Leagues */}
         <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-          <SectionCard title="Calibration Health Summary" subtitle="Model calibration durum ozeti">
+          <SectionCard title="Kalibrasyon Durumu" subtitle="Model kalibrasyon sağlık özeti">
             {dashboard?.calibrationHealthSummary ? (
               <div className="grid gap-3 sm:grid-cols-2">
-                <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
-                  <p className="text-xs text-[color:var(--muted)]">Status</p>
-                  <p className="font-semibold text-[color:var(--foreground)]">{dashboard.calibrationHealthSummary.status ?? "-"}</p>
+                <article className="rounded-lg border border-[#2A3035] bg-[#1F2529] p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">Durum</p>
+                  <p className="mt-1 text-lg font-semibold text-[#ECEDEF]">{dashboard.calibrationHealthSummary.status ?? "-"}</p>
                 </article>
-                <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
-                  <p className="text-xs text-[color:var(--muted)]">Avg confidence</p>
-                  <p className="font-semibold text-[color:var(--foreground)]">{dashboard.avgConfidenceScore ?? "-"}%</p>
+                <article className="rounded-lg border border-[#2A3035] bg-[#1F2529] p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">Ortalama Güven</p>
+                  <p className="mt-1 text-lg font-semibold text-[#ECEDEF]">{dashboard.avgConfidenceScore ?? "-"}%</p>
                 </article>
-                <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
-                  <p className="text-xs text-[color:var(--muted)]">Brier score</p>
-                  <p className="font-semibold text-[color:var(--foreground)]">{dashboard.calibrationHealthSummary.brierScore ?? "-"}</p>
+                <article className="rounded-lg border border-[#2A3035] bg-[#1F2529] p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">Brier Skoru</p>
+                  <p className="mt-1 text-lg font-semibold text-[#ECEDEF]">{dashboard.calibrationHealthSummary.brierScore ?? "-"}</p>
                 </article>
-                <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
-                  <p className="text-xs text-[color:var(--muted)]">ECE</p>
-                  <p className="font-semibold text-[color:var(--foreground)]">{dashboard.calibrationHealthSummary.ece ?? "-"}</p>
+                <article className="rounded-lg border border-[#2A3035] bg-[#1F2529] p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">ECE</p>
+                  <p className="mt-1 text-lg font-semibold text-[#ECEDEF]">{dashboard.calibrationHealthSummary.ece ?? "-"}</p>
                 </article>
-                <article className="sm:col-span-2 rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
-                  <p className="text-xs text-[color:var(--muted)]">Not</p>
-                  <p className="text-sm text-[color:var(--foreground)]">{dashboard.calibrationHealthSummary.note ?? "Not bulunmuyor."}</p>
-                  <p className="mt-1 text-xs text-[color:var(--muted)]">Updated: {formatDateTime(dashboard.calibrationHealthSummary.updatedAt)}</p>
+                <article className="sm:col-span-2 rounded-lg border border-[#2A3035] bg-[#1F2529] p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">Not</p>
+                  <p className="mt-1 text-sm text-[#ECEDEF]">{dashboard.calibrationHealthSummary.note ?? "Not bulunmuyor."}</p>
+                  <p className="mt-2 text-xs text-[#9CA3AF]">Güncelleme: {formatDateTime(dashboard.calibrationHealthSummary.updatedAt)}</p>
                 </article>
               </div>
             ) : (
-              <EmptyState title="Calibration ozeti yok" description="Calibration health summary endpoint verisi bekleniyor." />
+              <EmptyState title="Kalibrasyon özeti yok" description="Kalibrasyon sağlık özeti endpoint verisi bekleniyor." />
             )}
           </SectionCard>
 
-          <SectionCard title="Son Guncellenen Ligler" subtitle="Veri akisi son guncellenen ligler">
+          <SectionCard title="Son Güncellenen Ligler" subtitle="Veri akışı son güncellenen ligler">
             {updatedLeagues.length > 0 ? (
               <ul className="space-y-2">
                 {updatedLeagues.map((league) => (
-                  <li key={league.id} className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-2">
-                    <p className="font-semibold text-[color:var(--foreground)]">{league.name}</p>
-                    <p className="text-xs text-[color:var(--muted)]">
-                      {league.country} - {league.season}
+                  <li key={league.id} className="rounded-lg border border-[#2A3035] bg-[#1F2529] px-4 py-3">
+                    <p className="font-medium text-[#ECEDEF]">{league.name}</p>
+                    <p className="text-xs text-[#9CA3AF]">
+                      {league.country} — {league.season}
                     </p>
-                    <p className="text-xs text-[color:var(--muted)]">Guncelleme: {formatDateTime(league.updatedAt)}</p>
+                    <p className="text-xs text-[#9CA3AF]">Güncelleme: {formatDateTime(league.updatedAt)}</p>
                   </li>
                 ))}
               </ul>
             ) : (
-              <EmptyState title="Lig guncellemesi yok" description="Son guncellenen lig bilgisi su an paylasilmadi." />
+              <EmptyState title="Lig güncellemesi yok" description="Son güncellenen lig bilgisi şu an paylaşılmadı." />
             )}
           </SectionCard>
         </section>
 
-        <SectionCard title="Bugunun One Cikan Maclari" subtitle="Canli ve yaklasan maclar">
+        {/* Spotlight Matches */}
+        <SectionCard title="Bugünün Öne Çıkan Maçları" subtitle="Canlı ve yaklaşan maçlar">
           {spotlightMatches.length > 0 ? (
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               {spotlightMatches.map((match) => (
                 <MatchCard key={match.id} match={match} />
               ))}
             </div>
           ) : (
-            <EmptyState title="Mac listesi bos" description="Bugun icin gosterilecek mac bulunmuyor." />
+            <EmptyState title="Maç listesi boş" description="Bugün için gösterilecek maç bulunmuyor." />
           )}
         </SectionCard>
 
+        {/* Predictions */}
         <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-          <SectionCard title="Yuksek Guven Tahminleri" subtitle="Confidence score odakli model ciktilari">
+          <SectionCard title="Yüksek Güven Tahminleri" subtitle="Güven skoru odaklı model çıktıları">
             {topPredictions.length > 0 ? (
-              <div className="grid gap-3">
+              <div className="grid gap-4">
                 {topPredictions.map((prediction) => (
                   <PredictionCard key={prediction.id} prediction={prediction} />
                 ))}
               </div>
             ) : (
-              <EmptyState title="Yuksek guven tahmini yok" description="Bu saat araliginda confidence thresholdu asan tahmin yok." />
+              <EmptyState title="Yüksek güven tahmini yok" description="Bu saat aralığında güven thresholdu aşan tahmin yok." />
             )}
           </SectionCard>
 
-          <SectionCard title="Low Confidence Tahminler" subtitle="Ek kontrol gerektiren tahminler">
+          <SectionCard title="Düşük Güven Tahminler" subtitle="Ek kontrol gerektiren tahminler">
             {lowConfidencePredictions.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {lowConfidencePredictions.slice(0, 4).map((item) => (
                   <PredictionCard key={`low-${item.id}`} prediction={item} />
                 ))}
               </div>
             ) : (
-              <EmptyState title="Low confidence kayit yok" description="Su anda dusuk guvenli tahmin kaydi bulunmuyor." />
+              <EmptyState title="Düşük güven kayıt yok" description="Şu anda düşük güvenli tahmin kaydı bulunmuyor." />
             )}
           </SectionCard>
         </section>
 
-        <SectionCard title="Son Tahmin Ozet Tablosu" subtitle="Canli maclar ve recent predictions overview">
+        {/* Table */}
+        <SectionCard title="Son Tahmin Özet Tablosu" subtitle="Canlı maçlar ve recent predictions overview">
           {liveMatches.length > 0 || spotlightMatches.length > 0 ? (
             <RecentMatchesTable matches={liveMatches.length > 0 ? liveMatches : spotlightMatches.slice(0, 4)} />
           ) : (
-            <EmptyState title="Tablo verisi yok" description="Ozet tabloda gosterilecek mac verisi bulunmuyor." />
+            <EmptyState title="Tablo verisi yok" description="Özet tabloda gösterilecek maç verisi bulunmuyor." />
           )}
         </SectionCard>
       </DataFeedback>
     </div>
   );
 }
-

@@ -14,7 +14,7 @@ export function DataFeedback({
   emptyTitle,
   emptyDescription,
   partialTitle = "Veri eksik",
-  partialDescription = "Bazi alanlar eksik oldugu icin ekran kisitli gosteriliyor.",
+  partialDescription = "Bazı alanlar eksik olduğu için ekran kısıtlı gösteriliyor.",
   loadingCount = 3,
   loadingVariant = "card",
   onRetry,
@@ -50,7 +50,7 @@ export function DataFeedback({
     lastErrorRef.current = signature;
     showToast({
       tone: "error",
-      title: "Veri yuklenemedi",
+      title: "Veri yüklenemedi",
       description: error.message
     });
   }, [error, showToast]);
@@ -58,7 +58,7 @@ export function DataFeedback({
   if (isLoading) {
     return (
       <div
-        className={`grid gap-3 ${loadingVariant === "table" ? "grid-cols-1" : loadingVariant === "list" ? "grid-cols-1 md:grid-cols-2" : "md:grid-cols-2 xl:grid-cols-3"}`}
+        className={`grid gap-4 ${loadingVariant === "table" ? "grid-cols-1" : loadingVariant === "list" ? "grid-cols-1 md:grid-cols-2" : "md:grid-cols-2 xl:grid-cols-4"}`}
         aria-busy="true"
         aria-live="polite"
       >
@@ -79,7 +79,7 @@ export function DataFeedback({
 
   if (isPartial) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <EmptyState
           title={partialTitle}
           description={partialDescription}
@@ -88,7 +88,7 @@ export function DataFeedback({
               <button
                 type="button"
                 onClick={onRetry}
-                className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm transition hover:bg-[color:var(--surface-alt)]"
+                className="rounded-lg border border-[#2A3035] bg-[#171C1F] px-4 py-2 text-sm font-medium text-[#ECEDEF] transition-colors hover:bg-[#1F2529]"
               >
                 Yenile
               </button>
@@ -102,4 +102,3 @@ export function DataFeedback({
 
   return <>{children}</>;
 }
-

@@ -4,7 +4,7 @@ export function ProbabilityBar({
   home,
   draw,
   away,
-  title = "Olasilik Dagilimi"
+  title = "Olasılık Dağılımı"
 }: {
   home?: number | null;
   draw?: number | null;
@@ -18,8 +18,8 @@ export function ProbabilityBar({
 
   if (total <= 0) {
     return (
-      <div className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-2 text-xs text-[color:var(--muted)]">
-        Olasilik verisi henuz olusmadi.
+      <div className="rounded-lg border border-[#2A3035] bg-[#1F2529] px-3 py-2 text-xs text-[#9CA3AF]">
+        Olasılık verisi henüz oluşmadı.
       </div>
     );
   }
@@ -30,15 +30,15 @@ export function ProbabilityBar({
 
   return (
     <div className="space-y-2" aria-label="Kazanim olasiligi barlari">
-      <p className="text-xs text-[color:var(--muted)]">{title}</p>
-      <div className="h-3 overflow-hidden rounded-full bg-[color:var(--surface-alt)]">
+      <p className="text-xs text-[#9CA3AF]">{title}</p>
+      <div className="h-2 overflow-hidden rounded-full bg-[#1F2529]">
         <div className="flex h-full">
-          <div style={{ width: `${homeWidth}%` }} className="bg-emerald-400/70" />
-          {safeDraw > 0 ? <div style={{ width: `${drawWidth}%` }} className="bg-amber-400/70" /> : null}
-          <div style={{ width: `${awayWidth}%` }} className="bg-sky-400/70" />
+          <div style={{ width: `${homeWidth}%` }} className="bg-[#34C759]" />
+          {safeDraw > 0 ? <div style={{ width: `${drawWidth}%` }} className="bg-[#FF9500]" /> : null}
+          <div style={{ width: `${awayWidth}%` }} className="bg-[#7A84FF]" />
         </div>
       </div>
-      <div className="flex items-center justify-between text-xs text-[color:var(--muted)]">
+      <div className="flex items-center justify-between text-xs text-[#9CA3AF]">
         <span>Ev: {toPercent(safeHome)}</span>
         {safeDraw > 0 ? <span>Ber: {toPercent(safeDraw)}</span> : null}
         <span>Dep: {toPercent(safeAway)}</span>
@@ -46,4 +46,3 @@ export function ProbabilityBar({
     </div>
   );
 }
-

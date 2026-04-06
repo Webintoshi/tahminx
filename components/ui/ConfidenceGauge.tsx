@@ -13,20 +13,28 @@ export function ConfidenceGauge({
   const quality = !hasValue
     ? "Bilinmiyor"
     : bounded >= 80
-      ? "Yuksek"
+      ? "Yüksek"
       : bounded >= 67
         ? "Orta"
-        : "Dusuk";
+        : "Düşük";
+
+  const qualityColor = !hasValue
+    ? "#9CA3AF"
+    : bounded >= 80
+      ? "#34C759"
+      : bounded >= 67
+        ? "#7A84FF"
+        : "#FF9500";
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-2 text-xs text-[color:var(--muted)]">
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2 text-xs text-[#9CA3AF]">
         <span>Confidence</span>
-        {showLabel ? <span>{quality}</span> : null}
+        {showLabel ? <span style={{ color: qualityColor }}>{quality}</span> : null}
       </div>
       <div className="flex items-center gap-3">
         <div
-          className="h-2.5 w-full overflow-hidden rounded-full bg-[color:var(--surface-alt)]"
+          className="h-2 w-full overflow-hidden rounded-full bg-[#1F2529]"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={100}
@@ -34,13 +42,12 @@ export function ConfidenceGauge({
           aria-label="Guven skoru"
         >
           <div
-            className="h-full rounded-full bg-gradient-to-r from-[color:var(--warning)] via-[color:var(--accent)] to-[color:var(--success)]"
+            className="h-full rounded-full bg-[#7A84FF] transition-all duration-500"
             style={{ width: `${bounded}%` }}
           />
         </div>
-        <span className="text-sm font-semibold text-[color:var(--foreground)]">{hasValue ? `${bounded.toFixed(0)}%` : "-"}</span>
+        <span className="text-sm font-semibold text-[#ECEDEF]">{hasValue ? `${bounded.toFixed(0)}%` : "-"}</span>
       </div>
     </div>
   );
 }
-

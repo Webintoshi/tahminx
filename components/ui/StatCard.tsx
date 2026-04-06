@@ -17,23 +17,22 @@ export function StatCard({
   return (
     <article
       className={cn(
-        "rounded-2xl border bg-[color:var(--surface)] p-4",
+        "rounded-xl border bg-[#171C1F] p-5 transition-colors hover:border-[#3A4047]",
         tone === "success"
-          ? "border-emerald-500/35"
+          ? "border-[#34C759]/50"
           : tone === "warning"
-            ? "border-amber-500/35"
-            : "border-[var(--border)]"
+            ? "border-[#FF9500]/50"
+            : "border-[#2A3035]"
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.12em] text-[color:var(--muted)]">{title}</p>
-          <p className="mt-1 text-2xl font-semibold text-[color:var(--foreground)]">{value || "-"}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">{title}</p>
+          <p className="mt-2 text-3xl font-semibold tracking-tight text-[#ECEDEF]">{value || "-"}</p>
         </div>
-        {icon ? <span className="text-[color:var(--accent-2)]">{icon}</span> : null}
+        {icon ? <span className="text-[#7A84FF]">{icon}</span> : null}
       </div>
-      {hint ? <p className="mt-2 text-xs text-[color:var(--muted)]">{hint}</p> : null}
+      {hint ? <p className="mt-3 text-xs text-[#9CA3AF]">{hint}</p> : null}
     </article>
   );
 }
-

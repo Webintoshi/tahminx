@@ -15,17 +15,16 @@ export function EmptyState({
   return (
     <section
       className={cn(
-        "rounded-2xl border bg-[color:var(--surface)] p-6 text-center",
-        tone === "warning" ? "border-amber-500/35" : "border-[var(--border)]"
+        "rounded-xl border bg-[#171C1F] p-6 text-center",
+        tone === "warning" ? "border-[#FF9500]/30" : "border-[#2A3035]"
       )}
     >
-      <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--muted)]">
-        {tone === "warning" ? "Bilgilendirme" : "Bos Durum"}
+      <p className="text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">
+        {tone === "warning" ? "Bilgilendirme" : "Boş Durum"}
       </p>
-      <h3 className="mt-1 text-xl text-[color:var(--foreground)] [font-family:var(--font-display)]">{title}</h3>
-      <p className="mt-2 text-sm text-[color:var(--muted)]">{description}</p>
+      <h3 className="mt-2 text-lg font-semibold text-[#ECEDEF]">{title}</h3>
+      <p className="mt-1 text-sm text-[#9CA3AF]">{description}</p>
       {action ? <div className="mt-4">{action}</div> : null}
     </section>
   );
 }
-

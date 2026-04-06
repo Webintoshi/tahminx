@@ -18,7 +18,7 @@ export function LoadingSkeleton({
   return (
     <div
       className={cn(
-        "animate-pulse rounded-xl border border-[var(--border)] bg-gradient-to-r from-[color:var(--surface-alt)] via-white/5 to-[color:var(--surface-alt)]",
+        "animate-pulse rounded-xl border border-[#2A3035] bg-[#1F2529]",
         variantClassMap[variant],
         className
       )}
@@ -26,4 +26,3 @@ export function LoadingSkeleton({
     />
   );
 }
-
