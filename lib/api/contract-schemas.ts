@@ -154,6 +154,33 @@ const normalizeMatchDetail = (value: unknown): unknown => {
   };
 };
 
+const normalizeMatchPrediction = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  const probabilities = asRecord(record.probabilities);
+  const expectedScore = asRecord(record.expectedScore);
+
+  return {
+    matchId: asString(record.matchId ?? record.id),
+    expectedScore: {
+      home: asNumber(expectedScore?.home),
+      away: asNumber(expectedScore?.away)
+    },
+    probabilities: {
+      home: asNumber(probabilities?.home ?? probabilities?.homeWin) ?? 0,
+      draw: asNumber(probabilities?.draw),
+      away: asNumber(probabilities?.away ?? probabilities?.awayWin) ?? 0
+    },
+    confidenceScore: asNumber(record.confidenceScore),
+    riskFlags: asStringArray(record.riskFlags),
+    modelExplanation: asNullableString(record.modelExplanation ?? record.summary ?? record.avoidReason),
+    summary: asNullableString(record.summary ?? record.modelExplanation),
+    isLowConfidence: Boolean(record.isLowConfidence) || Boolean(record.avoidReason),
+    isRecommended: Boolean(record.isRecommended)
+  };
+};
+
 const normalizePredictionItem = (value: unknown): unknown => {
   const record = asRecord(value);
   if (!record) return value;
@@ -478,7 +505,7 @@ export const matchStatsSchema = z.object({
   efficiencyAway: z.number().nullable().optional()
 });
 
-export const matchPredictionSchema = z.object({
+export const matchPredictionSchema = z.preprocess(normalizeMatchPrediction, z.object({
   matchId: z.string(),
   expectedScore: z.object({
     home: z.number().nullable(),
@@ -495,7 +522,7 @@ export const matchPredictionSchema = z.object({
   summary: z.string().nullable().optional(),
   isLowConfidence: z.boolean().optional(),
   isRecommended: z.boolean().optional()
-});
+}));
 
 const predictionItemBaseSchema = z.object({
   id: z.string(),
