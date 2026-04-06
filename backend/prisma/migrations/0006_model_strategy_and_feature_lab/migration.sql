@@ -1,4 +1,4 @@
-﻿-- AlterTable
+-- AlterTable
 ALTER TABLE "Prediction"
   ADD COLUMN IF NOT EXISTS "modelStrategyId" TEXT,
   ADD COLUMN IF NOT EXISTS "usedStrategy" JSONB;

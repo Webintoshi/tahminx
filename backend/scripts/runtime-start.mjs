@@ -1,5 +1,11 @@
 import { spawnSync } from 'node:child_process';
 
+const RECOVERABLE_MIGRATIONS = [
+  '0001_init',
+  '0005_model_analysis_observability',
+  '0006_model_strategy_and_feature_lab',
+];
+
 function run(command, { allowFailure = false } = {}) {
   const result = spawnSync(command, {
     shell: true,
@@ -12,7 +18,9 @@ function run(command, { allowFailure = false } = {}) {
   }
 }
 
-run('npx prisma migrate resolve --rolled-back 0001_init', { allowFailure: true });
+for (const migration of RECOVERABLE_MIGRATIONS) {
+  run(`npx prisma migrate resolve --rolled-back ${migration}`, { allowFailure: true });
+}
 run('npx prisma migrate deploy');
 
 const app = spawnSync('node dist/src/main.js', {
