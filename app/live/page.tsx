@@ -278,10 +278,3 @@ export default function LivePage() {
   );
 }
 
-// Stream status config
-const streamStatusConfig = {
-  idle: { label: "Hazır", color: "default" as const },
-  connecting: { label: "Bağlanıyor", color: "accent" as const },
-  live: { label: "Canlı", color: "success" as const },
-  fallback: { label: "Yedek Mod", color: "warning" as const }
-};
