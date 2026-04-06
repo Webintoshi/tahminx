@@ -21,7 +21,8 @@ export const formatDateTime = (iso?: string | null) => {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
+    timeZone: "Europe/Istanbul"
   }).format(date);
 };
 
@@ -31,7 +32,8 @@ export const formatDate = (iso?: string | null) => {
   return new Intl.DateTimeFormat("tr-TR", {
     day: "2-digit",
     month: "long",
-    year: "numeric"
+    year: "numeric",
+    timeZone: "Europe/Istanbul"
   }).format(date);
 };
 
