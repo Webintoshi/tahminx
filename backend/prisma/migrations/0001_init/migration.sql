@@ -1,4 +1,4 @@
-﻿-- CreateEnum
+-- CreateEnum
 CREATE TYPE "SportCode" AS ENUM ('FOOTBALL', 'BASKETBALL');
 
 -- CreateEnum
