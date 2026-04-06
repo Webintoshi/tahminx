@@ -60,20 +60,22 @@ export function MatchCard({ match }: { match: MatchListItem }) {
           </div>
         </div>
 
-        {/* Score */}
+        {/* Score - Show VS for scheduled matches instead of 0-0 */}
         <div className="flex flex-col items-center">
-          <div className={`rounded-xl px-4 py-2 text-xl font-bold tracking-wider ${
-            isLive 
-              ? "bg-[#34C759]/10 text-[#34C759] border border-[#34C759]/30" 
-              : "bg-[#000000] text-[#ECEDEF] border border-[#2A3035]"
-          }`}>
-            {safeScore(match.scoreHome)} - {safeScore(match.scoreAway)}
-          </div>
-          {isLive && (
-            <span className="mt-1 flex items-center gap-1 text-xs font-medium text-[#34C759]">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#34C759]" />
-              Canlı
-            </span>
+          {isLive ? (
+            <>
+              <div className="rounded-xl border border-[#34C759]/30 bg-[#34C759]/10 px-4 py-2 text-xl font-bold tracking-wider text-[#34C759]">
+                {safeScore(match.scoreHome)} - {safeScore(match.scoreAway)}
+              </div>
+              <span className="mt-1 flex items-center gap-1 text-xs font-medium text-[#34C759]">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#34C759]" />
+                Canlı
+              </span>
+            </>
+          ) : (
+            <div className="rounded-xl border border-[#2A3035] bg-[#1F2529] px-6 py-2 text-lg font-bold text-[#7A84FF]">
+              VS
+            </div>
           )}
         </div>
 
