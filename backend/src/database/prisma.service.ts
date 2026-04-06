@@ -1,5 +1,45 @@
 import { INestApplication, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, SportCode } from '@prisma/client';
+
+const CORE_SPORTS = [
+  { code: SportCode.FOOTBALL, name: 'Football' },
+  { code: SportCode.BASKETBALL, name: 'Basketball' },
+] as const;
+
+const CORE_PROVIDERS = [
+  {
+    code: 'football_data',
+    name: 'Football Data',
+    baseUrl: process.env.FOOTBALL_DATA_BASE_URL || 'https://api.football-data.org/v4',
+    enabled: 'true',
+    apiKey: process.env.FOOTBALL_DATA_API_KEY || 'change_me',
+    isActive: true,
+  },
+  {
+    code: 'ball_dont_lie',
+    name: 'Ball Dont Lie',
+    baseUrl: process.env.BALL_DONT_LIE_BASE_URL || 'https://api.balldontlie.io/v1',
+    enabled: 'true',
+    apiKey: process.env.BALL_DONT_LIE_API_KEY || 'change_me',
+    isActive: true,
+  },
+  {
+    code: 'api_football',
+    name: 'API Football',
+    baseUrl: process.env.API_FOOTBALL_BASE_URL || 'https://v3.football.api-sports.io',
+    enabled: 'false',
+    apiKey: process.env.API_FOOTBALL_API_KEY || 'change_me',
+    isActive: false,
+  },
+  {
+    code: 'the_sports_db',
+    name: 'The Sports DB',
+    baseUrl: process.env.THE_SPORTS_DB_BASE_URL || 'https://www.thesportsdb.com/api/v1/json/3',
+    enabled: 'false',
+    apiKey: process.env.THE_SPORTS_DB_API_KEY || 'change_me',
+    isActive: false,
+  },
+] as const;
 
 const MODEL_STRATEGY_AND_FEATURE_LAB_BOOTSTRAP_SQL = [
   `ALTER TABLE "Prediction"
@@ -162,6 +202,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
     await this.$connect();
     await this.ensureModelStrategyAndFeatureLabSchema();
+    await this.ensureCoreReferenceData();
   }
 
   async onModuleDestroy(): Promise<void> {
@@ -178,6 +219,82 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     this.logger.log('Ensuring model strategy and feature lab schema bootstrap');
     for (const statement of MODEL_STRATEGY_AND_FEATURE_LAB_BOOTSTRAP_SQL) {
       await this.$executeRawUnsafe(statement);
+    }
+  }
+
+  private async ensureCoreReferenceData(): Promise<void> {
+    this.logger.log('Ensuring core sport/provider reference data');
+
+    for (const sport of CORE_SPORTS) {
+      await this.sport.upsert({
+        where: { code: sport.code },
+        create: {
+          code: sport.code,
+          name: sport.name,
+          isActive: true,
+        },
+        update: {
+          name: sport.name,
+          isActive: true,
+          deletedAt: null,
+        },
+      });
+    }
+
+    for (const provider of CORE_PROVIDERS) {
+      const row = await this.provider.upsert({
+        where: { code: provider.code },
+        create: {
+          code: provider.code,
+          name: provider.name,
+          baseUrl: provider.baseUrl,
+          isActive: provider.isActive,
+        },
+        update: {
+          name: provider.name,
+          baseUrl: provider.baseUrl,
+          isActive: provider.isActive,
+          deletedAt: null,
+        },
+      });
+
+      await this.providerConfig.upsert({
+        where: {
+          providerId_key: {
+            providerId: row.id,
+            key: 'enabled',
+          },
+        },
+        create: {
+          providerId: row.id,
+          key: 'enabled',
+          valueEncrypted: provider.enabled,
+          isEnabled: true,
+        },
+        update: {
+          valueEncrypted: provider.enabled,
+          isEnabled: true,
+        },
+      });
+
+      await this.providerConfig.upsert({
+        where: {
+          providerId_key: {
+            providerId: row.id,
+            key: 'apiKey',
+          },
+        },
+        create: {
+          providerId: row.id,
+          key: 'apiKey',
+          valueEncrypted: provider.apiKey,
+          isEnabled: true,
+        },
+        update: {
+          valueEncrypted: provider.apiKey,
+          isEnabled: true,
+        },
+      });
     }
   }
 }
