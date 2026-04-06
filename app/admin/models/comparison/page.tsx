@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
@@ -60,32 +60,74 @@ function AdminModelComparisonPageContent() {
   }));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 p-6">
       <PageHeader
         title="Model Comparison"
         description="Model versiyonlari, metrik kartlari ve karsilastirma tablosu"
       />
 
       <FilterPanel
-        description="Sport, league, model version ve tarih araligi ile filtreleme"
+        primaryFilters={
+          <>
+            <SportLeagueFilters
+              sport={filters.sport}
+              leagueId={filters.leagueId}
+              leagues={leaguesQuery.data?.data ?? []}
+              onChange={(value) => setFilters(value)}
+            />
+
+            <ModelVersionSelect
+              value={filters.modelVersion}
+              options={modelOptions}
+              onChange={(value) => setFilters({ modelVersion: value ?? "" })}
+            />
+
+            <DateRangeFilter from={filters.from} to={filters.to} onChange={(value) => setFilters(value)} />
+          </>
+        }
+        advancedFilters={
+          <>
+            <select
+              value={filters.sortBy}
+              onChange={(event) => setFilters({ sortBy: event.target.value })}
+              className="h-11 w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm text-[#ECEDEF] focus:border-[#7A84FF] focus:outline-none"
+            >
+              <option value="accuracy">Accuracy</option>
+              <option value="logLoss">LogLoss</option>
+              <option value="brierScore">Brier Score</option>
+              <option value="avgConfidenceScore">Avg Confidence</option>
+              <option value="sampleSize">Sample Size</option>
+              <option value="updatedAt">Updated</option>
+            </select>
+
+            <select
+              value={filters.sortOrder}
+              onChange={(event) => setFilters({ sortOrder: event.target.value as "asc" | "desc" })}
+              className="h-11 w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm text-[#ECEDEF] focus:border-[#7A84FF] focus:outline-none"
+            >
+              <option value="desc">Azalan</option>
+              <option value="asc">Artan</option>
+            </select>
+          </>
+        }
         footer={
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-[color:var(--muted)]">
+            <p className="text-sm text-[#9CA3AF]">
               Sayfa {meta?.page ?? filters.page} / {meta?.totalPages ?? 1} - Toplam {meta?.total ?? rows.length}
             </p>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setFilters({ page: Math.max(1, filters.page - 1) })}
-                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm"
+                className="rounded-lg border border-[#2A3035] bg-[#1F2529] px-3 py-1.5 text-sm font-medium text-[#ECEDEF] transition-colors hover:border-[#7A84FF] disabled:opacity-50"
                 disabled={filters.page <= 1}
               >
-                Onceki
+                Önceki
               </button>
               <button
                 type="button"
                 onClick={() => setFilters({ page: filters.page + 1 })}
-                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm"
+                className="rounded-lg border border-[#2A3035] bg-[#1F2529] px-3 py-1.5 text-sm font-medium text-[#ECEDEF] transition-colors hover:border-[#7A84FF] disabled:opacity-50"
                 disabled={meta ? filters.page >= meta.totalPages : false}
               >
                 Sonraki
@@ -93,50 +135,7 @@ function AdminModelComparisonPageContent() {
             </div>
           </div>
         }
-      >
-        <SportLeagueFilters
-          sport={filters.sport}
-          leagueId={filters.leagueId}
-          leagues={leaguesQuery.data?.data ?? []}
-          onChange={(value) => setFilters(value)}
-        />
-
-        <ModelVersionSelect
-          value={filters.modelVersion}
-          options={modelOptions}
-          onChange={(value) => setFilters({ modelVersion: value ?? "" })}
-        />
-
-        <DateRangeFilter from={filters.from} to={filters.to} onChange={(value) => setFilters(value)} />
-
-        <label className="space-y-1">
-          <span className="text-xs text-[color:var(--muted)]">Sort by</span>
-          <select
-            value={filters.sortBy}
-            onChange={(event) => setFilters({ sortBy: event.target.value })}
-            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
-          >
-            <option value="accuracy">Accuracy</option>
-            <option value="logLoss">LogLoss</option>
-            <option value="brierScore">Brier Score</option>
-            <option value="avgConfidenceScore">Avg Confidence</option>
-            <option value="sampleSize">Sample Size</option>
-            <option value="updatedAt">Updated</option>
-          </select>
-        </label>
-
-        <label className="space-y-1">
-          <span className="text-xs text-[color:var(--muted)]">Sort order</span>
-          <select
-            value={filters.sortOrder}
-            onChange={(event) => setFilters({ sortOrder: event.target.value as "asc" | "desc" })}
-            className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 text-sm"
-          >
-            <option value="desc">Azalan</option>
-            <option value="asc">Artan</option>
-          </select>
-        </label>
-      </FilterPanel>
+      />
 
       <DataFeedback
         isLoading={comparisonQuery.isLoading}
@@ -151,7 +150,7 @@ function AdminModelComparisonPageContent() {
         loadingCount={6}
         loadingVariant="list"
       >
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <MetricCard title="Accuracy" value={accuracyAvg == null ? "-" : `${accuracyAvg.toFixed(1)}%`} />
           <MetricCard title="LogLoss" value={logLossAvg == null ? "-" : logLossAvg.toFixed(3)} tone="warning" />
           <MetricCard title="Brier Score" value={brierAvg == null ? "-" : brierAvg.toFixed(3)} tone="warning" />
