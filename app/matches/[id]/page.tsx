@@ -22,15 +22,60 @@ const ComparisonRadarChart = dynamic(
   { ssr: false }
 );
 
+// SVG Icons for tabs
+const icons = {
+  overview: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+  ),
+  form: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+    </svg>
+  ),
+  stats: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+    </svg>
+  ),
+  h2h: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+    </svg>
+  ),
+  lineup: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+  ),
+  events: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+  ),
+  predictions: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  risk: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+  ),
+};
+
 const tabs = [
-  { id: "overview", label: "Genel Bakış", icon: "📊" },
-  { id: "form", label: "Form", icon: "📈" },
-  { id: "stats", label: "İstatistik", icon: "📉" },
-  { id: "h2h", label: "H2H", icon: "⚔️" },
-  { id: "lineup", label: "Kadro", icon: "👥" },
-  { id: "events", label: "Olaylar", icon: "⚡" },
-  { id: "predictions", label: "Tahmin", icon: "🎯" },
-  { id: "risk", label: "Risk", icon: "⚠️" }
+  { id: "overview", label: "Genel Bakış" },
+  { id: "form", label: "Form" },
+  { id: "stats", label: "İstatistik" },
+  { id: "h2h", label: "H2H" },
+  { id: "lineup", label: "Kadro" },
+  { id: "events", label: "Olaylar" },
+  { id: "predictions", label: "Tahmin" },
+  { id: "risk", label: "Risk" }
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -81,6 +126,8 @@ function TabButton({
   isActive: boolean; 
   onClick: () => void;
 }) {
+  const icon = icons[tab.id as keyof typeof icons];
+  
   return (
     <button
       type="button"
@@ -92,7 +139,7 @@ function TabButton({
           : "border border-[#2A3035] bg-[#171C1F] text-[#9CA3AF] hover:border-[#7A84FF]/50 hover:text-[#ECEDEF]"
       )}
     >
-      <span>{tab.icon}</span>
+      <span className={cn("transition-colors", isActive ? "text-black" : "text-[#7A84FF]")}>{icon}</span>
       <span className="hidden sm:inline">{tab.label}</span>
     </button>
   );
