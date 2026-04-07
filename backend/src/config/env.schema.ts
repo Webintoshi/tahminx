@@ -16,6 +16,12 @@ export const envSchema = z
     DIRECT_DATABASE_URL: z.string().optional(),
     DATABASE_SSL_MODE: z.enum(['disable', 'prefer', 'require']).default('prefer'),
     DATABASE_USE_POOLER: z.coerce.boolean().default(true),
+    SUPABASE_BACKUP_ENABLED: z.coerce.boolean().default(false),
+    SUPABASE_BACKUP_DATABASE_URL: z.string().optional(),
+    SUPABASE_BACKUP_DIRECT_DATABASE_URL: z.string().optional(),
+    SUPABASE_BACKUP_SYNC_CRON: z.string().default('35 * * * *'),
+    SUPABASE_BACKUP_STARTUP_SYNC: z.coerce.boolean().default(true),
+    SUPABASE_BACKUP_BATCH_SIZE: z.coerce.number().int().min(10).max(1000).default(200),
 
     REDIS_URL: z.string().optional(),
     REDIS_HOST: z.string().default('127.0.0.1'),
@@ -137,6 +143,14 @@ export const envSchema = z
         code: z.ZodIssueCode.custom,
         message: 'S3 storage requires STORAGE_ENDPOINT, STORAGE_ACCESS_KEY_ID, STORAGE_SECRET_ACCESS_KEY',
         path: ['STORAGE_DRIVER'],
+      });
+    }
+
+    if (env.SUPABASE_BACKUP_ENABLED && !env.SUPABASE_BACKUP_DATABASE_URL) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'SUPABASE_BACKUP_DATABASE_URL is required when SUPABASE_BACKUP_ENABLED=true',
+        path: ['SUPABASE_BACKUP_DATABASE_URL'],
       });
     }
   });

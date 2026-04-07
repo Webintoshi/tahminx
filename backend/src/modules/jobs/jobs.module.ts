@@ -5,10 +5,12 @@ import { LiveModule } from 'src/modules/live/live.module';
 import { ProvidersModule } from 'src/modules/providers/providers.module';
 import { PredictionsModule } from 'src/modules/predictions/predictions.module';
 import { resolveAppRole, isWorkerRole } from 'src/config/runtime-role';
+import { BackupModule } from 'src/modules/backup/backup.module';
 import { QUEUE_NAMES } from 'src/shared/constants/jobs.constants';
 import { IngestionProcessor } from './processors/ingestion.processor';
 import { PredictionProcessor } from './processors/prediction.processor';
 import { HealthProcessor } from './processors/health.processor';
+import { BackupProcessor } from './processors/backup.processor';
 import { JobsService } from './jobs.service';
 import { CanonicalMappingService } from './services/canonical-mapping.service';
 
@@ -40,16 +42,18 @@ const workerEnabled = isWorkerRole(runtimeRole);
       { name: QUEUE_NAMES.INGESTION },
       { name: QUEUE_NAMES.PREDICTION },
       { name: QUEUE_NAMES.HEALTH },
+      { name: QUEUE_NAMES.BACKUP },
       { name: QUEUE_NAMES.DEAD_LETTER },
     ),
     ProvidersModule,
     PredictionsModule,
     LiveModule,
+    BackupModule,
   ],
   providers: [
     JobsService,
     CanonicalMappingService,
-    ...(workerEnabled ? [IngestionProcessor, PredictionProcessor, HealthProcessor] : []),
+    ...(workerEnabled ? [IngestionProcessor, PredictionProcessor, HealthProcessor, BackupProcessor] : []),
   ],
   exports: [JobsService, BullModule, CanonicalMappingService],
 })
