@@ -42,7 +42,7 @@ function StatCard({ label, value, icon, color = "default" }: {
 }
 
 // League Card Component
-function LeagueCard({ league }: { league: { id: string; name: string; country: string; season?: string; updatedAt?: string } }) {
+function LeagueCard({ league }: { league: { id: string; name: string; country: string; season?: string | null; updatedAt?: string | null } }) {
   return (
     <Link href={`/leagues/${league.id}`} className="group block">
       <article className="h-full rounded-xl border border-[#2A3035] bg-[#171C1F] p-5 transition-all hover:border-[#7A84FF]/50 hover:bg-[#1F2529]">
