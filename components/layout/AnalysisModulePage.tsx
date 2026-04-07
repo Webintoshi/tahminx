@@ -23,12 +23,41 @@ interface AnalysisModulePageProps {
   focusTitle: string;
 }
 
+// SVG Icons
+const icons = {
+  overview: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+  ),
+  preMatch: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  ),
+  comparison: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+    </svg>
+  ),
+  form: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+    </svg>
+  ),
+  goal: (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+    </svg>
+  ),
+};
+
 const navigationItems = [
-  { href: "/football", label: "Genel Bakış", icon: "📊" },
-  { href: "/football/pre-match", label: "Maç Ön Analiz", icon: "🔍" },
-  { href: "/football/team-comparison", label: "Takım Kıyasla", icon: "⚖️" },
-  { href: "/football/form-analysis", label: "Form", icon: "📈" },
-  { href: "/football/goal-expectation", label: "Gol Beklentisi", icon: "⚽" },
+  { href: "/football", label: "Genel Bakış", iconKey: "overview" as const },
+  { href: "/football/pre-match", label: "Maç Ön Analiz", iconKey: "preMatch" as const },
+  { href: "/football/team-comparison", label: "Takım Kıyasla", iconKey: "comparison" as const },
+  { href: "/football/form-analysis", label: "Form", iconKey: "form" as const },
+  { href: "/football/goal-expectation", label: "Gol Beklentisi", iconKey: "goal" as const },
 ];
 
 // Section Header Component
@@ -165,6 +194,7 @@ export function AnalysisModulePage({ sport, title, description, focusTitle }: An
       <nav className="flex flex-wrap gap-2">
         {navigationItems.map((item) => {
           const isActive = pathname === item.href;
+          const icon = icons[item.iconKey];
           return (
             <Link
               key={item.href}
@@ -176,7 +206,7 @@ export function AnalysisModulePage({ sport, title, description, focusTitle }: An
                   : "border border-[#2A3035] bg-[#171C1F] text-[#9CA3AF] hover:border-[#7A84FF]/50 hover:text-[#ECEDEF]"
               )}
             >
-              <span>{item.icon}</span>
+              <span className={cn("transition-colors", isActive ? "text-black" : "text-[#7A84FF]")}>{icon}</span>
               <span>{item.label}</span>
             </Link>
           );
