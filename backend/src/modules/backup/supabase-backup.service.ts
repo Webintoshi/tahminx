@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { promises as fs } from 'node:fs';
-import path from 'node:path';
+import * as path from 'node:path';
 import { Client } from 'pg';
 
 type BackupRunOptions = {
@@ -11,6 +11,11 @@ type BackupRunOptions = {
 type TableSummary = {
   table: string;
   rowsCopied: number;
+};
+
+type TableColumn = {
+  name: string;
+  dataType: string;
 };
 
 @Injectable()
@@ -206,7 +211,7 @@ export class SupabaseBackupService {
       return 0;
     }
 
-    const quotedColumns = columns.map((column) => this.quoteIdentifier(column)).join(', ');
+    const quotedColumns = columns.map((column) => this.quoteIdentifier(column.name)).join(', ');
     const tableIdentifier = this.quoteIdentifier(table);
     const rows = await sourceClient.query<Record<string, unknown>>(`SELECT ${quotedColumns} FROM ${tableIdentifier}`);
     let copied = 0;
@@ -221,7 +226,7 @@ export class SupabaseBackupService {
       const placeholders = chunk
         .map((row, rowIndex) => {
           const rowPlaceholders = columns.map((column, columnIndex) => {
-            values.push(row[column]);
+            values.push(this.normalizeValue(row[column.name], column.dataType));
             return `$${rowIndex * columns.length + columnIndex + 1}`;
           });
           return `(${rowPlaceholders.join(', ')})`;
@@ -235,10 +240,10 @@ export class SupabaseBackupService {
     return copied;
   }
 
-  private async loadColumns(client: Client, table: string): Promise<string[]> {
-    const result = await client.query<{ column_name: string }>(
+  private async loadColumns(client: Client, table: string): Promise<TableColumn[]> {
+    const result = await client.query<{ column_name: string; data_type: string; udt_name: string }>(
       `
-        SELECT column_name
+        SELECT column_name, data_type, udt_name
         FROM information_schema.columns
         WHERE table_schema = 'public'
           AND table_name = $1
@@ -247,7 +252,22 @@ export class SupabaseBackupService {
       [table],
     );
 
-    return result.rows.map((row) => row.column_name);
+    return result.rows.map((row) => ({
+      name: row.column_name,
+      dataType: row.data_type === 'USER-DEFINED' ? row.udt_name : row.data_type,
+    }));
+  }
+
+  private normalizeValue(value: unknown, dataType: string): unknown {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (dataType === 'json' || dataType === 'jsonb') {
+      return JSON.stringify(value);
+    }
+
+    return value;
   }
 
   private quoteIdentifier(value: string): string {

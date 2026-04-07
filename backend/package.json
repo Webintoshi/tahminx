@@ -23,7 +23,8 @@
     "prisma:seed:safe": "node scripts/prisma-seed-safe.mjs",
     "health:check": "node scripts/health-check.mjs",
     "data:export": "ts-node src/scripts/export-critical-data.ts",
-    "backup:supabase:sync": "ts-node src/scripts/sync-supabase-backup.ts"
+    "backup:supabase:sync": "node dist/src/scripts/sync-supabase-backup.js",
+    "backup:supabase:sync:dev": "ts-node -r tsconfig-paths/register src/scripts/sync-supabase-backup.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1024.0",
