@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import {
@@ -11,15 +12,10 @@ import {
   useTeamForm,
   useTeamSquad
 } from "@/lib/hooks/use-api";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { SectionCard } from "@/components/ui/SectionCard";
 import { DataFeedback } from "@/components/states/DataFeedback";
-import { ConfidenceGauge } from "@/components/ui/ConfidenceGauge";
-import { ProbabilityBar } from "@/components/ui/ProbabilityBar";
 import { MatchEventsTimeline } from "@/components/match/MatchEventsTimeline";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/states/EmptyState";
-import { formatDate, formatDateTime, safeScore } from "@/lib/utils";
+import { formatDate, formatDateTime, safeScore, placeholderLogo, cn } from "@/lib/utils";
 
 const ComparisonRadarChart = dynamic(
   () => import("@/components/charts/ComparisonRadarChart").then((mod) => mod.ComparisonRadarChart),
@@ -27,17 +23,104 @@ const ComparisonRadarChart = dynamic(
 );
 
 const tabs = [
-  { id: "overview", label: "Genel Bakis" },
-  { id: "form", label: "Form" },
-  { id: "stats", label: "Istatistik Karsilastirma" },
-  { id: "h2h", label: "H2H" },
-  { id: "lineup", label: "Kadro" },
-  { id: "events", label: "Olaylar" },
-  { id: "predictions", label: "Tahminler" },
-  { id: "risk", label: "Risk Uyarilari" }
+  { id: "overview", label: "Genel Bakış", icon: "📊" },
+  { id: "form", label: "Form", icon: "📈" },
+  { id: "stats", label: "İstatistik", icon: "📉" },
+  { id: "h2h", label: "H2H", icon: "⚔️" },
+  { id: "lineup", label: "Kadro", icon: "👥" },
+  { id: "events", label: "Olaylar", icon: "⚡" },
+  { id: "predictions", label: "Tahmin", icon: "🎯" },
+  { id: "risk", label: "Risk", icon: "⚠️" }
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
+
+// Team Logo Component
+function TeamLogo({ name, logoUrl, size = 64 }: { name: string; logoUrl?: string | null; size?: number }) {
+  if (logoUrl) {
+    return (
+      <Image
+        src={logoUrl}
+        alt={`${name} logo`}
+        width={size}
+        height={size}
+        unoptimized
+        className="rounded-2xl border-2 border-[#2A3035] bg-[#1F2529] object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  return (
+    <div 
+      className="flex items-center justify-center rounded-2xl border-2 border-[#2A3035] bg-[#1F2529] text-xl font-bold text-[#7A84FF]"
+      style={{ width: size, height: size }}
+    >
+      {placeholderLogo(name)}
+    </div>
+  );
+}
+
+// Stat Card
+function StatCard({ label, value, subtext }: { label: string; value: string | number; subtext?: string }) {
+  return (
+    <div className="rounded-xl border border-[#2A3035] bg-[#1F2529] p-4">
+      <p className="text-xs text-[#9CA3AF]">{label}</p>
+      <p className="mt-1 text-lg font-bold text-[#ECEDEF]">{value}</p>
+      {subtext && <p className="text-xs text-[#9CA3AF]/70">{subtext}</p>}
+    </div>
+  );
+}
+
+// Tab Button
+function TabButton({ 
+  tab, 
+  isActive, 
+  onClick 
+}: { 
+  tab: typeof tabs[number]; 
+  isActive: boolean; 
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all",
+        isActive
+          ? "bg-[#7A84FF] text-black"
+          : "border border-[#2A3035] bg-[#171C1F] text-[#9CA3AF] hover:border-[#7A84FF]/50 hover:text-[#ECEDEF]"
+      )}
+    >
+      <span>{tab.icon}</span>
+      <span className="hidden sm:inline">{tab.label}</span>
+    </button>
+  );
+}
+
+// Section Header
+function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div className="mb-4">
+      <h2 className="text-lg font-semibold text-[#ECEDEF]">{title}</h2>
+      {subtitle && <p className="text-xs text-[#9CA3AF]">{subtitle}</p>}
+    </div>
+  );
+}
+
+// Form Badge
+function FormBadge({ result }: { result: string }) {
+  const colors: Record<string, string> = {
+    W: "bg-[#34C759] text-black",
+    L: "bg-[#FF3B30] text-white",
+    D: "bg-[#9CA3AF] text-black",
+  };
+  return (
+    <span className={cn("flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold", colors[result] || "bg-[#2A3035] text-[#9CA3AF]")}>
+      {result === "W" ? "G" : result === "L" ? "M" : result === "D" ? "B" : result}
+    </span>
+  );
+}
 
 export default function MatchDetailPage() {
   const params = useParams<{ id: string }>();
@@ -64,319 +147,383 @@ export default function MatchDetailPage() {
   const predictionConfidence = prediction?.confidenceScore ?? match?.confidenceScore ?? null;
   const isLowConfidence = Boolean(prediction?.isLowConfidence) || (predictionConfidence ?? 0) < 67;
   const isRecommended = Boolean(prediction?.isRecommended) && !isLowConfidence;
-
-  const predictionSummary = prediction?.summary ?? prediction?.modelExplanation ?? match?.summary ?? null;
+  const isLive = match?.status === "live";
 
   const mergedRiskFlags = useMemo(
     () => [...(prediction?.riskFlags ?? []), ...(match?.riskFlags ?? [])],
     [match?.riskFlags, prediction?.riskFlags]
   );
 
-  const h2hSummary = (() => {
-    if (match?.h2hSummary) return match.h2hSummary;
-    if (homeForm.length === 0 && awayForm.length === 0) return "H2H verisi su an bulunmuyor.";
+  if (detailQuery.isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#7A84FF] border-t-transparent" />
+      </div>
+    );
+  }
 
-    const homeWins = homeForm.filter((item) => item.result === "W").length;
-    const awayWins = awayForm.filter((item) => item.result === "W").length;
-
-    return `${match?.homeTeamName ?? "Ev"} son formda ${homeWins} galibiyet, ${match?.awayTeamName ?? "Dep"} ${awayWins} galibiyet uretti.`;
-  })();
+  if (!match) {
+    return (
+      <div className="p-6">
+        <EmptyState 
+          title="Maç bulunamadı" 
+          description="Bu maç için veri bulunmuyor."
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-5">
-      <PageHeader
-        title={match ? `${match.homeTeamName} vs ${match.awayTeamName}` : "Mac Detay"}
-        description={match ? `${match.leagueName} - ${formatDateTime(match.kickoffAt)}` : "Mac veri detayi"}
-      />
+    <div className="space-y-6 p-6">
+      {/* Hero Section - Match Header */}
+      <section className="relative overflow-hidden rounded-3xl border border-[#2A3035] bg-gradient-to-b from-[#171C1F] to-[#0D0F10] p-6">
+        {/* League & Date */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="rounded-lg bg-[#1F2529] px-3 py-1.5 text-xs font-medium text-[#7A84FF]">
+              {match.leagueName}
+            </span>
+            {isLive && (
+              <span className="flex items-center gap-1.5 rounded-lg bg-[#34C759]/10 px-3 py-1.5 text-xs font-bold text-[#34C759]">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-[#34C759]" />
+                CANLI
+              </span>
+            )}
+          </div>
+          <span className="text-[#9CA3AF]">{formatDateTime(match.kickoffAt)}</span>
+        </div>
 
-      <DataFeedback
-        isLoading={detailQuery.isLoading}
-        error={detailQuery.error as Error | undefined}
-        isEmpty={!match}
-        emptyTitle="Mac verisi bulunamadi"
-        emptyDescription="Mac detay endpoint'i veri dondurmedi."
-        onRetry={() => {
-          void detailQuery.refetch();
-          void eventsQuery.refetch();
-          void statsQuery.refetch();
-          void predictionQuery.refetch();
-        }}
-      >
-        {match ? (
+        {/* Teams & Score */}
+        <div className="flex items-center justify-between gap-4">
+          {/* Home Team */}
+          <div className="flex flex-1 flex-col items-center text-center">
+            <TeamLogo name={match.homeTeamName} logoUrl={match.homeLogoUrl} size={80} />
+            <h1 className="mt-3 text-lg font-bold text-[#ECEDEF] sm:text-xl">{match.homeTeamName}</h1>
+            <span className="text-xs text-[#9CA3AF]">Ev Sahibi</span>
+          </div>
+
+          {/* Score */}
+          <div className="flex flex-col items-center px-4">
+            {isLive ? (
+              <div className="rounded-2xl border-2 border-[#34C759]/30 bg-[#34C759]/10 px-6 py-3">
+                <span className="text-4xl font-bold text-[#34C759]">
+                  {safeScore(match.scoreHome)} - {safeScore(match.scoreAway)}
+                </span>
+              </div>
+            ) : (
+              <div className="rounded-2xl border-2 border-[#7A84FF]/30 bg-[#7A84FF]/10 px-8 py-4">
+                <span className="text-3xl font-bold text-[#7A84FF]">VS</span>
+              </div>
+            )}
+            {match.venue && (
+              <span className="mt-2 text-xs text-[#9CA3AF]">🏟️ {match.venue}</span>
+            )}
+          </div>
+
+          {/* Away Team */}
+          <div className="flex flex-1 flex-col items-center text-center">
+            <TeamLogo name={match.awayTeamName} logoUrl={match.awayLogoUrl} size={80} />
+            <h1 className="mt-3 text-lg font-bold text-[#ECEDEF] sm:text-xl">{match.awayTeamName}</h1>
+            <span className="text-xs text-[#9CA3AF]">Deplasman</span>
+          </div>
+        </div>
+
+        {/* Match Info Badges */}
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+          {isRecommended && (
+            <span className="rounded-full bg-[#34C759]/10 px-3 py-1 text-xs font-medium text-[#34C759]">
+              ✓ Önerilen
+            </span>
+          )}
+          {isLowConfidence && (
+            <span className="rounded-full bg-[#FF9500]/10 px-3 py-1 text-xs font-medium text-[#FF9500]">
+              ! Düşük Güven
+            </span>
+          )}
+          {predictionConfidence && (
+            <span className="rounded-full bg-[#1F2529] px-3 py-1 text-xs font-medium text-[#9CA3AF]">
+              Güven: %{predictionConfidence}
+            </span>
+          )}
+          {match.round && (
+            <span className="rounded-full bg-[#1F2529] px-3 py-1 text-xs font-medium text-[#9CA3AF]">
+              Hafta {match.round}
+            </span>
+          )}
+        </div>
+      </section>
+
+      {/* Tabs Navigation */}
+      <nav className="flex flex-wrap gap-2">
+        {tabs.map((tab) => (
+          <TabButton
+            key={tab.id}
+            tab={tab}
+            isActive={activeTab === tab.id}
+            onClick={() => setActiveTab(tab.id)}
+          />
+        ))}
+      </nav>
+
+      {/* Tab Content */}
+      <div className="rounded-2xl border border-[#2A3035] bg-[#171C1F] p-5">
+        {/* OVERVIEW */}
+        {activeTab === "overview" && (
           <>
-            <SectionCard title="Mac Ozeti" subtitle={`${match.leagueName} - ${match.venue ?? "Stadyum bilgisi yok"}`}>
-              <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr_auto] lg:items-center">
-                <div>
-                  <p className="text-lg font-semibold text-[color:var(--foreground)]">{match.homeTeamName}</p>
-                  <p className="text-xs text-[color:var(--muted)]">Tarih: {formatDate(match.kickoffAt)}</p>
-                </div>
-                <p className="text-3xl font-semibold text-[color:var(--foreground)]">{safeScore(match.scoreHome)}</p>
-                <p className="text-3xl font-semibold text-[color:var(--foreground)]">{safeScore(match.scoreAway)}</p>
-                <div className="text-right">
-                  <p className="text-lg font-semibold text-[color:var(--foreground)]">{match.awayTeamName}</p>
-                  <p className="text-xs text-[color:var(--muted)]">Saat: {formatDateTime(match.kickoffAt)}</p>
-                </div>
-              </div>
-
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <StatusBadge status={match.status} />
-                {isRecommended ? <StatusBadge status="recommended" /> : null}
-                {isLowConfidence ? <StatusBadge status="low-confidence" /> : null}
-                <span className="text-sm text-[color:var(--muted)]">Round: {match.round ?? "-"}</span>
-                <span className="text-sm text-[color:var(--muted)]">Guven: {predictionConfidence ?? "-"}%</span>
-              </div>
-            </SectionCard>
-
-            <div className="rounded-2xl border border-[var(--border)] bg-[color:var(--surface)] p-2">
-              <div className="flex flex-wrap gap-2">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                      activeTab === tab.id
-                        ? "bg-[color:var(--accent)] text-black"
-                        : "text-[color:var(--muted)] hover:bg-[color:var(--surface-alt)] hover:text-[color:var(--foreground)]"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
+            <SectionHeader title="Maç Özeti" subtitle="Temel bilgiler ve tahmin özeti" />
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard label="Lig" value={match.leagueName} />
+              <StatCard 
+                label="Beklenen Skor" 
+                value={`${prediction?.expectedScore.home ?? match.expectedScoreHome ?? "?"} - ${prediction?.expectedScore.away ?? match.expectedScoreAway ?? "?"}`} 
+              />
+              <StatCard 
+                label="Model Güveni" 
+                value={`%${predictionConfidence ?? "-"}`}
+                subtext={isLowConfidence ? "Düşük güven" : isRecommended ? "Yüksek güven" : undefined}
+              />
+              <StatCard 
+                label="Durum" 
+                value={isLive ? "Canlı" : match.status === "scheduled" ? "Planlandı" : match.status} 
+              />
             </div>
+          </>
+        )}
 
-            {activeTab === "overview" ? (
-              <SectionCard title="Genel Bakis" subtitle="Temel mac ve model alani">
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
-                    <p className="text-xs text-[color:var(--muted)]">Lig</p>
-                    <p className="font-semibold text-[color:var(--foreground)]">{match.leagueName}</p>
-                  </article>
-                  <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
-                    <p className="text-xs text-[color:var(--muted)]">Beklenen skor</p>
-                    <p className="font-semibold text-[color:var(--foreground)]">
-                      {prediction?.expectedScore.home ?? match.expectedScoreHome ?? "-"} - {prediction?.expectedScore.away ?? match.expectedScoreAway ?? "-"}
-                    </p>
-                  </article>
-                  <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
-                    <p className="text-xs text-[color:var(--muted)]">Model guven skoru</p>
-                    <p className="font-semibold text-[color:var(--foreground)]">{predictionConfidence ?? "-"}%</p>
-                  </article>
-                  <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
-                    <p className="text-xs text-[color:var(--muted)]">Mac durumu</p>
-                    <p className="font-semibold text-[color:var(--foreground)]">{match.status}</p>
-                  </article>
+        {/* FORM */}
+        {activeTab === "form" && (
+          <>
+            <SectionHeader title="Takım Formu" subtitle="Son 5 maç performansı" />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-[#2A3035] bg-[#1F2529] p-4">
+                <div className="mb-3 flex items-center gap-3">
+                  <TeamLogo name={match.homeTeamName} logoUrl={match.homeLogoUrl} size={40} />
+                  <h3 className="font-semibold text-[#ECEDEF]">{match.homeTeamName}</h3>
                 </div>
-              </SectionCard>
-            ) : null}
-
-            {activeTab === "form" ? (
-              <SectionCard title="Form" subtitle="Takimlarin son form noktalarinin dagilimi">
-                <DataFeedback
-                  isLoading={homeFormQuery.isLoading || awayFormQuery.isLoading}
-                  error={(homeFormQuery.error as Error | undefined) ?? (awayFormQuery.error as Error | undefined)}
-                  isEmpty={homeForm.length === 0 && awayForm.length === 0}
-                  emptyTitle="Form verisi yok"
-                  emptyDescription="Her iki takim icin de form verisi gelmedi."
-                  onRetry={() => {
-                    void homeFormQuery.refetch();
-                    void awayFormQuery.refetch();
-                  }}
-                >
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-4">
-                      <h3 className="text-lg text-[color:var(--foreground)]">{match.homeTeamName}</h3>
-                      <p className="mt-2 text-sm text-[color:var(--muted)]">
-                        {homeForm.length > 0 ? homeForm.map((item) => item.result).join(" - ") : "Form verisi yok"}
-                      </p>
-                    </article>
-                    <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-4">
-                      <h3 className="text-lg text-[color:var(--foreground)]">{match.awayTeamName}</h3>
-                      <p className="mt-2 text-sm text-[color:var(--muted)]">
-                        {awayForm.length > 0 ? awayForm.map((item) => item.result).join(" - ") : "Form verisi yok"}
-                      </p>
-                    </article>
-                  </div>
-                </DataFeedback>
-              </SectionCard>
-            ) : null}
-
-            {activeTab === "stats" ? (
-              <SectionCard title="Istatistik Karsilastirma" subtitle="Match stats endpoint verisi">
-                <DataFeedback
-                  isLoading={statsQuery.isLoading}
-                  error={statsQuery.error as Error | undefined}
-                  isEmpty={!stats}
-                  emptyTitle="Istatistik verisi yok"
-                  emptyDescription="Bu mac icin stats endpoint veri dondurmedi."
-                  onRetry={() => void statsQuery.refetch()}
-                >
-                  <ComparisonRadarChart
-                    values={[
-                      { label: "Topa sahip", home: Math.round(stats?.possessionHome ?? 0), away: Math.round(stats?.possessionAway ?? 0) },
-                      { label: "Sut", home: Math.round(stats?.shotsHome ?? 0), away: Math.round(stats?.shotsAway ?? 0) },
-                      { label: "Isabetli", home: Math.round(stats?.shotsOnTargetHome ?? 0), away: Math.round(stats?.shotsOnTargetAway ?? 0) },
-                      { label: "xG/Pace", home: Math.round((stats?.xgHome ?? stats?.paceHome ?? 0) * 20), away: Math.round((stats?.xgAway ?? stats?.paceAway ?? 0) * 20) },
-                      { label: "Verimlilik", home: Math.round((stats?.efficiencyHome ?? 1) * 60), away: Math.round((stats?.efficiencyAway ?? 1) * 60) }
-                    ]}
-                  />
-                </DataFeedback>
-              </SectionCard>
-            ) : null}
-
-            {activeTab === "h2h" ? (
-              <SectionCard title="H2H" subtitle="Karsilikli mac ve trend yorumu">
-                <p className="text-sm text-[color:var(--muted)]">{h2hSummary}</p>
-              </SectionCard>
-            ) : null}
-
-            {activeTab === "lineup" ? (
-              <SectionCard title="Kadro" subtitle="Team squad endpoint verisi">
-                <DataFeedback
-                  isLoading={homeSquadQuery.isLoading || awaySquadQuery.isLoading}
-                  error={(homeSquadQuery.error as Error | undefined) ?? (awaySquadQuery.error as Error | undefined)}
-                  isEmpty={(homeSquadQuery.data?.data ?? []).length === 0 && (awaySquadQuery.data?.data ?? []).length === 0}
-                  emptyTitle="Kadro verisi yok"
-                  emptyDescription="Her iki takim icin de kadro endpoint'i veri dondurmedi."
-                  onRetry={() => {
-                    void homeSquadQuery.refetch();
-                    void awaySquadQuery.refetch();
-                  }}
-                >
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-4">
-                      <h3 className="font-semibold text-[color:var(--foreground)]">{match.homeTeamName} kadro</h3>
-                      <ul className="mt-2 space-y-1 text-sm text-[color:var(--muted)]">
-                        {(homeSquadQuery.data?.data ?? []).length > 0 ? (
-                          (homeSquadQuery.data?.data ?? []).map((player) => (
-                            <li key={player.id}>{player.name} - {player.position}</li>
-                          ))
-                        ) : (
-                          <li>Kadro verisi yok</li>
-                        )}
-                      </ul>
-                    </article>
-                    <article className="rounded-xl border border-[var(--border)] bg-[color:var(--surface-alt)] p-4">
-                      <h3 className="font-semibold text-[color:var(--foreground)]">{match.awayTeamName} kadro</h3>
-                      <ul className="mt-2 space-y-1 text-sm text-[color:var(--muted)]">
-                        {(awaySquadQuery.data?.data ?? []).length > 0 ? (
-                          (awaySquadQuery.data?.data ?? []).map((player) => (
-                            <li key={player.id}>{player.name} - {player.position}</li>
-                          ))
-                        ) : (
-                          <li>Kadro verisi yok</li>
-                        )}
-                      </ul>
-                    </article>
-                  </div>
-                </DataFeedback>
-              </SectionCard>
-            ) : null}
-
-            {activeTab === "events" ? (
-              <SectionCard title="Olaylar" subtitle="Canli olay ve son gelismeler">
-                <DataFeedback
-                  isLoading={eventsQuery.isLoading}
-                  error={eventsQuery.error as Error | undefined}
-                  isEmpty={events.length === 0}
-                  emptyTitle="Olay verisi yok"
-                  emptyDescription="Bu mac icin olay listesi bulunmuyor."
-                  onRetry={() => void eventsQuery.refetch()}
-                >
-                  <MatchEventsTimeline events={events} />
-                </DataFeedback>
-              </SectionCard>
-            ) : null}
-
-            {activeTab === "predictions" ? (
-              <SectionCard title="Tahminler" subtitle="Calibrated prediction output">
-                <DataFeedback
-                  isLoading={predictionQuery.isLoading}
-                  error={predictionQuery.error as Error | undefined}
-                  isEmpty={!prediction}
-                  isPartial={!prediction?.probabilities || predictionConfidence == null}
-                  emptyTitle="Tahmin verisi yok"
-                  emptyDescription="Bu mac icin prediction endpoint veri dondurmuyor."
-                  partialTitle="Kismi prediction verisi"
-                  partialDescription="Bazi prediction alanlari eksik oldugu icin panel kisitli gosteriliyor."
-                  onRetry={() => void predictionQuery.refetch()}
-                >
-                  {prediction ? (
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {isRecommended ? <StatusBadge status="recommended" /> : null}
-                        {isLowConfidence ? <StatusBadge status="low-confidence" /> : null}
-                      </div>
-
-                      <ProbabilityBar
-                        home={prediction.probabilities.home}
-                        draw={prediction.probabilities.draw}
-                        away={prediction.probabilities.away}
-                      />
-
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
-                          <p className="text-xs text-[color:var(--muted)]">Expected Score</p>
-                          <p className="font-semibold text-[color:var(--foreground)]">
-                            {prediction.expectedScore.home ?? "-"} - {prediction.expectedScore.away ?? "-"}
-                          </p>
-                        </article>
-                        <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
-                          <p className="text-xs text-[color:var(--muted)]">Confidence Score</p>
-                          <ConfidenceGauge value={predictionConfidence} />
-                        </article>
-                      </div>
-
-                      <article className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] p-3">
-                        <p className="text-xs text-[color:var(--muted)]">Summary</p>
-                        <p className="text-sm text-[color:var(--foreground)]">{predictionSummary ?? "Prediction summary bulunmuyor."}</p>
-                      </article>
-
-                      {isLowConfidence ? (
-                        <article className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
-                          Bu macin tahmininde confidence seviyesi dusuk. Karar verirken ek belirsizlik payi oldugunu dikkate alin.
-                        </article>
-                      ) : null}
-
-                      {mergedRiskFlags.length > 0 ? (
-                        <ul className="flex flex-wrap gap-2">
-                          {mergedRiskFlags.map((risk, index) => (
-                            <li key={`${risk}-${index}`} className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[11px] text-amber-200">
-                              {risk}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <EmptyState title="Risk flag yok" description="Bu mac icin riskFlags alaninda kayit bulunmuyor." />
-                      )}
-                    </div>
-                  ) : null}
-                </DataFeedback>
-              </SectionCard>
-            ) : null}
-
-            {activeTab === "risk" ? (
-              <SectionCard title="Risk Uyarilari" subtitle="Model risk flags ve mac riskleri">
-                <ul className="space-y-2">
-                  {mergedRiskFlags.length > 0 ? (
-                    mergedRiskFlags.map((risk, index) => (
-                      <li key={`${risk}-${index}`} className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-                        {risk}
-                      </li>
+                <div className="flex gap-2">
+                  {homeForm.length > 0 ? (
+                    homeForm.slice(0, 5).map((item, i) => (
+                      <FormBadge key={i} result={item.result} />
                     ))
                   ) : (
-                    <li className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-2 text-sm text-[color:var(--muted)]">
-                      Risk uyarisi bulunmuyor.
-                    </li>
+                    <span className="text-sm text-[#9CA3AF]">Form verisi yok</span>
                   )}
-                </ul>
-              </SectionCard>
-            ) : null}
+                </div>
+              </div>
+              <div className="rounded-xl border border-[#2A3035] bg-[#1F2529] p-4">
+                <div className="mb-3 flex items-center gap-3">
+                  <TeamLogo name={match.awayTeamName} logoUrl={match.awayLogoUrl} size={40} />
+                  <h3 className="font-semibold text-[#ECEDEF]">{match.awayTeamName}</h3>
+                </div>
+                <div className="flex gap-2">
+                  {awayForm.length > 0 ? (
+                    awayForm.slice(0, 5).map((item, i) => (
+                      <FormBadge key={i} result={item.result} />
+                    ))
+                  ) : (
+                    <span className="text-sm text-[#9CA3AF]">Form verisi yok</span>
+                  )}
+                </div>
+              </div>
+            </div>
           </>
-        ) : null}
-      </DataFeedback>
+        )}
+
+        {/* STATS */}
+        {activeTab === "stats" && (
+          <>
+            <SectionHeader title="İstatistik Karşılaştırma" subtitle="Takım istatistikleri" />
+            <DataFeedback
+              isLoading={statsQuery.isLoading}
+              error={statsQuery.error as Error | undefined}
+              isEmpty={!stats}
+              emptyTitle="İstatistik yok"
+              emptyDescription="Bu maç için istatistik verisi bulunmuyor."
+              onRetry={() => void statsQuery.refetch()}
+            >
+              {stats && (
+                <ComparisonRadarChart
+                  values={[
+                    { label: "Topla Oynama", home: Math.round(stats.possessionHome ?? 0), away: Math.round(stats.possessionAway ?? 0) },
+                    { label: "Şut", home: Math.round(stats.shotsHome ?? 0), away: Math.round(stats.shotsAway ?? 0) },
+                    { label: "İsabetli Şut", home: Math.round(stats.shotsOnTargetHome ?? 0), away: Math.round(stats.shotsOnTargetAway ?? 0) },
+                    { label: "xG", home: Math.round((stats.xgHome ?? 0) * 10), away: Math.round((stats.xgAway ?? 0) * 10) },
+                    { label: "Korner", home: Math.round(stats.cornersHome ?? 0), away: Math.round(stats.cornersAway ?? 0) }
+                  ]}
+                />
+              )}
+            </DataFeedback>
+          </>
+        )}
+
+        {/* H2H */}
+        {activeTab === "h2h" && (
+          <>
+            <SectionHeader title="Karşılıklı Maçlar" subtitle="Takımların birbirlerine karşı geçmişi" />
+            <div className="rounded-xl border border-[#2A3035] bg-[#1F2529] p-4">
+              <p className="text-sm text-[#9CA3AF]">
+                {match.h2hSummary || "Karşılıklı maç verisi bulunmuyor."}
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* LINEUP */}
+        {activeTab === "lineup" && (
+          <>
+            <SectionHeader title="Kadrolar" subtitle="Muhtemel ilk 11'ler" />
+            <DataFeedback
+              isLoading={homeSquadQuery.isLoading || awaySquadQuery.isLoading}
+              isEmpty={(homeSquadQuery.data?.data ?? []).length === 0 && (awaySquadQuery.data?.data ?? []).length === 0}
+              emptyTitle="Kadro verisi yok"
+              emptyDescription="Kadro bilgisi henüz yayınlanmadı."
+            >
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-xl border border-[#2A3035] bg-[#1F2529] p-4">
+                  <div className="mb-3 flex items-center gap-3">
+                    <TeamLogo name={match.homeTeamName} logoUrl={match.homeLogoUrl} size={40} />
+                    <h3 className="font-semibold text-[#ECEDEF]">{match.homeTeamName}</h3>
+                  </div>
+                  <ul className="space-y-1">
+                    {(homeSquadQuery.data?.data ?? []).map((player) => (
+                      <li key={player.id} className="flex items-center justify-between text-sm">
+                        <span className="text-[#ECEDEF]">{player.name}</span>
+                        <span className="text-xs text-[#9CA3AF]">{player.position}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="rounded-xl border border-[#2A3035] bg-[#1F2529] p-4">
+                  <div className="mb-3 flex items-center gap-3">
+                    <TeamLogo name={match.awayTeamName} logoUrl={match.awayLogoUrl} size={40} />
+                    <h3 className="font-semibold text-[#ECEDEF]">{match.awayTeamName}</h3>
+                  </div>
+                  <ul className="space-y-1">
+                    {(awaySquadQuery.data?.data ?? []).map((player) => (
+                      <li key={player.id} className="flex items-center justify-between text-sm">
+                        <span className="text-[#ECEDEF]">{player.name}</span>
+                        <span className="text-xs text-[#9CA3AF]">{player.position}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </DataFeedback>
+          </>
+        )}
+
+        {/* EVENTS */}
+        {activeTab === "events" && (
+          <>
+            <SectionHeader title="Maç Olayları" subtitle="Gol, kart ve diğer olaylar" />
+            <DataFeedback
+              isLoading={eventsQuery.isLoading}
+              isEmpty={events.length === 0}
+              emptyTitle="Olay yok"
+              emptyDescription="Bu maç için olay kaydı bulunmuyor."
+            >
+              <MatchEventsTimeline events={events} isLive={isLive} />
+            </DataFeedback>
+          </>
+        )}
+
+        {/* PREDICTIONS */}
+        {activeTab === "predictions" && (
+          <>
+            <SectionHeader title="AI Tahmini" subtitle="Model tahmini ve olasılıklar" />
+            <DataFeedback
+              isLoading={predictionQuery.isLoading}
+              isEmpty={!prediction}
+              emptyTitle="Tahmin yok"
+              emptyDescription="Bu maç için tahmin verisi bulunmuyor."
+            >
+              {prediction && (
+                <div className="space-y-4">
+                  {/* Confidence Badge */}
+                  <div className="flex gap-2">
+                    {isRecommended && (
+                      <span className="rounded-full bg-[#34C759]/10 px-4 py-2 text-sm font-bold text-[#34C759]">
+                        ✓ Önerilen Tahmin
+                      </span>
+                    )}
+                    {isLowConfidence && (
+                      <span className="rounded-full bg-[#FF9500]/10 px-4 py-2 text-sm font-bold text-[#FF9500]">
+                        ! Düşük Güven
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Probabilities */}
+                  <div className="rounded-xl bg-[#1F2529] p-4">
+                    <div className="mb-3 flex justify-between text-sm">
+                      <span className="text-[#34C759]">{match.homeTeamName}</span>
+                      <span className="text-[#9CA3AF]">Beraberlik</span>
+                      <span className="text-[#7A84FF]">{match.awayTeamName}</span>
+                    </div>
+                    <div className="flex h-10 overflow-hidden rounded-xl">
+                      <div className="flex items-center justify-center bg-[#34C759] text-sm font-bold text-black" style={{ width: `${Math.max(prediction.probabilities.home ?? 0, 5)}%` }}>
+                        {prediction.probabilities.home > 10 && `${Math.round(prediction.probabilities.home)}%`}
+                      </div>
+                      <div className="flex items-center justify-center bg-[#9CA3AF] text-sm font-bold text-black" style={{ width: `${Math.max(prediction.probabilities.draw ?? 0, 5)}%` }}>
+                        {prediction.probabilities.draw > 10 && `${Math.round(prediction.probabilities.draw)}%`}
+                      </div>
+                      <div className="flex items-center justify-center bg-[#7A84FF] text-sm font-bold text-black" style={{ width: `${Math.max(prediction.probabilities.away ?? 0, 5)}%` }}>
+                        {prediction.probabilities.away > 10 && `${Math.round(prediction.probabilities.away)}%`}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expected Score */}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border border-[#2A3035] bg-[#1F2529] p-4">
+                      <p className="text-xs text-[#9CA3AF]">Beklenen Skor</p>
+                      <p className="mt-1 text-2xl font-bold text-[#ECEDEF]">
+                        {prediction.expectedScore.home ?? "?"} - {prediction.expectedScore.away ?? "?"}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-[#2A3035] bg-[#1F2529] p-4">
+                      <p className="text-xs text-[#9CA3AF]">Güven Skoru</p>
+                      <p className={`mt-1 text-2xl font-bold ${isLowConfidence ? "text-[#FF9500]" : "text-[#34C759]"}`}>
+                        %{predictionConfidence ?? "-"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Summary */}
+                  {prediction.summary && (
+                    <div className="rounded-xl border border-[#2A3035] bg-[#1F2529] p-4">
+                      <p className="text-xs text-[#9CA3AF]">Model Açıklaması</p>
+                      <p className="mt-1 text-sm text-[#ECEDEF]">{prediction.summary}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </DataFeedback>
+          </>
+        )}
+
+        {/* RISK */}
+        {activeTab === "risk" && (
+          <>
+            <SectionHeader title="Risk Faktörleri" subtitle="Model tarafından tespit edilen riskler" />
+            {mergedRiskFlags.length > 0 ? (
+              <ul className="space-y-2">
+                {mergedRiskFlags.map((risk, index) => (
+                  <li key={index} className="flex items-center gap-3 rounded-xl border border-[#FF9500]/30 bg-[#FF9500]/10 p-4">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FF9500] text-sm font-bold text-black">!</span>
+                    <span className="text-sm text-[#FF9500]">{risk}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="rounded-xl border border-[#2A3035] bg-[#1F2529] p-6 text-center">
+                <span className="text-4xl">✓</span>
+                <p className="mt-2 text-[#34C759]">Risk faktörü bulunmuyor</p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
-
