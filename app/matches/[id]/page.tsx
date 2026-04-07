@@ -462,13 +462,13 @@ export default function MatchDetailPage() {
                     </div>
                     <div className="flex h-10 overflow-hidden rounded-xl">
                       <div className="flex items-center justify-center bg-[#34C759] text-sm font-bold text-black" style={{ width: `${Math.max(prediction.probabilities.home ?? 0, 5)}%` }}>
-                        {prediction.probabilities.home > 10 && `${Math.round(prediction.probabilities.home)}%`}
+                        {(prediction.probabilities.home ?? 0) > 10 && `${Math.round(prediction.probabilities.home ?? 0)}%`}
                       </div>
                       <div className="flex items-center justify-center bg-[#9CA3AF] text-sm font-bold text-black" style={{ width: `${Math.max(prediction.probabilities.draw ?? 0, 5)}%` }}>
-                        {prediction.probabilities.draw > 10 && `${Math.round(prediction.probabilities.draw)}%`}
+                        {(prediction.probabilities.draw ?? 0) > 10 && `${Math.round(prediction.probabilities.draw ?? 0)}%`}
                       </div>
                       <div className="flex items-center justify-center bg-[#7A84FF] text-sm font-bold text-black" style={{ width: `${Math.max(prediction.probabilities.away ?? 0, 5)}%` }}>
-                        {prediction.probabilities.away > 10 && `${Math.round(prediction.probabilities.away)}%`}
+                        {(prediction.probabilities.away ?? 0) > 10 && `${Math.round(prediction.probabilities.away ?? 0)}%`}
                       </div>
                     </div>
                   </div>
