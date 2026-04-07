@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { promises as fs } from 'node:fs';
-import path from 'node:path';
+import * as path from 'node:path';
 import { Client } from 'pg';
 
 type BackupRunOptions = {
