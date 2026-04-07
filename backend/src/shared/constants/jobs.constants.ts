@@ -2,6 +2,7 @@ export const QUEUE_NAMES = {
   INGESTION: 'ingestion',
   PREDICTION: 'prediction',
   HEALTH: 'health',
+  BACKUP: 'backup',
   DEAD_LETTER: 'dead-letter',
 } as const;
 
@@ -21,4 +22,5 @@ export const JOB_NAMES = {
   generatePredictions: 'generatePredictions',
   recalculateForms: 'recalculateForms',
   providerHealthCheck: 'providerHealthCheck',
+  syncSupabaseBackup: 'syncSupabaseBackup',
 } as const;

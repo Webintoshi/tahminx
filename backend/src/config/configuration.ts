@@ -55,6 +55,14 @@ export default () => {
       sslMode: env.DATABASE_SSL_MODE,
       usePooler: env.DATABASE_USE_POOLER,
     },
+    backup: {
+      enabled: env.SUPABASE_BACKUP_ENABLED,
+      databaseUrl: env.SUPABASE_BACKUP_DATABASE_URL,
+      directDatabaseUrl: env.SUPABASE_BACKUP_DIRECT_DATABASE_URL || env.SUPABASE_BACKUP_DATABASE_URL,
+      syncCron: env.SUPABASE_BACKUP_SYNC_CRON,
+      startupSync: env.SUPABASE_BACKUP_STARTUP_SYNC,
+      batchSize: Number(env.SUPABASE_BACKUP_BATCH_SIZE),
+    },
     redis: {
       url: redis.url,
       host: redis.host,

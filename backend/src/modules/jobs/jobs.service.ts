@@ -21,6 +21,7 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
     @InjectQueue(QUEUE_NAMES.INGESTION) private readonly ingestionQueue: Queue,
     @InjectQueue(QUEUE_NAMES.PREDICTION) private readonly predictionQueue: Queue,
     @InjectQueue(QUEUE_NAMES.HEALTH) private readonly healthQueue: Queue,
+    @InjectQueue(QUEUE_NAMES.BACKUP) private readonly backupQueue: Queue,
     @InjectQueue(QUEUE_NAMES.DEAD_LETTER) private readonly deadLetterQueue: Queue,
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
@@ -207,6 +208,19 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         jobId: this.safeJobId('repeatable', JOB_NAMES.providerHealthCheck),
       },
     );
+
+    if (this.configService.get<boolean>('backup.enabled')) {
+      await this.backupQueue.add(
+        JOB_NAMES.syncSupabaseBackup,
+        { source: 'scheduler' },
+        {
+          repeat: { pattern: String(this.configService.get<string>('backup.syncCron') || '35 * * * *') },
+          removeOnComplete: 50,
+          removeOnFail: 200,
+          jobId: this.safeJobId('repeatable', JOB_NAMES.syncSupabaseBackup),
+        },
+      );
+    }
   }
 
   private async enqueueStartupHydration(): Promise<void> {
@@ -307,6 +321,20 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         removeOnFail: 100,
       },
     );
+
+    if (this.configService.get<boolean>('backup.enabled') && this.configService.get<boolean>('backup.startupSync')) {
+      await this.backupQueue.add(
+        JOB_NAMES.syncSupabaseBackup,
+        { source: 'startup-hydration' },
+        {
+          jobId: this.safeJobId('startup', JOB_NAMES.syncSupabaseBackup, hourKey),
+          delay: 150_000,
+          priority: 2,
+          removeOnComplete: 25,
+          removeOnFail: 100,
+        },
+      );
+    }
   }
 
   async enqueueIngestionJob(ingestionJobId: string, jobName: string, payload: Record<string, unknown>): Promise<void> {
@@ -468,9 +496,11 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
         this.observeQueueDepth(this.ingestionQueue, QUEUE_NAMES.INGESTION),
         this.observeQueueDepth(this.predictionQueue, QUEUE_NAMES.PREDICTION),
         this.observeQueueDepth(this.healthQueue, QUEUE_NAMES.HEALTH),
+        this.observeQueueDepth(this.backupQueue, QUEUE_NAMES.BACKUP),
         this.observeQueueDepth(this.deadLetterQueue, QUEUE_NAMES.DEAD_LETTER),
         this.detectStuckJobs(this.ingestionQueue, QUEUE_NAMES.INGESTION),
         this.detectStuckJobs(this.predictionQueue, QUEUE_NAMES.PREDICTION),
+        this.detectStuckJobs(this.backupQueue, QUEUE_NAMES.BACKUP),
       ]);
     };
 
