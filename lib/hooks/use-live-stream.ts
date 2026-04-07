@@ -31,6 +31,25 @@ const parsePayload = (value: string): LiveMessagePayload | null => {
   }
 };
 
+const buildStreamUrl = (selectedMatchId?: string) => {
+  const configuredUrl = normalizeBrowserUrl(env.liveSseUrl, false).trim();
+
+  if (!configuredUrl || typeof window === "undefined") {
+    return null;
+  }
+
+  const streamUrl = new URL(configuredUrl, window.location.origin);
+  const liveRoot = streamUrl.pathname.match(/^(.*\/live)(?:\/.*)?$/)?.[1] ?? streamUrl.pathname.replace(/\/+$/, "");
+
+  streamUrl.pathname = selectedMatchId
+    ? `${liveRoot}/matches/${encodeURIComponent(selectedMatchId)}/events/stream`
+    : `${liveRoot}/events/stream`;
+  streamUrl.search = "";
+  streamUrl.hash = "";
+
+  return streamUrl.toString();
+};
+
 const mergeApiResponse = <T,>(oldData: unknown, nextData: T): ApiResponse<T> => {
   const safeOld = oldData as ApiResponse<T> | undefined;
   return {
@@ -84,12 +103,14 @@ export function useLiveStream({
       };
     }
 
-    const streamUrl = new URL(normalizeBrowserUrl(env.liveSseUrl, false), window.location.origin);
-    if (selectedMatchId) {
-      streamUrl.searchParams.set("matchId", selectedMatchId);
+    const streamUrl = buildStreamUrl(selectedMatchId);
+
+    if (!streamUrl) {
+      setMode("polling");
+      return;
     }
 
-    const source = new EventSource(streamUrl.toString());
+    const source = new EventSource(streamUrl);
     const backgroundSyncId = window.setInterval(() => {
       onRefetchLiveRef.current();
       onRefetchEventsRef.current?.();
