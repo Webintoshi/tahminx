@@ -6,11 +6,12 @@ import { SupabaseBackupService } from '../modules/backup/supabase-backup.service
 
 async function bootstrap() {
   const logger = new Logger('SupabaseBackupSyncScript');
-  const app = await NestFactory.createApplicationContext(AppModule, { bufferLogs: true });
+  const app = await NestFactory.createApplicationContext(AppModule);
 
   try {
     const backupService = app.get(SupabaseBackupService);
     const result = await backupService.runFullSync({ source: 'cli' });
+    console.log(JSON.stringify(result));
     logger.log(`Supabase backup sync finished with status=${result.status} tables=${result.tablesCopied} rows=${result.rowsCopied}`);
   } finally {
     await app.close();
