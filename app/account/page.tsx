@@ -123,7 +123,6 @@ export default function AccountPage() {
                 <Checkbox label="Canlı maç alarmları" defaultChecked={profile.notifications?.liveAlerts} />
                 <Checkbox label="Güven skoru düşüş alarmları" defaultChecked={profile.notifications?.confidenceDropAlerts} />
                 <Checkbox label="Haftalık özet" defaultChecked={profile.notifications?.weeklyDigest} />
-                <Checkbox label="Yeni tahmin bildirimleri" defaultChecked={profile.notifications?.newPredictions} />
               </div>
             </div>
 
