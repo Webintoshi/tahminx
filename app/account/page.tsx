@@ -74,7 +74,6 @@ export default function AccountPage() {
               <div className="grid gap-4">
                 <FormInput label="Ad Soyad" defaultValue={profile.fullName} />
                 <FormInput label="E-posta" defaultValue={profile.email} type="email" />
-                <FormInput label="Kullanıcı Adı" defaultValue={profile.username} />
               </div>
             </div>
 
