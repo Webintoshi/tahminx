@@ -348,7 +348,7 @@ export default function MatchDetailPage() {
                     { label: "Şut", home: Math.round(stats.shotsHome ?? 0), away: Math.round(stats.shotsAway ?? 0) },
                     { label: "İsabetli Şut", home: Math.round(stats.shotsOnTargetHome ?? 0), away: Math.round(stats.shotsOnTargetAway ?? 0) },
                     { label: "xG", home: Math.round((stats.xgHome ?? 0) * 10), away: Math.round((stats.xgAway ?? 0) * 10) },
-                    { label: "Korner", home: Math.round(stats.cornersHome ?? 0), away: Math.round(stats.cornersAway ?? 0) }
+                    { label: "Tempo", home: Math.round(stats.paceHome ?? 0), away: Math.round(stats.paceAway ?? 0) }
                   ]}
                 />
               )}
