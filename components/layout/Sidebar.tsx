@@ -12,14 +12,18 @@ export function Sidebar() {
     <aside className="hidden h-screen w-64 shrink-0 flex-col border-r border-[#2A3035] bg-[#171C1F] lg:flex">
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-[#2A3035] px-6">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#7A84FF]">
-            <span className="text-sm font-bold text-black">T</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M6 4h8c2.5 0 4 1.5 4 3.5S16.5 11 14 11H6V4z" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6 11h9c2.5 0 4 1.5 4 3.5S17.5 18 15 18H6V11z" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6 4v14" stroke="black" strokeWidth="2.5" strokeLinecap="round"/>
+            </svg>
           </div>
           <span className="text-lg font-semibold tracking-tight text-[#ECEDEF]">
-            TahminX
+            betify
           </span>
-        </div>
+        </Link>
       </div>
 
       {/* Navigation */}

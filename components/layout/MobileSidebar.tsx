@@ -23,11 +23,17 @@ export function MobileSidebar() {
 
       {open ? (
         <div className="fixed inset-0 z-50 bg-black/50 lg:hidden" role="dialog" aria-modal="true">
-          <aside className="h-full w-80 max-w-[90vw] overflow-y-auto bg-[color:var(--surface)] p-4">
+          <aside className="h-full w-80 max-w-[90vw] overflow-y-auto bg-[#171C1F] p-4">
             <div className="mb-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--accent-2)]">TahminX</p>
-                <p className="text-lg text-[color:var(--foreground)] [font-family:var(--font-display)]">Navigation</p>
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#7A84FF]">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M6 4h8c2.5 0 4 1.5 4 3.5S16.5 11 14 11H6V4z" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M6 11h9c2.5 0 4 1.5 4 3.5S17.5 18 15 18H6V11z" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M6 4v14" stroke="black" strokeWidth="2.5" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <span className="text-lg font-semibold tracking-tight text-[#ECEDEF]">betify</span>
               </div>
               <button
                 type="button"
