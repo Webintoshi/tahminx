@@ -100,9 +100,9 @@ export default function PerformancePage() {
           <ChartContainer title="Spor Türü Bazlı Karşılaştırma" subtitle="Futbol ve basketbol başarı oranları">
             <BarChart
               data={[
-                { label: "Futbol", value: avgFootball, color: "#34C759" },
-                { label: "Basketbol", value: avgBasketball, color: "#7A84FF" },
-                { label: "Genel Ortalama", value: avgOverall, color: "#9CA3AF" }
+                { label: "Futbol", value: avgFootball },
+                { label: "Basketbol", value: avgBasketball },
+                { label: "Genel Ortalama", value: avgOverall }
               ]}
             />
           </ChartContainer>
