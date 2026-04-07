@@ -1,10 +1,50 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { SectionCard } from "@/components/ui/SectionCard";
 import { DataFeedback } from "@/components/states/DataFeedback";
 import { useAccount } from "@/lib/hooks/use-api";
+import { cn } from "@/lib/utils";
+
+function SectionHeader({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="mb-4">
+      <h3 className="text-lg font-semibold text-[#ECEDEF]">{title}</h3>
+      {description && <p className="text-xs text-[#9CA3AF]">{description}</p>}
+    </div>
+  );
+}
+
+function FormInput({ label, defaultValue, type = "text" }: { label: string; defaultValue?: string; type?: string }) {
+  return (
+    <label className="space-y-2 block">
+      <span className="text-xs font-medium text-[#9CA3AF]">{label}</span>
+      <input 
+        type={type}
+        defaultValue={defaultValue} 
+        className="h-11 w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm text-[#ECEDEF] placeholder:text-[#9CA3AF] focus:border-[#7A84FF] focus:outline-none transition-colors"
+      />
+    </label>
+  );
+}
+
+function Checkbox({ label, defaultChecked }: { label: string; defaultChecked?: boolean }) {
+  return (
+    <label className="flex items-center gap-3 cursor-pointer group">
+      <div className="relative flex items-center">
+        <input 
+          type="checkbox" 
+          defaultChecked={defaultChecked}
+          className="peer h-5 w-5 cursor-pointer appearance-none rounded-lg border border-[#2A3035] bg-[#1F2529] checked:border-[#7A84FF] checked:bg-[#7A84FF]"
+        />
+        <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 peer-checked:opacity-100 text-black" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <span className="text-sm text-[#9CA3AF] group-hover:text-[#ECEDEF] transition-colors">{label}</span>
+    </label>
+  );
+}
 
 export default function AccountPage() {
   const { data, error, isLoading, refetch } = useAccount();
@@ -12,89 +52,118 @@ export default function AccountPage() {
   const profile = data?.data;
 
   return (
-    <div className="space-y-5">
-      <PageHeader title="Hesabim" description="Profil, favoriler, bildirim ve guvenlik ayarlari" />
+    <div className="space-y-6 p-6">
+      <PageHeader 
+        title="Hesabım" 
+        description="Profil, favoriler, bildirim ve güvenlik ayarları" 
+      />
 
       <DataFeedback
         isLoading={isLoading}
         error={error as Error | undefined}
         isEmpty={!profile}
-        emptyTitle="Hesap verisi bulunamadi"
-        emptyDescription="Profil bilgileri su an yuklenemedi."
+        emptyTitle="Hesap verisi bulunamadı"
+        emptyDescription="Profil bilgileri şu an yüklenemedi."
         onRetry={() => void refetch()}
       >
         {profile ? (
-          <>
-            <SectionCard title="Profil" subtitle="Kullanici temel bilgileri">
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="space-y-1">
-                  <span className="text-xs text-[color:var(--muted)]">Ad Soyad</span>
-                  <input defaultValue={profile.fullName} className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3" />
-                </label>
-                <label className="space-y-1">
-                  <span className="text-xs text-[color:var(--muted)]">E-posta</span>
-                  <input defaultValue={profile.email} className="h-10 w-full rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3" />
-                </label>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Profile Section */}
+            <div className="rounded-2xl border border-[#2A3035] bg-[#171C1F] p-5">
+              <SectionHeader title="Profil" description="Kullanıcı temel bilgileri" />
+              <div className="grid gap-4">
+                <FormInput label="Ad Soyad" defaultValue={profile.fullName} />
+                <FormInput label="E-posta" defaultValue={profile.email} type="email" />
+                <FormInput label="Kullanıcı Adı" defaultValue={profile.username} />
               </div>
-            </SectionCard>
+            </div>
 
-            <SectionCard title="Favoriler" subtitle="Takip edilen ligler ve takimlar">
-              <div className="grid gap-4 md:grid-cols-2">
-                <article>
-                  <p className="mb-2 text-sm font-semibold text-[color:var(--foreground)]">Favori ligler</p>
+            {/* Favorites Section */}
+            <div className="rounded-2xl border border-[#2A3035] bg-[#171C1F] p-5">
+              <SectionHeader title="Favoriler" description="Takip edilen ligler ve takımlar" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="mb-3 text-sm font-medium text-[#9CA3AF]">Favori Ligler</p>
                   <ul className="space-y-2">
-                    {profile.favoriteLeagues.map((league: string) => (
-                      <li key={league} className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-2 text-sm">{league}</li>
+                    {profile.favoriteLeagues?.map((league: string) => (
+                      <li key={league} className="flex items-center gap-2 rounded-lg border border-[#2A3035] bg-[#1F2529] px-3 py-2 text-sm text-[#ECEDEF]">
+                        <svg className="h-4 w-4 text-[#7A84FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                        {league}
+                      </li>
                     ))}
+                    {(!profile.favoriteLeagues || profile.favoriteLeagues.length === 0) && (
+                      <li className="text-sm text-[#9CA3AF]">Henüz favori lig yok</li>
+                    )}
                   </ul>
-                </article>
-                <article>
-                  <p className="mb-2 text-sm font-semibold text-[color:var(--foreground)]">Favori takimlar</p>
+                </div>
+                <div>
+                  <p className="mb-3 text-sm font-medium text-[#9CA3AF]">Favori Takımlar</p>
                   <ul className="space-y-2">
-                    {profile.favoriteTeams.map((team: string) => (
-                      <li key={team} className="rounded-lg border border-[var(--border)] bg-[color:var(--surface-alt)] px-3 py-2 text-sm">{team}</li>
+                    {profile.favoriteTeams?.map((team: string) => (
+                      <li key={team} className="flex items-center gap-2 rounded-lg border border-[#2A3035] bg-[#1F2529] px-3 py-2 text-sm text-[#ECEDEF]">
+                        <svg className="h-4 w-4 text-[#34C759]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                        {team}
+                      </li>
                     ))}
+                    {(!profile.favoriteTeams || profile.favoriteTeams.length === 0) && (
+                      <li className="text-sm text-[#9CA3AF]">Henüz favori takım yok</li>
+                    )}
                   </ul>
-                </article>
+                </div>
               </div>
-            </SectionCard>
+            </div>
 
-            <SectionCard title="Bildirim ayarlari" subtitle="Canli ve sistem bildirim tercihleri">
-              <div className="space-y-2 text-sm">
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked={profile.notifications.liveAlerts} />
-                  Canli mac alarmlari
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked={profile.notifications.confidenceDropAlerts} />
-                  Guven skoru dusus alarmlari
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked={profile.notifications.weeklyDigest} />
-                  Haftalik ozet
-                </label>
+            {/* Notifications Section */}
+            <div className="rounded-2xl border border-[#2A3035] bg-[#171C1F] p-5">
+              <SectionHeader title="Bildirim Ayarları" description="Canlı ve sistem bildirim tercihleri" />
+              <div className="space-y-4">
+                <Checkbox label="Canlı maç alarmları" defaultChecked={profile.notifications?.liveAlerts} />
+                <Checkbox label="Güven skoru düşüş alarmları" defaultChecked={profile.notifications?.confidenceDropAlerts} />
+                <Checkbox label="Haftalık özet" defaultChecked={profile.notifications?.weeklyDigest} />
+                <Checkbox label="Yeni tahmin bildirimleri" defaultChecked={profile.notifications?.newPredictions} />
               </div>
-            </SectionCard>
+            </div>
 
-            <SectionCard title="Guvenlik" subtitle="Hesap guvenligi ayarlari">
-              <div className="flex flex-wrap gap-3">
+            {/* Security Section */}
+            <div className="rounded-2xl border border-[#2A3035] bg-[#171C1F] p-5">
+              <SectionHeader title="Güvenlik" description="Hesap güvenliği ayarları" />
+              <div className="space-y-3">
                 <button
                   type="button"
                   onClick={() => setSaved(true)}
-                  className="rounded-lg bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-black"
+                  className="w-full rounded-xl bg-[#7A84FF] px-4 py-3 text-sm font-bold text-black transition-all hover:bg-[#7A84FF]/90"
                 >
-                  Ayarlari kaydet
+                  Değişiklikleri Kaydet
                 </button>
-                <button type="button" className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm">
-                  Sifre degistir
+                <button 
+                  type="button" 
+                  className="w-full rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 py-3 text-sm font-medium text-[#ECEDEF] transition-all hover:border-[#7A84FF] hover:text-[#7A84FF]"
+                >
+                  Şifre Değiştir
                 </button>
-                {saved ? <span className="text-sm text-emerald-400">Degisiklikler kaydedildi.</span> : null}
+                <button 
+                  type="button" 
+                  className="w-full rounded-xl border border-[#FF3B30]/30 bg-[#FF3B30]/10 px-4 py-3 text-sm font-medium text-[#FF3B30] transition-all hover:bg-[#FF3B30]/20"
+                >
+                  Hesabı Sil
+                </button>
+                {saved && (
+                  <div className="flex items-center gap-2 rounded-lg bg-[#34C759]/10 px-3 py-2 text-sm text-[#34C759]">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Değişiklikler kaydedildi.
+                  </div>
+                )}
               </div>
-            </SectionCard>
-          </>
+            </div>
+          </div>
         ) : null}
       </DataFeedback>
     </div>
   );
 }
-
