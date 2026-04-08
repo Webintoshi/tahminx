@@ -1,4 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { spawn } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { JobsService } from 'src/modules/jobs/jobs.service';
@@ -9,6 +12,12 @@ import { ManualRemapDto, MappingType } from './dto/manual-remap.dto';
 
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+  private readonly archiveMatchesUrl =
+    'https://raw.githubusercontent.com/xgabora/Club-Football-Match-Data-2000-2025/main/data/Matches.csv';
+  private readonly archiveEloUrl =
+    'https://raw.githubusercontent.com/xgabora/Club-Football-Match-Data-2000-2025/main/data/EloRatings.csv';
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jobsService: JobsService,
@@ -501,6 +510,79 @@ export class AdminService {
       recentJobs: latestJobs,
       recentRuns: latestRuns,
     };
+  }
+
+  async triggerArchiveBootstrap(
+    actorUserId: string | undefined,
+    input: {
+      divisions?: string[];
+      limit?: number;
+      dryRun?: boolean;
+      teamsOnly?: boolean;
+      skipElo?: boolean;
+      matchesUrl?: string;
+      eloUrl?: string;
+    },
+  ) {
+    const scriptPath = path.resolve(process.cwd(), 'dist', 'src', 'scripts', 'import-football-archive.js');
+    if (!fs.existsSync(scriptPath)) {
+      throw new NotFoundException('Archive import script not found in deployment artifact');
+    }
+
+    const divisions = (input.divisions || [])
+      .map((value) => String(value || '').trim().toUpperCase())
+      .filter(Boolean);
+
+    const matchesUrl = input.matchesUrl || this.archiveMatchesUrl;
+    const eloUrl = input.eloUrl || this.archiveEloUrl;
+    const args = [scriptPath, `--matches=${matchesUrl}`];
+
+    if (input.teamsOnly !== false) {
+      args.push('--teams-only');
+    }
+    if (input.dryRun) {
+      args.push('--dry-run');
+    }
+    if (input.skipElo) {
+      args.push('--skip-elo');
+    } else {
+      args.push(`--elo=${eloUrl}`);
+    }
+    if (divisions.length > 0) {
+      args.push(`--divisions=${divisions.join(',')}`);
+    }
+    if (input.limit && input.limit > 0) {
+      args.push(`--limit=${Math.trunc(input.limit)}`);
+    }
+
+    const child = spawn(process.execPath, args, {
+      cwd: process.cwd(),
+      env: process.env,
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+
+    const payload = {
+      pid: child.pid,
+      scriptPath,
+      matchesUrl,
+      eloUrl: input.skipElo ? null : eloUrl,
+      divisions,
+      dryRun: Boolean(input.dryRun),
+      teamsOnly: input.teamsOnly !== false,
+      limit: input.limit ?? null,
+    };
+
+    this.logger.log(`Archive bootstrap triggered pid=${child.pid} divisions=${divisions.join(',') || 'ALL'}`);
+    await this.createAuditLog(
+      actorUserId,
+      'archive-bootstrap-trigger',
+      String(child.pid || 'unknown'),
+      payload as unknown as Prisma.InputJsonValue,
+    );
+
+    return payload;
   }
 
   private async createAuditLog(

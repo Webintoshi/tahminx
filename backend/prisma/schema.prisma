@@ -86,8 +86,10 @@ model Provider {
 
   configs        ProviderConfig[]
   teamMappings   ProviderTeamMapping[]
+  teamAliases    ProviderTeamAlias[]
   leagueMappings ProviderLeagueMapping[]
   matchMappings  ProviderMatchMapping[]
+  ratingSnapshots TeamRatingSnapshot[]
   ingestionJobs  IngestionJob[]
   apiLogs        ApiLog[]
 }
@@ -172,6 +174,8 @@ model Team {
   teamStats   TeamStat[]
   formSnapshots TeamFormSnapshot[]
   providerMaps ProviderTeamMapping[]
+  providerAliases ProviderTeamAlias[]
+  ratingSnapshots TeamRatingSnapshot[]
 
   @@index([sportId])
   @@index([name])
@@ -358,6 +362,26 @@ model ProviderTeamMapping {
   @@index([providerId, reviewNeeded])
 }
 
+model ProviderTeamAlias {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  providerId   String
+  teamId       String?
+  externalAlias String
+  externalName String?
+  countryCode  String?
+  confidence   Float?
+  rawPayload   Json?
+
+  provider Provider @relation(fields: [providerId], references: [id])
+  team     Team?    @relation(fields: [teamId], references: [id])
+
+  @@unique([providerId, externalAlias])
+  @@index([teamId])
+  @@index([providerId, countryCode])
+}
+
 model ProviderLeagueMapping {
   id           String   @id @default(cuid())
   createdAt    DateTime @default(now())
@@ -400,6 +424,27 @@ model ProviderMatchMapping {
   @@unique([matchId, providerId])
   @@index([matchId])
   @@index([providerId, reviewNeeded])
+}
+
+model TeamRatingSnapshot {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  providerId     String
+  teamId         String?
+  snapshotDate   DateTime
+  ratingType     String
+  ratingValue    Float
+  externalTeamRef String
+  countryCode    String?
+  rawPayload     Json?
+
+  provider Provider @relation(fields: [providerId], references: [id])
+  team     Team?    @relation(fields: [teamId], references: [id])
+
+  @@unique([providerId, ratingType, snapshotDate, externalTeamRef, countryCode])
+  @@index([teamId, snapshotDate])
+  @@index([providerId, snapshotDate])
 }
 
 model FeatureSet {

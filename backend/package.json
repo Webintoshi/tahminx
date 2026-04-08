@@ -23,6 +23,8 @@
     "prisma:seed:safe": "node scripts/prisma-seed-safe.mjs",
     "health:check": "node scripts/health-check.mjs",
     "data:export": "ts-node src/scripts/export-critical-data.ts",
+    "archive:football:import": "node dist/src/scripts/import-football-archive.js",
+    "archive:football:import:dev": "ts-node -r tsconfig-paths/register src/scripts/import-football-archive.ts",
     "backup:supabase:sync": "node dist/src/scripts/sync-supabase-backup.js",
     "backup:supabase:sync:dev": "ts-node -r tsconfig-paths/register src/scripts/sync-supabase-backup.ts"
   },

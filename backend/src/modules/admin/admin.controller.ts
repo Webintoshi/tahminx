@@ -105,4 +105,23 @@ export class AdminController {
   async syncSummaryByProvider() {
     return { data: await this.service.syncSummaryByProvider() };
   }
+
+  @Post('archive/bootstrap')
+  async triggerArchiveBootstrap(
+    @Req() req: Request & { user?: { id?: string } },
+    @Body()
+    body: {
+      divisions?: string[];
+      limit?: number;
+      dryRun?: boolean;
+      teamsOnly?: boolean;
+      skipElo?: boolean;
+      matchesUrl?: string;
+      eloUrl?: string;
+    },
+  ) {
+    return {
+      data: await this.service.triggerArchiveBootstrap(req.user?.id, body || {}),
+    };
+  }
 }
