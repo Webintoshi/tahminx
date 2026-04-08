@@ -166,7 +166,7 @@ function LeaguesPageContent() {
               <option value="asc">Artan</option>
             </select>
             <select
-              value={filters.pageSize}
+              value={effectivePageSize}
               onChange={(e) => setFilters({ pageSize: Number(e.target.value), page: 1 })}
               className="h-11 rounded-xl border border-[#2A3035] bg-[#1F2529] px-4 text-sm text-[#ECEDEF]"
             >
