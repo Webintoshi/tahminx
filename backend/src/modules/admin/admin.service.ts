@@ -591,9 +591,16 @@ export class AdminService {
     targetId: string,
     payload: Prisma.InputJsonValue,
   ) {
+    const actorUser = actorUserId
+      ? await this.prisma.user.findUnique({
+          where: { id: actorUserId },
+          select: { id: true },
+        })
+      : null;
+
     await this.prisma.auditLog.create({
       data: {
-        userId: actorUserId || null,
+        userId: actorUser?.id || null,
         action,
         targetType: 'admin-operation',
         targetId,
