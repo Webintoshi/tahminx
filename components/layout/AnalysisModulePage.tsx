@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -138,7 +139,15 @@ function StatCard({
 
 export function AnalysisModulePage({ sport, title, description, focusTitle }: AnalysisModulePageProps) {
   const pathname = usePathname();
-  const matchesQuery = useMatches({ sport, status: "scheduled", pageSize: 8, sortBy: "kickoffAt", sortOrder: "asc" });
+  const [upcomingFrom] = useState(() => new Date().toISOString());
+  const matchesQuery = useMatches({
+    sport,
+    status: "scheduled",
+    from: upcomingFrom,
+    pageSize: 8,
+    sortBy: "kickoffAt",
+    sortOrder: "asc"
+  });
   const predictionsQuery = usePredictions({
     sport,
     pageSize: 8,
@@ -146,7 +155,10 @@ export function AnalysisModulePage({ sport, title, description, focusTitle }: An
     sortOrder: "desc"
   });
 
-  const matches = matchesQuery.data?.data ?? [];
+  const matches = (matchesQuery.data?.data ?? []).filter((match) => {
+    const kickoffAt = Date.parse(match.kickoffAt);
+    return Number.isNaN(kickoffAt) ? false : kickoffAt >= Date.parse(upcomingFrom);
+  });
   const predictions = predictionsQuery.data?.data ?? [];
 
   // Yüksek güvenli tahmin sayısı
