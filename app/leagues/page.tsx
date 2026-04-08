@@ -2,6 +2,7 @@
 
 import { Suspense, useMemo } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { FilterPanel } from "@/components/filters/FilterPanel";
 import { SportTabs } from "@/components/filters/SportTabs";
@@ -74,10 +75,14 @@ function LeagueCard({ league }: { league: { id: string; name: string; country: s
 
 function LeaguesPageContent() {
   const { filters, setFilters } = useFilterQueryState();
+  const searchParams = useSearchParams();
+  const hasExplicitPageSize = searchParams.has("pageSize");
+  const effectivePageSize = !hasExplicitPageSize && filters.pageSize === 20 ? 50 : filters.pageSize;
+
   const leaguesQuery = useLeagues({
     sport: filters.sport,
     page: filters.page,
-    pageSize: filters.pageSize
+    pageSize: effectivePageSize
   });
   
   const leagues = useMemo(() => {
@@ -168,6 +173,7 @@ function LeaguesPageContent() {
               <option value={10}>10 lig</option>
               <option value={20}>20 lig</option>
               <option value={50}>50 lig</option>
+              <option value={100}>Tum ligler</option>
             </select>
           </>
         }
