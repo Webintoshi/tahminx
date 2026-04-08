@@ -122,6 +122,36 @@ const normalizeTeamListItem = (value: unknown): unknown => {
   };
 };
 
+const normalizeTeamLeagueSummary = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  return {
+    leagueId: asString(record.leagueId ?? record.id),
+    leagueName: asString(record.leagueName ?? record.name, "Lig bilgisi yok"),
+    country: asNullableString(record.country),
+    seasonLabel: asNullableString(record.seasonLabel ?? record.season ?? record.seasonName),
+    matchCount: asNumber(record.matchCount) ?? 0,
+    seasonCount: asNumber(record.seasonCount),
+    firstMatchAt: asNullableString(record.firstMatchAt),
+    lastMatchAt: asNullableString(record.lastMatchAt),
+    isCurrent: Boolean(record.isCurrent)
+  };
+};
+
+const normalizeTeamMatchHistorySummary = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  return {
+    totalMatches: asNumber(record.totalMatches) ?? 0,
+    completedMatches: asNumber(record.completedMatches) ?? 0,
+    scheduledMatches: asNumber(record.scheduledMatches) ?? 0,
+    firstMatchAt: asNullableString(record.firstMatchAt),
+    lastMatchAt: asNullableString(record.lastMatchAt)
+  };
+};
+
 const normalizeTeamDetail = (value: unknown): unknown => {
   const record = asRecord(value);
   if (!record) return value;
@@ -150,7 +180,11 @@ const normalizeTeamDetail = (value: unknown): unknown => {
     homeMetric: asNumber(source.homeMetric) ?? homeAvgScored,
     awayMetric: asNumber(source.awayMetric) ?? awayAvgScored,
     attackMetric: asNumber(source.attackMetric) ?? average([homeAvgScored, awayAvgScored]),
-    defenseMetric: asNumber(source.defenseMetric) ?? average([homeAvgConceded, awayAvgConceded])
+    defenseMetric: asNumber(source.defenseMetric) ?? average([homeAvgConceded, awayAvgConceded]),
+    currentLeague: record.currentLeague ? normalizeTeamLeagueSummary(record.currentLeague) : null,
+    latestLeague: record.latestLeague ? normalizeTeamLeagueSummary(record.latestLeague) : null,
+    leagueHistory: Array.isArray(record.leagueHistory) ? record.leagueHistory.map(normalizeTeamLeagueSummary) : [],
+    matchHistorySummary: record.matchHistorySummary ? normalizeTeamMatchHistorySummary(record.matchHistorySummary) : null
   };
 };
 
@@ -860,7 +894,47 @@ export const teamDetailSchema = z.preprocess(normalizeTeamDetail, z.object({
   homeMetric: z.number().nullable().optional(),
   awayMetric: z.number().nullable().optional(),
   attackMetric: z.number().nullable().optional(),
-  defenseMetric: z.number().nullable().optional()
+  defenseMetric: z.number().nullable().optional(),
+  currentLeague: z.object({
+    leagueId: z.string(),
+    leagueName: z.string(),
+    country: z.string().nullable().optional(),
+    seasonLabel: z.string().nullable().optional(),
+    matchCount: z.number(),
+    seasonCount: z.number().nullable().optional(),
+    firstMatchAt: z.string().nullable().optional(),
+    lastMatchAt: z.string().nullable().optional(),
+    isCurrent: z.boolean().optional()
+  }).nullable().optional(),
+  latestLeague: z.object({
+    leagueId: z.string(),
+    leagueName: z.string(),
+    country: z.string().nullable().optional(),
+    seasonLabel: z.string().nullable().optional(),
+    matchCount: z.number(),
+    seasonCount: z.number().nullable().optional(),
+    firstMatchAt: z.string().nullable().optional(),
+    lastMatchAt: z.string().nullable().optional(),
+    isCurrent: z.boolean().optional()
+  }).nullable().optional(),
+  leagueHistory: z.array(z.object({
+    leagueId: z.string(),
+    leagueName: z.string(),
+    country: z.string().nullable().optional(),
+    seasonLabel: z.string().nullable().optional(),
+    matchCount: z.number(),
+    seasonCount: z.number().nullable().optional(),
+    firstMatchAt: z.string().nullable().optional(),
+    lastMatchAt: z.string().nullable().optional(),
+    isCurrent: z.boolean().optional()
+  })).default([]),
+  matchHistorySummary: z.object({
+    totalMatches: z.number(),
+    completedMatches: z.number(),
+    scheduledMatches: z.number(),
+    firstMatchAt: z.string().nullable().optional(),
+    lastMatchAt: z.string().nullable().optional()
+  }).nullable().optional()
 }));
 
 export const teamFormPointSchema = z.object({

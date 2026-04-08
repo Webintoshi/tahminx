@@ -98,6 +98,30 @@ export interface TeamDetail extends TeamListItem {
   awayMetric?: number | null;
   attackMetric?: number | null;
   defenseMetric?: number | null;
+  currentLeague?: TeamLeagueSummary | null;
+  latestLeague?: TeamLeagueSummary | null;
+  leagueHistory?: TeamLeagueSummary[];
+  matchHistorySummary?: TeamMatchHistorySummary | null;
+}
+
+export interface TeamLeagueSummary {
+  leagueId: string;
+  leagueName: string;
+  country?: string | null;
+  seasonLabel?: string | null;
+  matchCount: number;
+  seasonCount?: number | null;
+  firstMatchAt?: string | null;
+  lastMatchAt?: string | null;
+  isCurrent?: boolean;
+}
+
+export interface TeamMatchHistorySummary {
+  totalMatches: number;
+  completedMatches: number;
+  scheduledMatches: number;
+  firstMatchAt?: string | null;
+  lastMatchAt?: string | null;
 }
 
 export interface TeamFormPoint {

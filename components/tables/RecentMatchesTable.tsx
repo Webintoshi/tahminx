@@ -3,13 +3,16 @@ import type { MatchListItem } from "@/types/api-contract";
 import { formatDateTime, safeScore } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
-export function RecentMatchesTable({ matches }: { matches: MatchListItem[] }) {
+export function RecentMatchesTable({ matches, showLeague = false }: { matches: MatchListItem[]; showLeague?: boolean }) {
   return (
     <div className="overflow-hidden rounded-xl border border-[#2A3035]">
       <table className="min-w-full text-sm">
         <thead className="bg-[#1F2529]">
           <tr>
             <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">Maç</th>
+            {showLeague ? (
+              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">Lig</th>
+            ) : null}
             <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">Tarih</th>
             <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">Skor</th>
             <th scope="col" className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">Detay</th>
@@ -18,7 +21,7 @@ export function RecentMatchesTable({ matches }: { matches: MatchListItem[] }) {
         <tbody>
           {matches.length === 0 ? (
             <tr className="bg-[#171C1F]">
-              <td colSpan={4} className="px-4 py-8 text-center text-sm text-[#9CA3AF]">
+              <td colSpan={showLeague ? 5 : 4} className="px-4 py-8 text-center text-sm text-[#9CA3AF]">
                 Gösterilecek maç kaydı yok.
               </td>
             </tr>
@@ -32,6 +35,9 @@ export function RecentMatchesTable({ matches }: { matches: MatchListItem[] }) {
                 )}
               >
                 <td className="px-4 py-3.5 font-medium text-[#ECEDEF]">{match.homeTeamName} vs {match.awayTeamName}</td>
+                {showLeague ? (
+                  <td className="px-4 py-3.5 text-[#9CA3AF]">{match.leagueName}</td>
+                ) : null}
                 <td className="px-4 py-3.5 text-[#9CA3AF]">{formatDateTime(match.kickoffAt)}</td>
                 <td className="px-4 py-3.5">
                   <span className="rounded-lg bg-[#000000] px-3 py-1 font-semibold text-[#ECEDEF]">
