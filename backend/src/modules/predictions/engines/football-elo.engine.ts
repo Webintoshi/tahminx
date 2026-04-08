@@ -3,6 +3,8 @@ import { MatchStatus } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { PredictionEngine, PredictionEngineInput, PredictionEngineOutput } from './prediction.interfaces';
 
+const ARCHIVE_RATING_TYPE = 'elo';
+
 @Injectable()
 export class FootballEloEngine implements PredictionEngine {
   key = 'football-elo';
@@ -18,6 +20,11 @@ export class FootballEloEngine implements PredictionEngine {
     if (!match) {
       return defaultOutput();
     }
+
+    const [homeSnapshotRating, awaySnapshotRating] = await Promise.all([
+      this.loadSnapshotRating(match.homeTeamId, match.matchDate),
+      this.loadSnapshotRating(match.awayTeamId, match.matchDate),
+    ]);
 
     const completedMatches = await this.prisma.match.findMany({
       where: {
@@ -35,28 +42,11 @@ export class FootballEloEngine implements PredictionEngine {
       },
     });
 
-    const ratings = new Map<string, number>();
-    for (const completed of completedMatches) {
-      const home = ratings.get(completed.homeTeamId) ?? 1500;
-      const away = ratings.get(completed.awayTeamId) ?? 1500;
-      const homeExpected = 1 / (1 + Math.pow(10, ((away - (home + 55)) / 400)));
-      const awayExpected = 1 - homeExpected;
+    const ratings =
+      homeSnapshotRating !== null && awaySnapshotRating !== null ? null : this.buildFallbackRatings(completedMatches);
 
-      const homeGoals = Number(completed.homeScore ?? 0);
-      const awayGoals = Number(completed.awayScore ?? 0);
-
-      const homeActual = homeGoals > awayGoals ? 1 : homeGoals === awayGoals ? 0.5 : 0;
-      const awayActual = 1 - homeActual;
-
-      const goalDiff = Math.max(1, Math.abs(homeGoals - awayGoals));
-      const k = 20 + Math.min(20, goalDiff * 5);
-
-      ratings.set(completed.homeTeamId, home + k * (homeActual - homeExpected));
-      ratings.set(completed.awayTeamId, away + k * (awayActual - awayExpected));
-    }
-
-    const homeRating = (ratings.get(match.homeTeamId) ?? 1500) + 55;
-    const awayRating = ratings.get(match.awayTeamId) ?? 1500;
+    const homeRating = (homeSnapshotRating ?? ratings?.get(match.homeTeamId) ?? 1500) + 55;
+    const awayRating = awaySnapshotRating ?? ratings?.get(match.awayTeamId) ?? 1500;
     const diff = homeRating - awayRating;
 
     const baseHome = clamp01(1 / (1 + Math.exp(-diff / 180)));
@@ -108,6 +98,51 @@ export class FootballEloEngine implements PredictionEngine {
       for: gf / matches.length,
       against: ga / matches.length,
     };
+  }
+
+  private async loadSnapshotRating(teamId: string, beforeDate: Date): Promise<number | null> {
+    const snapshot = await this.prisma.teamRatingSnapshot.findFirst({
+      where: {
+        teamId,
+        ratingType: ARCHIVE_RATING_TYPE,
+        snapshotDate: { lte: beforeDate },
+      },
+      orderBy: { snapshotDate: 'desc' },
+      select: { ratingValue: true },
+    });
+
+    return snapshot ? Number(snapshot.ratingValue) : null;
+  }
+
+  private buildFallbackRatings(
+    completedMatches: Array<{
+      homeTeamId: string;
+      awayTeamId: string;
+      homeScore: number | null;
+      awayScore: number | null;
+    }>,
+  ) {
+    const ratings = new Map<string, number>();
+    for (const completed of completedMatches) {
+      const home = ratings.get(completed.homeTeamId) ?? 1500;
+      const away = ratings.get(completed.awayTeamId) ?? 1500;
+      const homeExpected = 1 / (1 + Math.pow(10, (away - (home + 55)) / 400));
+      const awayExpected = 1 - homeExpected;
+
+      const homeGoals = Number(completed.homeScore ?? 0);
+      const awayGoals = Number(completed.awayScore ?? 0);
+
+      const homeActual = homeGoals > awayGoals ? 1 : homeGoals === awayGoals ? 0.5 : 0;
+      const awayActual = 1 - homeActual;
+
+      const goalDiff = Math.max(1, Math.abs(homeGoals - awayGoals));
+      const k = 20 + Math.min(20, goalDiff * 5);
+
+      ratings.set(completed.homeTeamId, home + k * (homeActual - homeExpected));
+      ratings.set(completed.awayTeamId, away + k * (awayActual - awayExpected));
+    }
+
+    return ratings;
   }
 }
 

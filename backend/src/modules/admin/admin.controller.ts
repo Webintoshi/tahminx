@@ -124,4 +124,27 @@ export class AdminController {
       data: await this.service.triggerArchiveBootstrap(req.user?.id, body || {}),
     };
   }
+
+  @Post('archive/refresh-football')
+  async triggerFootballArchiveRefresh(
+    @Req() req: Request & { user?: { id?: string } },
+    @Body()
+    body: {
+      from?: string;
+      to?: string;
+      leagueId?: string;
+      seasonId?: string;
+      limit?: number;
+      chunkSize?: number;
+      skipStandings?: boolean;
+      skipForms?: boolean;
+      skipPredictions?: boolean;
+      onlyArchiveMatches?: boolean;
+      onlyMissingPredictions?: boolean;
+    },
+  ) {
+    return {
+      data: await this.service.triggerFootballArchiveRefresh(req.user?.id, body || {}),
+    };
+  }
 }

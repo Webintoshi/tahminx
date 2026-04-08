@@ -1,12 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { CacheKeys } from 'src/common/utils/cache-key.util';
 import { CacheService } from 'src/common/utils/cache.service';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { PredictionCalibrationService } from 'src/modules/calibration/prediction-calibration.service';
 import { FeatureLabService } from 'src/modules/feature-lab/feature-lab.service';
 import { ModelAnalysisService } from 'src/modules/model-analysis/model-analysis.service';
 import { ModelStrategyService } from 'src/modules/model-strategy/model-strategy.service';
 import { CACHE_TTL_SECONDS } from 'src/shared/constants/cache.constants';
+
+const buildCurrentPredictionScope = (fromDate: Date): Prisma.MatchWhereInput => ({
+  status: { in: ['SCHEDULED', 'LIVE'] },
+  matchDate: { gte: fromDate },
+});
+
+type DashboardPredictionRow = Prisma.PredictionGetPayload<{
+  include: {
+    match: {
+      include: {
+        league: true;
+        homeTeam: true;
+        awayTeam: true;
+        sport: true;
+      };
+    };
+  };
+}>;
 
 @Injectable()
 export class AnalyticsService {
@@ -24,13 +43,14 @@ export class AnalyticsService {
       const now = new Date();
       const startOfToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
       const endOfToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+      const currentPredictionScope = buildCurrentPredictionScope(startOfToday);
 
       const [
         todayMatchCount,
         liveMatchCount,
-        highConfidenceRows,
+        highConfidenceRowsRaw,
         updatedLeaguesRaw,
-        recentPredictionRows,
+        recentPredictionRowsRaw,
         calibratedHighConfidenceCount,
         lowConfidenceCount,
         avgConfidenceAggregate,
@@ -51,7 +71,11 @@ export class AnalyticsService {
           }),
           this.prisma.match.count({ where: { status: 'LIVE' } }),
           this.prisma.prediction.findMany({
-            where: { status: 'PUBLISHED', confidenceScore: { gte: 75 } },
+            where: {
+              status: 'PUBLISHED',
+              confidenceScore: { gte: 75 },
+              match: currentPredictionScope,
+            },
             include: {
               match: {
                 include: { league: true, homeTeam: true, awayTeam: true, sport: true },
@@ -76,7 +100,10 @@ export class AnalyticsService {
             take: 8,
           }),
           this.prisma.prediction.findMany({
-            where: { status: 'PUBLISHED' },
+            where: {
+              status: 'PUBLISHED',
+              match: currentPredictionScope,
+            },
             include: {
               match: {
                 include: { league: true, homeTeam: true, awayTeam: true, sport: true },
@@ -90,17 +117,28 @@ export class AnalyticsService {
               status: 'PUBLISHED',
               confidenceScore: { gte: 75 },
               calibratedConfidenceScore: { not: null },
+              match: currentPredictionScope,
             },
           }),
           this.prisma.prediction.count({
-            where: { status: 'PUBLISHED', OR: [{ isLowConfidence: true }, { confidenceScore: { lt: 60 } }] },
+            where: {
+              status: 'PUBLISHED',
+              OR: [{ isLowConfidence: true }, { confidenceScore: { lt: 60 } }],
+              match: currentPredictionScope,
+            },
           }),
           this.prisma.prediction.aggregate({
-            where: { status: 'PUBLISHED' },
+            where: {
+              status: 'PUBLISHED',
+              match: currentPredictionScope,
+            },
             _avg: { confidenceScore: true },
           }),
           this.prisma.prediction.findMany({
-            where: { status: 'PUBLISHED' },
+            where: {
+              status: 'PUBLISHED',
+              match: currentPredictionScope,
+            },
             select: { riskFlags: true },
             orderBy: { updatedAt: 'desc' },
             take: 2000,
@@ -110,6 +148,9 @@ export class AnalyticsService {
           this.modelStrategyService.analyticsSummary(),
           this.featureLabService.analyticsSummary(),
         ]);
+
+      const highConfidenceRows = highConfidenceRowsRaw as DashboardPredictionRow[];
+      const recentPredictionRows = recentPredictionRowsRaw as DashboardPredictionRow[];
 
       const riskDistribution = riskFlagRows.reduce<Record<string, number>>((acc, item) => {
         const flags = Array.isArray(item.riskFlags) ? (item.riskFlags as string[]) : [];
@@ -125,7 +166,7 @@ export class AnalyticsService {
         calibratedHighConfidenceCount,
         lowConfidenceCount,
         riskDistribution,
-        avgConfidenceScore: Number((avgConfidenceAggregate._avg.confidenceScore || 0).toFixed(2)),
+        avgConfidenceScore: Number((avgConfidenceAggregate._avg?.confidenceScore || 0).toFixed(2)),
         calibrationHealthSummary,
         bestPerformingModel: adminInsights.bestPerformingModel,
         worstPerformingModel: adminInsights.worstPerformingModel,

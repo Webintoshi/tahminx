@@ -585,6 +585,77 @@ export class AdminService {
     return payload;
   }
 
+  async triggerFootballArchiveRefresh(
+    actorUserId: string | undefined,
+    input: {
+      from?: string;
+      to?: string;
+      leagueId?: string;
+      seasonId?: string;
+      limit?: number;
+      chunkSize?: number;
+      skipStandings?: boolean;
+      skipForms?: boolean;
+      skipPredictions?: boolean;
+      onlyArchiveMatches?: boolean;
+      onlyMissingPredictions?: boolean;
+    },
+  ) {
+    const scriptPath = path.resolve(process.cwd(), 'dist', 'src', 'scripts', 'refresh-football-archive.js');
+    if (!fs.existsSync(scriptPath)) {
+      throw new NotFoundException('Archive refresh script not found in deployment artifact');
+    }
+
+    const args = [scriptPath];
+    if (input.from) args.push(`--from=${input.from}`);
+    if (input.to) args.push(`--to=${input.to}`);
+    if (input.leagueId) args.push(`--leagueId=${input.leagueId}`);
+    if (input.seasonId) args.push(`--seasonId=${input.seasonId}`);
+    if (input.limit && input.limit > 0) args.push(`--limit=${Math.trunc(input.limit)}`);
+    if (input.chunkSize && input.chunkSize > 0) args.push(`--chunkSize=${Math.trunc(input.chunkSize)}`);
+    if (input.skipStandings) args.push('--skip-standings');
+    if (input.skipForms) args.push('--skip-forms');
+    if (input.skipPredictions) args.push('--skip-predictions');
+    if (input.onlyArchiveMatches === false) args.push('--include-live-provider-matches');
+    if (input.onlyMissingPredictions === false) args.push('--force-predictions');
+
+    const child = spawn(process.execPath, args, {
+      cwd: process.cwd(),
+      env: process.env,
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+
+    const payload = {
+      pid: child.pid,
+      scriptPath,
+      from: input.from ?? null,
+      to: input.to ?? null,
+      leagueId: input.leagueId ?? null,
+      seasonId: input.seasonId ?? null,
+      limit: input.limit ?? null,
+      chunkSize: input.chunkSize ?? null,
+      skipStandings: Boolean(input.skipStandings),
+      skipForms: Boolean(input.skipForms),
+      skipPredictions: Boolean(input.skipPredictions),
+      onlyArchiveMatches: input.onlyArchiveMatches !== false,
+      onlyMissingPredictions: input.onlyMissingPredictions !== false,
+    };
+
+    this.logger.log(
+      `Football archive refresh triggered pid=${child.pid} archiveOnly=${payload.onlyArchiveMatches} limit=${payload.limit ?? 'ALL'}`,
+    );
+    await this.createAuditLog(
+      actorUserId,
+      'archive-football-refresh-trigger',
+      String(child.pid || 'unknown'),
+      payload as unknown as Prisma.InputJsonValue,
+    );
+
+    return payload;
+  }
+
   private async createAuditLog(
     actorUserId: string | undefined,
     action: string,

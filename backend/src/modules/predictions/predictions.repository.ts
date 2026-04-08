@@ -3,6 +3,16 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { PredictionListQueryDto } from 'src/shared/dto/prediction-list-query.dto';
 
+const currentPredictionScope = () => {
+  const startOfToday = new Date();
+  startOfToday.setUTCHours(0, 0, 0, 0);
+
+  return {
+    status: { in: ['SCHEDULED', 'LIVE'] as const },
+    matchDate: { gte: startOfToday },
+  } satisfies Prisma.MatchWhereInput;
+};
+
 @Injectable()
 export class PredictionsRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -17,6 +27,7 @@ export class PredictionsRepository {
           ? { [sortField]: sortDirection }
           : { match: { matchDate: sortDirection } };
 
+    const scopedToCurrentWindow = !query.status && !query.date && !query.from && !query.to;
     const matchWhere: Prisma.MatchWhereInput = {
       ...(query.date
         ? {
@@ -40,6 +51,7 @@ export class PredictionsRepository {
         ? { OR: [{ homeTeamId: query.teamId }, { awayTeamId: query.teamId }] }
         : {}),
       ...(query.status ? { status: query.status.toUpperCase() as never } : {}),
+      ...(scopedToCurrentWindow ? currentPredictionScope() : {}),
     };
 
     const where: Prisma.PredictionWhereInput = {

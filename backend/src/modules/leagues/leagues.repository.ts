@@ -40,7 +40,17 @@ export class LeaguesRepository {
   }
 
   currentSeason(leagueId: string) {
-    return this.prisma.season.findFirst({ where: { leagueId, isCurrent: true }, orderBy: { seasonYear: 'desc' } });
+    return this.prisma.season.findFirst({
+      where: { leagueId, isCurrent: true },
+      orderBy: { seasonYear: 'desc' },
+    });
+  }
+
+  latestSeason(leagueId: string) {
+    return this.prisma.season.findFirst({
+      where: { leagueId },
+      orderBy: [{ isCurrent: 'desc' }, { seasonYear: 'desc' }, { createdAt: 'desc' }],
+    });
   }
 
   standings(leagueId: string, seasonId?: string) {

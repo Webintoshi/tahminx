@@ -35,6 +35,7 @@ import { BacktestModule } from './modules/backtest/backtest.module';
 import { CalibrationModule } from './modules/calibration/calibration.module';
 import { ModelStrategyModule } from './modules/model-strategy/model-strategy.module';
 import { FeatureLabModule } from './modules/feature-lab/feature-lab.module';
+import { ArchiveModule } from './modules/archive/archive.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { ApiLoggingMiddleware } from './common/logger/api-logging.middleware';
 import { CorrelationIdMiddleware } from './common/logger/correlation-id.middleware';
@@ -82,6 +83,7 @@ import { SanitizeInputMiddleware } from './common/logger/sanitize-input.middlewa
     CalibrationModule,
     ModelStrategyModule,
     FeatureLabModule,
+    ArchiveModule,
   ],
   providers: [
     {

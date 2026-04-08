@@ -3,6 +3,8 @@ import { MatchStatus } from '@prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { FeatureBuilder, PredictionEngineInput } from '../engines/prediction.interfaces';
 
+const ARCHIVE_PROVIDER_CODE = 'club_football_archive';
+
 @Injectable()
 export class FootballFeatureBuilder implements FeatureBuilder {
   constructor(private readonly prisma: PrismaService) {}
@@ -24,33 +26,35 @@ export class FootballFeatureBuilder implements FeatureBuilder {
       return this.zeroFeatures();
     }
 
-    const [homeRecent, awayRecent, homeHomeMatches, awayAwayMatches, homeStanding, awayStanding] = await Promise.all([
-      this.loadRecentTeamMatches(match.homeTeamId, match.matchDate),
-      this.loadRecentTeamMatches(match.awayTeamId, match.matchDate),
-      this.prisma.match.findMany({
-        where: {
-          homeTeamId: match.homeTeamId,
-          status: MatchStatus.COMPLETED,
-          matchDate: { lt: match.matchDate },
-        },
-        orderBy: { matchDate: 'desc' },
-        take: 8,
-      }),
-      this.prisma.match.findMany({
-        where: {
-          awayTeamId: match.awayTeamId,
-          status: MatchStatus.COMPLETED,
-          matchDate: { lt: match.matchDate },
-        },
-        orderBy: { matchDate: 'desc' },
-        take: 8,
-      }),
-      this.resolveStanding(match.leagueId, match.seasonId, match.homeTeamId, match.matchDate),
-      this.resolveStanding(match.leagueId, match.seasonId, match.awayTeamId, match.matchDate),
-    ]);
+    const [homeRecent, awayRecent, homeHomeMatches, awayAwayMatches, homeStanding, awayStanding, archiveSignals] =
+      await Promise.all([
+        this.loadRecentTeamMatches(match.homeTeamId, match.matchDate),
+        this.loadRecentTeamMatches(match.awayTeamId, match.matchDate),
+        this.prisma.match.findMany({
+          where: {
+            homeTeamId: match.homeTeamId,
+            status: MatchStatus.COMPLETED,
+            matchDate: { lt: match.matchDate },
+          },
+          orderBy: { matchDate: 'desc' },
+          take: 8,
+        }),
+        this.prisma.match.findMany({
+          where: {
+            awayTeamId: match.awayTeamId,
+            status: MatchStatus.COMPLETED,
+            matchDate: { lt: match.matchDate },
+          },
+          orderBy: { matchDate: 'desc' },
+          take: 8,
+        }),
+        this.resolveStanding(match.leagueId, match.seasonId, match.homeTeamId, match.matchDate),
+        this.resolveStanding(match.leagueId, match.seasonId, match.awayTeamId, match.matchDate),
+        this.loadArchiveSignals(match.id),
+      ]);
 
-    const homeFormPoints = formPoints(homeRecent, match.homeTeamId);
-    const awayFormPoints = formPoints(awayRecent, match.awayTeamId);
+    const homeFormPoints = archiveSignals?.form5Home ?? formPoints(homeRecent, match.homeTeamId);
+    const awayFormPoints = archiveSignals?.form5Away ?? formPoints(awayRecent, match.awayTeamId);
 
     const homeGoalsFor = avgGoalsFor(homeRecent, match.homeTeamId);
     const homeGoalsAgainst = avgGoalsAgainst(homeRecent, match.homeTeamId);
@@ -59,6 +63,12 @@ export class FootballFeatureBuilder implements FeatureBuilder {
 
     const homeHomeWinRate = winRate(homeHomeMatches, true);
     const awayAwayWinRate = winRate(awayAwayMatches, false);
+    const archiveHomeElo = archiveSignals?.homeElo ?? null;
+    const archiveAwayElo = archiveSignals?.awayElo ?? null;
+    const archiveEloStrength =
+      archiveHomeElo !== null && archiveAwayElo !== null
+        ? normalizeEloStrength(archiveHomeElo, archiveAwayElo)
+        : null;
 
     const restDays = Math.min(
       daysSinceLastMatch(homeRecent[0]?.matchDate, match.matchDate),
@@ -69,7 +79,7 @@ export class FootballFeatureBuilder implements FeatureBuilder {
 
     return {
       recentFormScore: round2((homeFormPoints - awayFormPoints) / 15),
-      homeAwayStrength: round2(homeHomeWinRate - awayAwayWinRate),
+      homeAwayStrength: round2(archiveEloStrength ?? (homeHomeWinRate - awayAwayWinRate)),
       avgGoalsFor: round2((homeGoalsFor + awayGoalsFor) / 2),
       avgGoalsAgainst: round2((homeGoalsAgainst + awayGoalsAgainst) / 2),
       tableRank: Number(homeStanding?.rank ?? 0),
@@ -138,9 +148,41 @@ export class FootballFeatureBuilder implements FeatureBuilder {
       select: { playerId: true },
     });
 
-    const activePlayers = new Set(stats.map((item) => item.playerId));
     const totalPlayers = [...homePlayers, ...awayPlayers].length;
+    if (!totalPlayers || !stats.length) {
+      return 0;
+    }
+
+    const activePlayers = new Set(stats.map((item) => item.playerId));
     return Math.max(0, totalPlayers - activePlayers.size);
+  }
+
+  private async loadArchiveSignals(matchId: string): Promise<{
+    homeElo: number | null;
+    awayElo: number | null;
+    form5Home: number | null;
+    form5Away: number | null;
+  } | null> {
+    const mapping = await this.prisma.providerMatchMapping.findFirst({
+      where: {
+        matchId,
+        provider: { code: ARCHIVE_PROVIDER_CODE },
+      },
+      select: { rawPayload: true },
+    });
+
+    const rawPayload = mapping?.rawPayload;
+    if (!rawPayload || typeof rawPayload !== 'object' || Array.isArray(rawPayload)) {
+      return null;
+    }
+
+    const row = rawPayload as Record<string, unknown>;
+    return {
+      homeElo: parseNumber(row.HomeElo),
+      awayElo: parseNumber(row.AwayElo),
+      form5Home: parseNumber(row.Form5Home),
+      form5Away: parseNumber(row.Form5Away),
+    };
   }
 
   private async computeStandingRankFromMatches(
@@ -314,3 +356,21 @@ const daysSinceLastMatch = (lastMatchDate: Date | undefined, nextMatchDate: Date
 };
 
 const round2 = (value: number): number => Number(value.toFixed(2));
+
+const parseNumber = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+};
+
+const normalizeEloStrength = (homeElo: number, awayElo: number): number => {
+  const diff = homeElo + 55 - awayElo;
+  return Math.max(-1, Math.min(1, diff / 400));
+};

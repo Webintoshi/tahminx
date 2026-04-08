@@ -28,9 +28,10 @@ export class LeaguesService {
         throw new NotFoundException('League not found');
       }
 
-      const [currentSeason, standings, recentResults, upcomingMatches, stats] = await Promise.all([
-        this.repository.currentSeason(id),
-        this.repository.standings(id),
+      const currentSeason = (await this.repository.currentSeason(id)) || (await this.repository.latestSeason(id));
+
+      const [standings, recentResults, upcomingMatches, stats] = await Promise.all([
+        this.repository.standings(id, currentSeason?.id),
         this.repository.recentResults(id),
         this.repository.upcomingMatches(id),
         this.repository.statsSummary(id),
@@ -54,8 +55,11 @@ export class LeaguesService {
   }
 
   async standings(id: string) {
-    return this.cacheService.getOrSet(CacheKeys.leagueStandings(id), CACHE_TTL_SECONDS.standings, async () => ({
-      data: await this.repository.standings(id),
-    }));
+    return this.cacheService.getOrSet(CacheKeys.leagueStandings(id), CACHE_TTL_SECONDS.standings, async () => {
+      const season = (await this.repository.currentSeason(id)) || (await this.repository.latestSeason(id));
+      return {
+        data: await this.repository.standings(id, season?.id),
+      };
+    });
   }
 }
