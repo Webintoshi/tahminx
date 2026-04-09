@@ -4,6 +4,7 @@ import { resolveApiProxyBase, resolveDocsProxyBase } from "./lib/config/api-prox
 const docsProxyBase = resolveDocsProxyBase(resolveApiProxyBase());
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   async rewrites() {
     return [
       {
