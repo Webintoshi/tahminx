@@ -41,6 +41,12 @@ export const sidebarMenu: MenuSection[] = [
     ]
   },
   {
+    title: "Compare",
+    items: [
+      { title: "Team Comparison", href: "/compare/teams", description: "Takim karsilastirma robotu" }
+    ]
+  },
+  {
     title: "Veri Modulleri",
     items: [
       { title: "Ligler", href: "/leagues" },

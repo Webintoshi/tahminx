@@ -32,6 +32,8 @@ import {
   teamDetailSchema,
   teamFormListSchema,
   teamListItemSchema,
+  teamComparisonResponseSchema,
+  seasonListItemSchema,
   teamSquadPlayerSchema
 } from "@/lib/api/contract-schemas";
 import { privateRequest, publicRequest } from "@/lib/api/http-client";
@@ -42,7 +44,8 @@ import {
   type FailedPredictionQuery,
   type MatchQuery,
   type PredictionQuery,
-  type StrategyQuery
+  type StrategyQuery,
+  type TeamComparisonQuery
 } from "@/lib/api/query";
 
 type QueryPrimitive = string | number | boolean | null | undefined;
@@ -139,6 +142,8 @@ export const apiClient = {
   getLeagues: (query?: MatchQuery) => publicRequest(listQueryToPath("/leagues", query), z.array(leagueListItemSchema)),
   getLeagueDetail: (leagueId: string) => publicRequest(`/leagues/${leagueId}`, leagueDetailSchema),
   getLeagueStandings: (leagueId: string) => publicRequest(`/leagues/${leagueId}/standings`, z.array(standingRowSchema)),
+  getSeasons: (leagueId: string) =>
+    publicRequest(listQueryToPath("/seasons", pickQuery({ leagueId }, ["leagueId"])), z.array(seasonListItemSchema)),
 
   getTeams: (query?: MatchQuery) => publicRequest(listQueryToPath("/teams", query), z.array(teamListItemSchema)),
   getTeamDetail: (teamId: string) => publicRequest(`/teams/${teamId}`, teamDetailSchema),
@@ -165,6 +170,8 @@ export const apiClient = {
     publicRequest(listQueryToPath("/predictions", query), z.array(predictionItemSchema)),
   getHighConfidencePredictions: () =>
     publicRequest("/predictions/high-confidence", z.array(predictionItemSchema)),
+  getTeamComparison: (query: TeamComparisonQuery) =>
+    publicRequest(listQueryToPath("/compare/teams", query), teamComparisonResponseSchema),
 
   getDashboardAnalytics: () => publicRequest("/analytics/dashboard", dashboardSummarySchema),
   getGuideSummary: () => publicRequest("/guide/summary", guideSummarySchema),

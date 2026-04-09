@@ -27,6 +27,10 @@ export class CacheKeys {
     return `predictions:match:${matchId}`;
   }
 
+  static teamComparison(hash: string): string {
+    return `comparisons:teams:${hash}`;
+  }
+
   static dashboardSummary(): string {
     return 'analytics:dashboard:summary';
   }

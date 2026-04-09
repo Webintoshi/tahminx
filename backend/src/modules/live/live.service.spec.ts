@@ -37,6 +37,7 @@ describe('LiveService', () => {
       {
         observeQueueJob: jest.fn(),
       } as any,
+      { get: jest.fn(() => null) } as any,
     );
 
     await service.onModuleInit();

@@ -133,6 +133,141 @@ export interface TeamFormPoint {
   value?: number | null;
 }
 
+export interface SeasonListItem {
+  id: string;
+  leagueId: string;
+  seasonYear: number;
+  name: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  isCurrent?: boolean;
+}
+
+export interface TeamComparisonSide {
+  id: string;
+  name: string;
+  shortName?: string | null;
+  logoUrl?: string | null;
+  country?: string | null;
+}
+
+export interface TeamComparisonHeader {
+  homeTeam: TeamComparisonSide;
+  awayTeam: TeamComparisonSide;
+  comparisonDate: string;
+  dataWindow: "last3" | "last5" | "last10";
+  confidenceScore: number;
+  leagueContext: string;
+  cacheHit: boolean;
+}
+
+export interface TeamComparisonCard {
+  key: string;
+  label: string;
+  homeScore: number;
+  awayScore: number;
+  edge: number;
+  winner: "home" | "away" | "balanced";
+  winnerLabel: string;
+  explanation: string;
+}
+
+export type TeamComparisonCategory = TeamComparisonCard;
+
+export interface ScorelineProbability {
+  score: string;
+  probability: number;
+}
+
+export interface TeamScenario {
+  name: string;
+  probabilityScore: number;
+  favoredSide: "home" | "away" | "balanced";
+  reasons: string[];
+  supportingSignals: string[];
+}
+
+export interface TeamComparisonExplanation {
+  shortComment: string;
+  detailedComment: string;
+  expertComment: string;
+  risks: string[];
+  missingDataNotes: string[];
+  confidenceNote: string;
+}
+
+export interface TeamComparisonConfidence {
+  score: number;
+  band: "high" | "medium" | "low";
+  dataQuality: number;
+  dataCoverage: number;
+  windowConsistency: number;
+  mappingConfidence: number;
+}
+
+export interface TeamComparisonMetadata {
+  usedMatches: {
+    home: string[];
+    away: string[];
+  };
+  usedWindows: {
+    home: number;
+    away: number;
+  };
+  usedFeatureSet: string;
+  generatedAt: string;
+  cacheHit: boolean;
+  cacheSource?: string | null;
+  cacheExpiresAt?: string | null;
+  crossLeague: boolean;
+  warnings: string[];
+}
+
+export interface ComparisonVisualizationData {
+  attackScore: number;
+  defenseScore: number;
+  formScore: number;
+  homeAwayScore: number;
+  tempoScore: number;
+  transitionScore: number;
+  setPieceScore: number;
+  resilienceScore: number;
+  homeValues: Record<string, number>;
+  awayValues: Record<string, number>;
+}
+
+export interface TeamComparisonResponse {
+  header: TeamComparisonHeader;
+  comparison: {
+    overallStrength: TeamComparisonCard;
+    attack: TeamComparisonCategory;
+    defense: TeamComparisonCategory;
+    form: TeamComparisonCategory;
+    homeAway: TeamComparisonCategory;
+    tempo: TeamComparisonCategory;
+    setPiece: TeamComparisonCategory;
+    transition: TeamComparisonCategory;
+    squadIntegrity: TeamComparisonCategory;
+  };
+  probabilities: {
+    homeEdge: number;
+    drawTendency: number;
+    awayThreatLevel: number;
+    overTendency: number;
+    bttsTendency: number;
+    topScorelines: ScorelineProbability[];
+    expectedScore: {
+      home: number;
+      away: number;
+    };
+  };
+  scenarios: TeamScenario[];
+  explanation: TeamComparisonExplanation;
+  confidence: TeamComparisonConfidence;
+  metadata: TeamComparisonMetadata;
+  visualization: ComparisonVisualizationData;
+}
+
 export type MatchStatus = "scheduled" | "live" | "completed" | "postponed" | "cancelled";
 
 export interface MatchListItem {

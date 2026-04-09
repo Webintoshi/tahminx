@@ -5,7 +5,6 @@ import { PROVIDER_POLICIES } from 'src/shared/constants/provider.constants';
 import { BaseProviderHttpClient } from './base-provider.client';
 
 const ESPN_SITE_BASE_URL = 'https://site.api.espn.com/apis/site/v2';
-const NBA_LEAGUE_CODE = 'nba';
 
 interface EspnBasketballResponse {
   events?: Array<Record<string, unknown>>;

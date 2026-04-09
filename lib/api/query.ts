@@ -52,6 +52,14 @@ export interface FeatureExperimentResultsQuery extends AdminAnalyticsQuery {
   experimentId?: string;
 }
 
+export interface TeamComparisonQuery {
+  homeTeamId: string;
+  awayTeamId: string;
+  leagueId?: string;
+  seasonId?: string;
+  window?: "last3" | "last5" | "last10";
+}
+
 const MAX_PAGE_SIZE = 100;
 
 export const toQueryString = (query?: Record<string, string | number | boolean | undefined | null>) => {

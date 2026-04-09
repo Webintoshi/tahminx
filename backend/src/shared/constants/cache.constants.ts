@@ -2,6 +2,7 @@ export const CACHE_TTL_SECONDS = {
   matches: 45,
   standings: 180,
   predictions: 60,
+  comparisons: 600,
   analytics: 180,
   providerHealth: 60,
   providerRateLimit: 30,

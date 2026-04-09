@@ -6,6 +6,7 @@ import { PredictionsController } from './predictions.controller';
 import { PredictionsRepository } from './predictions.repository';
 import { PredictionsService } from './predictions.service';
 import { FootballEloEngine } from './engines/football-elo.engine';
+import { FootballLogisticEngine } from './engines/football-logistic.engine';
 import { FootballPoissonEngine } from './engines/football-poisson.engine';
 import { BasketballTeamRatingEngine } from './engines/basketball-team-rating.engine';
 import { BasketballPaceTotalEngine } from './engines/basketball-pace-total.engine';
@@ -23,6 +24,7 @@ import { PredictionRiskFlagEngine } from './risk/prediction-risk-flag.engine';
     PredictionsService,
     PredictionsRepository,
     FootballEloEngine,
+    FootballLogisticEngine,
     FootballPoissonEngine,
     BasketballTeamRatingEngine,
     BasketballPaceTotalEngine,
@@ -33,6 +35,6 @@ import { PredictionRiskFlagEngine } from './risk/prediction-risk-flag.engine';
     PredictionRiskFlagEngine,
     DefaultExplanationBuilder,
   ],
-  exports: [PredictionsService],
+  exports: [PredictionsService, FootballEloEngine, FootballPoissonEngine, FootballLogisticEngine, DefaultConfidenceCalculator, PredictionConfidenceService],
 })
 export class PredictionsModule {}

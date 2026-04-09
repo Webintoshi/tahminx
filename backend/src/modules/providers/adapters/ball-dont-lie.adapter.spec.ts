@@ -1,6 +1,10 @@
 ﻿import { BallDontLieProviderAdapter } from './ball-dont-lie.adapter';
 
 class BallDontLieClientMock {
+  hasApiKeyConfigured() {
+    return true;
+  }
+
   async getTeams() {
     return {
       data: [

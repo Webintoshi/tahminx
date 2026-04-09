@@ -70,6 +70,60 @@ export class FootballEloEngine implements PredictionEngine {
     };
   }
 
+  async previewMatchup(input: {
+    homeTeamId: string;
+    awayTeamId: string;
+    leagueId?: string | null;
+    beforeDate?: Date;
+  }): Promise<PredictionEngineOutput> {
+    const beforeDate = input.beforeDate ?? new Date();
+    const [homeSnapshotRating, awaySnapshotRating] = await Promise.all([
+      this.loadSnapshotRating(input.homeTeamId, beforeDate),
+      this.loadSnapshotRating(input.awayTeamId, beforeDate),
+    ]);
+
+    const completedMatches = await this.prisma.match.findMany({
+      where: {
+        ...(input.leagueId ? { leagueId: input.leagueId } : {}),
+        status: MatchStatus.COMPLETED,
+        matchDate: { lt: beforeDate },
+      },
+      orderBy: { matchDate: 'asc' },
+      take: 400,
+      select: {
+        homeTeamId: true,
+        awayTeamId: true,
+        homeScore: true,
+        awayScore: true,
+      },
+    });
+
+    const ratings =
+      homeSnapshotRating !== null && awaySnapshotRating !== null ? null : this.buildFallbackRatings(completedMatches);
+
+    const homeRating = (homeSnapshotRating ?? ratings?.get(input.homeTeamId) ?? 1500) + 55;
+    const awayRating = awaySnapshotRating ?? ratings?.get(input.awayTeamId) ?? 1500;
+    const diff = homeRating - awayRating;
+
+    const baseHome = clamp01(1 / (1 + Math.exp(-diff / 180)));
+    const draw = clamp01(0.22 - Math.min(0.08, Math.abs(diff) / 2200));
+    const homeWin = clamp01(baseHome * (1 - draw));
+    const awayWin = clamp01(1 - draw - homeWin);
+
+    const [homeScoring, awayScoring] = await Promise.all([
+      this.avgGoals(input.homeTeamId, true, beforeDate),
+      this.avgGoals(input.awayTeamId, false, beforeDate),
+    ]);
+
+    return {
+      probabilities: normalizeProbabilities({ homeWin, draw, awayWin }),
+      expectedScore: {
+        home: round2((homeScoring.for + awayScoring.against) / 2),
+        away: round2((awayScoring.for + homeScoring.against) / 2),
+      },
+    };
+  }
+
   private async avgGoals(teamId: string, homePerspective: boolean, beforeDate: Date) {
     const matches = await this.prisma.match.findMany({
       where: {

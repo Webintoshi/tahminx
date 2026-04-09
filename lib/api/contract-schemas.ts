@@ -1375,3 +1375,577 @@ export const featureExperimentResultSchema = z.object({
   isWinner: z.boolean().optional(),
   updatedAt: z.string().nullable().optional()
 });
+
+const normalizeSeasonListItem = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  if ("leagueId" in record && "seasonYear" in record && "name" in record) {
+    return record;
+  }
+
+  return {
+    id: asString(record.id),
+    leagueId: asString(record.leagueId),
+    seasonYear: asNumber(record.seasonYear) ?? asNumber(record.year) ?? 0,
+    name: asString(record.name, `Season ${asString(record.seasonYear ?? record.year, "-")}`),
+    startDate: asNullableString(record.startDate),
+    endDate: asNullableString(record.endDate),
+    isCurrent: Boolean(record.isCurrent)
+  };
+};
+
+const normalizeComparisonWindow = (value: unknown): "last3" | "last5" | "last10" => {
+  if (value === "last3" || value === "last5" || value === "last10") return value;
+  return "last5";
+};
+
+const normalizeComparisonBand = (value: unknown, score: number): "high" | "medium" | "low" => {
+  const text = asString(value).toLowerCase();
+  if (text === "high" || text === "medium" || text === "low") return text;
+  if (score >= 75) return "high";
+  if (score >= 55) return "medium";
+  return "low";
+};
+
+const comparisonCategoryLabel = (key: string) => {
+  switch (key) {
+    case "overall":
+      return "Genel guc";
+    case "attack":
+      return "Hucum";
+    case "defense":
+      return "Savunma";
+    case "form":
+      return "Form";
+    case "venue":
+      return "Ic saha / deplasman";
+    case "tempo":
+      return "Tempo";
+    case "set_piece":
+      return "Duran top";
+    case "transition":
+      return "Gecis oyunu";
+    case "resilience":
+      return "Dayaniklilik";
+    case "squad":
+      return "Kadro butunlugu";
+    default:
+      return key;
+  }
+};
+
+const comparisonWinnerLabel = (winner: "home" | "away" | "balanced") => {
+  if (winner === "home") return "Ev sahibi onde";
+  if (winner === "away") return "Deplasman onde";
+  return "Denge";
+};
+
+const normalizeComparisonWinner = (value: unknown, edge: number): "home" | "away" | "balanced" => {
+  const text = asString(value).toLowerCase();
+  if (text === "home" || text === "away" || text === "balanced") return text;
+  if (edge >= 4) return "home";
+  if (edge <= -4) return "away";
+  return "balanced";
+};
+
+const normalizeComparisonExplanation = (key: string, winner: "home" | "away" | "balanced", edge: number) => {
+  const label = comparisonCategoryLabel(key).toLowerCase();
+  if (winner === "balanced") {
+    return `${label} tarafinda fark sinirli gorunuyor.`;
+  }
+
+  return `${label} tarafinda ${winner === "home" ? "ev sahibi" : "deplasman"} taraf lehine ${Math.abs(edge)} puanlik bir ayrisma var.`;
+};
+
+const buildComparisonCard = (input: {
+  key: string;
+  label?: string;
+  homeScore: number;
+  awayScore: number;
+  edge?: number | null;
+  winner?: unknown;
+  explanation?: string | null;
+}) => {
+  const edge = Math.round(input.edge ?? input.homeScore - input.awayScore);
+  const winner = normalizeComparisonWinner(input.winner, edge);
+  return {
+    key: input.key,
+    label: input.label ?? comparisonCategoryLabel(input.key),
+    homeScore: Number((input.homeScore ?? 0).toFixed(1)),
+    awayScore: Number((input.awayScore ?? 0).toFixed(1)),
+    edge,
+    winner,
+    winnerLabel: comparisonWinnerLabel(winner),
+    explanation: input.explanation || normalizeComparisonExplanation(input.key, winner, edge)
+  };
+};
+
+const normalizeWarning = (warning: string) => {
+  switch (warning) {
+    case "limited_sample":
+    case "insufficientComparisonSample":
+      return "Orneklem dar oldugu icin sinyaller oynak olabilir.";
+    case "proxy_xg_active":
+    case "heavyProxyXgUsage":
+      return "xG verisinin bir bolumu proxy hesaplarla tamamlandi.";
+    case "scope_fallback_applied":
+    case "scopeFallbackApplied":
+      return "Talep edilen pencere dolmadi; sistem daha genis bir pencereye geri dondu.";
+    case "cross_league_context":
+    case "crossLeagueContext":
+      return "Karsilastirma farkli lig baglamlarini icerdigi icin tempo ve guc seviyeleri birebir tasinmayabilir.";
+    case "lowComparisonDataCoverage":
+      return "Veri kapsami sinirli; ciktiyi ihtiyatli okumak gerekir.";
+    case "windowConsistencyRisk":
+      return "Takimlar icin kullanilan veri pencereleri tutarli degil.";
+    case "lowMappingConfidence":
+      return "Takim esleme guveni ideal seviyede degil.";
+    case "lowModelConsensus":
+      return "Model ciktilari arasinda tam uzlasi yok.";
+    default:
+      return warning.replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim();
+  }
+};
+
+const normalizeScenarioSide = (value: unknown): "home" | "away" | "balanced" => {
+  const text = asString(value).toLowerCase();
+  if (text === "home" || text === "away" || text === "balanced") return text;
+  return "balanced";
+};
+
+const scenarioFavorFromKey = (
+  key: string,
+  probabilities: { home: number; away: number },
+  edgeScore: number
+): "home" | "away" | "balanced" => {
+  if (key === "dominant_home") return "home";
+  if (key === "balanced" || key === "controlled_match") return "balanced";
+  if (edgeScore >= 8 || probabilities.home >= probabilities.away) return "home";
+  if (edgeScore <= -8 || probabilities.away > probabilities.home) return "away";
+  return "balanced";
+};
+
+const averageNumbers = (values: Array<number | null>) => {
+  const valid = values.filter((value): value is number => value != null && Number.isFinite(value));
+  if (!valid.length) return 0;
+  return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+};
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+const poissonProbability = (lambda: number, goals: number) => {
+  const factorial = goals <= 1 ? 1 : Array.from({ length: goals }, (_, index) => index + 1).reduce((acc, item) => acc * item, 1);
+  return (Math.exp(-lambda) * Math.pow(lambda, goals)) / factorial;
+};
+
+const estimateOverTendency = (homeExpected: number, awayExpected: number) => {
+  let cumulative = 0;
+  for (let homeGoals = 0; homeGoals <= 5; homeGoals += 1) {
+    for (let awayGoals = 0; awayGoals <= 5; awayGoals += 1) {
+      if (homeGoals + awayGoals <= 2) {
+        cumulative += poissonProbability(homeExpected, homeGoals) * poissonProbability(awayExpected, awayGoals);
+      }
+    }
+  }
+  return Number(((1 - cumulative) * 100).toFixed(1));
+};
+
+const estimateBttsTendency = (homeExpected: number, awayExpected: number) =>
+  Number((((1 - Math.exp(-homeExpected)) * (1 - Math.exp(-awayExpected))) * 100).toFixed(1));
+
+const normalizeTeamComparisonResponse = (value: unknown): unknown => {
+  const record = asRecord(value);
+  if (!record) return value;
+
+  const header = asRecord(record.header);
+  const comparison = asRecord(record.comparison);
+  const probabilities = asRecord(record.probabilities);
+
+  if (header && "comparisonDate" in header && comparison && probabilities) {
+    return record;
+  }
+
+  const homeTeam = asRecord(header?.homeTeam);
+  const awayTeam = asRecord(header?.awayTeam);
+  const league = asRecord(header?.league);
+  const metadata = asRecord(record.metadata);
+  const cache = asRecord(metadata?.cache);
+  const confidence = asRecord(record.confidence);
+  const explanation = asRecord(record.explanation);
+  const homeStrengths = asRecord(comparison?.homeStrengths);
+  const awayStrengths = asRecord(comparison?.awayStrengths);
+
+  const comparisonDate = asString(header?.generatedAt ?? metadata?.generatedAt, new Date().toISOString());
+  const confidenceScore = asNumber(confidence?.score) ?? 0;
+  const dataWindow = normalizeComparisonWindow(header?.requestedWindow ?? metadata?.requestedWindow);
+  const cacheHit = Boolean(cache?.hit);
+  const comparisonDataCoverage = asNumber(metadata?.comparisonDataCoverage ?? confidence?.comparisonDataCoverage) ?? 0;
+  const windowConsistency = asNumber(metadata?.windowConsistency ?? confidence?.windowConsistency) ?? 0;
+  const mappingConfidence = asNumber(confidence?.mappingConfidence) ?? 0;
+  const modelConsensus = asNumber(confidence?.modelConsensus) ?? 0;
+  const warnings = Array.from(
+    new Set([
+      ...asStringArray(metadata?.warnings),
+      ...asStringArray(confidence?.riskFlags)
+    ])
+  );
+
+  const rawCategoryItems = Array.isArray(comparison?.categoryComparisons)
+    ? comparison.categoryComparisons.map((item) => asRecord(item)).filter((item): item is Record<string, unknown> => Boolean(item))
+    : [];
+
+  const categoryMap = new Map(rawCategoryItems.map((item) => [asString(item.category), item]));
+  const overallEdge = asNumber(comparison?.edgeScore) ?? 0;
+  const overallCard = buildComparisonCard({
+    key: "overall",
+    homeScore: clamp(50 + overallEdge / 2, 0, 100),
+    awayScore: clamp(50 - overallEdge / 2, 0, 100),
+    edge: overallEdge,
+    winner: comparison?.favourite,
+    explanation:
+      overallEdge >= 8
+        ? "Ev sahibi tarafin toplu sinyal paketi bir miktar daha guclu."
+        : overallEdge <= -8
+          ? "Deplasman tarafi toplu sinyal paketinde bir miktar onde."
+          : "Genel tablo dengeli ve tek yonlu bir sinyal vermiyor."
+  });
+
+  const categoryCard = (key: string, fallbackHome?: number | null, fallbackAway?: number | null) => {
+    const item = categoryMap.get(key);
+    return buildComparisonCard({
+      key,
+      homeScore: asNumber(item?.homeScore) ?? fallbackHome ?? 50,
+      awayScore: asNumber(item?.awayScore) ?? fallbackAway ?? 50,
+      edge: asNumber(item?.edge),
+      winner: item?.advantage,
+      explanation: null
+    });
+  };
+
+  const expectedScore = asRecord(probabilities?.expectedScore);
+  const expectedHome = asNumber(expectedScore?.home) ?? 0;
+  const expectedAway = asNumber(expectedScore?.away) ?? 0;
+  const homeWin = asPercent(probabilities?.homeWin) ?? asNumber(probabilities?.homeEdge) ?? 0;
+  const draw = asPercent(probabilities?.draw) ?? asNumber(probabilities?.drawTendency) ?? 0;
+  const awayWin = asPercent(probabilities?.awayWin) ?? asNumber(probabilities?.awayThreatLevel) ?? 0;
+
+  const normalizedScenarios = Array.isArray(record.scenarios)
+    ? record.scenarios
+        .map((item) => asRecord(item))
+        .filter((item): item is Record<string, unknown> => Boolean(item))
+        .slice(0, 5)
+        .map((item) => {
+          const key = asString(item.key ?? item.name);
+          const favoredSide =
+            normalizeScenarioSide(item.favoredSide) !== "balanced"
+              ? normalizeScenarioSide(item.favoredSide)
+              : scenarioFavorFromKey(key, { home: homeWin, away: awayWin }, overallEdge);
+
+          return {
+            name: asString(item.label ?? item.name ?? key, "Scenario"),
+            probabilityScore: asPercent(item.probabilityHint ?? item.probabilityScore) ?? 0,
+            favoredSide,
+            reasons:
+              asStringArray(item.reasons).length > 0
+                ? asStringArray(item.reasons)
+                : [asString(item.reason, "Bu senaryo birden fazla sinyalin birlesiminden cikiyor.")],
+            supportingSignals: Array.from(
+              new Set(
+                asStringArray(item.supportingSignals).length > 0
+                  ? asStringArray(item.supportingSignals)
+                  : [comparisonCategoryLabel(key.replace("dominant_home", "overall").replace("controlled_match", "defense"))]
+              )
+            )
+          };
+        })
+    : [];
+
+  const shortComment = asString(explanation?.short ?? explanation?.shortComment, "Karsilastirma sinyalleri olasilik temelli okunmali.");
+  const detailedComment = asString(
+    explanation?.detailed ?? explanation?.detailedComment,
+    "Takimlar arasindaki farklar kategori bazinda ayrisiyor; yine de veri kapsami ve model uzlasisi birlikte okunmali."
+  );
+  const expertComment = asString(
+    explanation?.expert ?? explanation?.expertComment,
+    "Bu motor sayisal bir edge uretir; cikti kesinlik degil, veri ve baglam yorumu icin bir referanstir."
+  );
+
+  const missingDataNotes = Array.from(
+    new Set(
+      warnings
+        .filter((item) =>
+          ["proxy_xg_active", "heavyProxyXgUsage", "limited_sample", "insufficientComparisonSample", "scope_fallback_applied", "scopeFallbackApplied"].includes(item)
+        )
+        .map(normalizeWarning)
+    )
+  );
+
+  const risks = Array.from(
+    new Set(
+      warnings
+        .filter((item) => !["proxy_xg_active", "heavyProxyXgUsage"].includes(item))
+        .map(normalizeWarning)
+    )
+  );
+
+  const leagueContext = league?.name
+    ? asString(league.name)
+    : Boolean(metadata?.crossLeague)
+      ? "Cross-league context"
+      : "League context not specified";
+
+  const usedMatchesHome = Array.isArray(asRecord(metadata?.sourceMatches)?.home)
+    ? (asRecord(metadata?.sourceMatches)?.home as unknown[]).map((item) => asString(item)).filter(Boolean)
+    : [];
+  const usedMatchesAway = Array.isArray(asRecord(metadata?.sourceMatches)?.away)
+    ? (asRecord(metadata?.sourceMatches)?.away as unknown[]).map((item) => asString(item)).filter(Boolean)
+    : [];
+
+  return {
+    header: {
+      homeTeam: {
+        id: asString(homeTeam?.id),
+        name: asString(homeTeam?.name, "Ev sahibi"),
+        shortName: asNullableString(homeTeam?.shortName),
+        logoUrl: asNullableString(homeTeam?.logoUrl),
+        country: null
+      },
+      awayTeam: {
+        id: asString(awayTeam?.id),
+        name: asString(awayTeam?.name, "Deplasman"),
+        shortName: asNullableString(awayTeam?.shortName),
+        logoUrl: asNullableString(awayTeam?.logoUrl),
+        country: null
+      },
+      comparisonDate,
+      dataWindow,
+      confidenceScore,
+      leagueContext,
+      cacheHit
+    },
+    comparison: {
+      overallStrength: overallCard,
+      attack: categoryCard("attack", asNumber(homeStrengths?.attack_score), asNumber(awayStrengths?.attack_score)),
+      defense: categoryCard("defense", asNumber(homeStrengths?.defense_score), asNumber(awayStrengths?.defense_score)),
+      form: categoryCard("form", asNumber(homeStrengths?.form_score), asNumber(awayStrengths?.form_score)),
+      homeAway: categoryCard("venue", asNumber(homeStrengths?.home_score), asNumber(awayStrengths?.away_score)),
+      tempo: categoryCard("tempo", asNumber(homeStrengths?.tempo_score), asNumber(awayStrengths?.tempo_score)),
+      setPiece: categoryCard("set_piece", asNumber(homeStrengths?.set_piece_score), asNumber(awayStrengths?.set_piece_score)),
+      transition: categoryCard("transition", asNumber(homeStrengths?.transition_score), asNumber(awayStrengths?.transition_score)),
+      squadIntegrity: categoryCard("squad", asNumber(homeStrengths?.squad_score), asNumber(awayStrengths?.squad_score))
+    },
+    probabilities: {
+      homeEdge: Number(homeWin.toFixed(1)),
+      drawTendency: Number(draw.toFixed(1)),
+      awayThreatLevel: Number(awayWin.toFixed(1)),
+      overTendency: estimateOverTendency(expectedHome, expectedAway),
+      bttsTendency: estimateBttsTendency(expectedHome, expectedAway),
+      topScorelines: Array.isArray(probabilities?.topScorelines)
+        ? probabilities.topScorelines
+            .map((item) => asRecord(item))
+            .filter((item): item is Record<string, unknown> => Boolean(item))
+            .map((item) => ({
+              score: asString(item.score, "0-0"),
+              probability: asPercent(item.probability) ?? 0
+            }))
+        : [],
+      expectedScore: {
+        home: Number(expectedHome.toFixed(2)),
+        away: Number(expectedAway.toFixed(2))
+      }
+    },
+    scenarios: normalizedScenarios,
+    explanation: {
+      shortComment,
+      detailedComment,
+      expertComment,
+      risks,
+      missingDataNotes,
+      confidenceNote:
+        confidenceScore >= 75
+          ? "Veri kapsami makul gorunuyor; yine de cikti olasilik temellidir."
+          : confidenceScore >= 55
+            ? "Sinyaller kullanisli fakat belirsizlik tamamen kapanmis degil."
+            : "Guven seviyesi dusuk; sonucu tek basina karar sinyali gibi okumamak gerekir."
+    },
+    confidence: {
+      score: confidenceScore,
+      band: normalizeComparisonBand(confidence?.level ?? confidence?.band, confidenceScore),
+      dataQuality: Number((averageNumbers([comparisonDataCoverage, mappingConfidence, modelConsensus]) * 100).toFixed(1)),
+      dataCoverage: Number((comparisonDataCoverage * 100).toFixed(1)),
+      windowConsistency: Number((windowConsistency * 100).toFixed(1)),
+      mappingConfidence: Number((mappingConfidence * 100).toFixed(1))
+    },
+    metadata: {
+      usedMatches: {
+        home: usedMatchesHome,
+        away: usedMatchesAway
+      },
+      usedWindows: {
+        home: asNumber(asRecord(metadata?.effectiveWindow)?.home) ?? usedMatchesHome.length,
+        away: asNumber(asRecord(metadata?.effectiveWindow)?.away) ?? usedMatchesAway.length
+      },
+      usedFeatureSet: asString(asRecord(probabilities?.ensemble)?.method, "comparison-core"),
+      generatedAt: comparisonDate,
+      cacheHit,
+      cacheSource: asNullableString(cache?.source),
+      cacheExpiresAt: asNullableString(cache?.expiresAt),
+      crossLeague: Boolean(metadata?.crossLeague),
+      warnings: warnings.map(normalizeWarning)
+    },
+    visualization: {
+      attackScore: asNumber(homeStrengths?.attack_score) ?? 0,
+      defenseScore: asNumber(homeStrengths?.defense_score) ?? 0,
+      formScore: asNumber(homeStrengths?.form_score) ?? 0,
+      homeAwayScore: asNumber(homeStrengths?.home_score) ?? 0,
+      tempoScore: asNumber(homeStrengths?.tempo_score) ?? 0,
+      transitionScore: asNumber(homeStrengths?.transition_score) ?? 0,
+      setPieceScore: asNumber(homeStrengths?.set_piece_score) ?? 0,
+      resilienceScore: asNumber(homeStrengths?.resilience_score) ?? 0,
+      homeValues: {
+        attackScore: asNumber(homeStrengths?.attack_score) ?? 0,
+        defenseScore: asNumber(homeStrengths?.defense_score) ?? 0,
+        formScore: asNumber(homeStrengths?.form_score) ?? 0,
+        homeAwayScore: asNumber(homeStrengths?.home_score) ?? 0,
+        tempoScore: asNumber(homeStrengths?.tempo_score) ?? 0,
+        transitionScore: asNumber(homeStrengths?.transition_score) ?? 0,
+        setPieceScore: asNumber(homeStrengths?.set_piece_score) ?? 0,
+        resilienceScore: asNumber(homeStrengths?.resilience_score) ?? 0
+      },
+      awayValues: {
+        attackScore: asNumber(awayStrengths?.attack_score) ?? 0,
+        defenseScore: asNumber(awayStrengths?.defense_score) ?? 0,
+        formScore: asNumber(awayStrengths?.form_score) ?? 0,
+        homeAwayScore: asNumber(awayStrengths?.away_score) ?? 0,
+        tempoScore: asNumber(awayStrengths?.tempo_score) ?? 0,
+        transitionScore: asNumber(awayStrengths?.transition_score) ?? 0,
+        setPieceScore: asNumber(awayStrengths?.set_piece_score) ?? 0,
+        resilienceScore: asNumber(awayStrengths?.resilience_score) ?? 0
+      }
+    }
+  };
+};
+
+export const seasonListItemSchema = z.preprocess(normalizeSeasonListItem, z.object({
+  id: z.string(),
+  leagueId: z.string(),
+  seasonYear: z.number(),
+  name: z.string(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+  isCurrent: z.boolean().optional()
+}));
+
+export const teamComparisonSideSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  shortName: z.string().nullable().optional(),
+  logoUrl: z.string().nullable().optional(),
+  country: z.string().nullable().optional()
+});
+
+export const teamComparisonCardSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  homeScore: z.number(),
+  awayScore: z.number(),
+  edge: z.number(),
+  winner: z.enum(["home", "away", "balanced"]),
+  winnerLabel: z.string(),
+  explanation: z.string()
+});
+
+export const scorelineProbabilitySchema = z.object({
+  score: z.string(),
+  probability: z.number()
+});
+
+export const teamScenarioSchema = z.object({
+  name: z.string(),
+  probabilityScore: z.number(),
+  favoredSide: z.enum(["home", "away", "balanced"]),
+  reasons: z.array(z.string()),
+  supportingSignals: z.array(z.string())
+});
+
+export const teamComparisonResponseSchema = z.preprocess(normalizeTeamComparisonResponse, z.object({
+  header: z.object({
+    homeTeam: teamComparisonSideSchema,
+    awayTeam: teamComparisonSideSchema,
+    comparisonDate: z.string(),
+    dataWindow: z.enum(["last3", "last5", "last10"]),
+    confidenceScore: z.number(),
+    leagueContext: z.string(),
+    cacheHit: z.boolean()
+  }),
+  comparison: z.object({
+    overallStrength: teamComparisonCardSchema,
+    attack: teamComparisonCardSchema,
+    defense: teamComparisonCardSchema,
+    form: teamComparisonCardSchema,
+    homeAway: teamComparisonCardSchema,
+    tempo: teamComparisonCardSchema,
+    setPiece: teamComparisonCardSchema,
+    transition: teamComparisonCardSchema,
+    squadIntegrity: teamComparisonCardSchema
+  }),
+  probabilities: z.object({
+    homeEdge: z.number(),
+    drawTendency: z.number(),
+    awayThreatLevel: z.number(),
+    overTendency: z.number(),
+    bttsTendency: z.number(),
+    topScorelines: z.array(scorelineProbabilitySchema),
+    expectedScore: z.object({
+      home: z.number(),
+      away: z.number()
+    })
+  }),
+  scenarios: z.array(teamScenarioSchema),
+  explanation: z.object({
+    shortComment: z.string(),
+    detailedComment: z.string(),
+    expertComment: z.string(),
+    risks: z.array(z.string()),
+    missingDataNotes: z.array(z.string()),
+    confidenceNote: z.string()
+  }),
+  confidence: z.object({
+    score: z.number(),
+    band: z.enum(["high", "medium", "low"]),
+    dataQuality: z.number(),
+    dataCoverage: z.number(),
+    windowConsistency: z.number(),
+    mappingConfidence: z.number()
+  }),
+  metadata: z.object({
+    usedMatches: z.object({
+      home: z.array(z.string()),
+      away: z.array(z.string())
+    }),
+    usedWindows: z.object({
+      home: z.number(),
+      away: z.number()
+    }),
+    usedFeatureSet: z.string(),
+    generatedAt: z.string(),
+    cacheHit: z.boolean(),
+    cacheSource: z.string().nullable().optional(),
+    cacheExpiresAt: z.string().nullable().optional(),
+    crossLeague: z.boolean(),
+    warnings: z.array(z.string())
+  }),
+  visualization: z.object({
+    attackScore: z.number(),
+    defenseScore: z.number(),
+    formScore: z.number(),
+    homeAwayScore: z.number(),
+    tempoScore: z.number(),
+    transitionScore: z.number(),
+    setPieceScore: z.number(),
+    resilienceScore: z.number(),
+    homeValues: z.record(z.string(), z.number()),
+    awayValues: z.record(z.string(), z.number())
+  })
+}));

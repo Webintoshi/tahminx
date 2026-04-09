@@ -15,6 +15,7 @@ import { PredictionConfidenceService } from './calibration/prediction-confidence
 import { BasketballPaceTotalEngine } from './engines/basketball-pace-total.engine';
 import { BasketballTeamRatingEngine } from './engines/basketball-team-rating.engine';
 import { FootballEloEngine } from './engines/football-elo.engine';
+import { FootballLogisticEngine } from './engines/football-logistic.engine';
 import { FootballPoissonEngine } from './engines/football-poisson.engine';
 import { PredictionEngineInput, PredictionEngineOutput } from './engines/prediction.interfaces';
 import { BasketballFeatureBuilder } from './features/basketball-feature.builder';
@@ -83,6 +84,7 @@ export class PredictionsService {
     private readonly cacheService: CacheService,
     private readonly footballEloEngine: FootballEloEngine,
     private readonly footballPoissonEngine: FootballPoissonEngine,
+    private readonly footballLogisticEngine: FootballLogisticEngine,
     private readonly basketballRatingEngine: BasketballTeamRatingEngine,
     private readonly basketballPaceEngine: BasketballPaceTotalEngine,
     private readonly footballFeatureBuilder: FootballFeatureBuilder,
@@ -492,7 +494,7 @@ export class PredictionsService {
         return this.footballPoissonEngine.run(input);
       }
       if (model === 'logistic') {
-        return this.runFootballLogisticModel(features);
+        return this.footballLogisticEngine.run(features);
       }
       return null;
     }
@@ -504,34 +506,6 @@ export class PredictionsService {
       return this.basketballPaceEngine.run(input);
     }
     return null;
-  }
-
-  private runFootballLogisticModel(features: Record<string, number>): PredictionEngineOutput {
-    const form = Number(features.recentFormScore || 0);
-    const homeAway = Number(features.homeAwayStrength || 0);
-    const oppDiff = Number(features.opponentStrengthDiff || 0);
-    const missing = Number(features.missingPlayersCount || 0);
-    const tableRank = Number(features.tableRank || 10);
-    const avgGoalsFor = Number(features.avgGoalsFor || 1.4);
-    const avgGoalsAgainst = Number(features.avgGoalsAgainst || 1.2);
-
-    const signal =
-      form * 0.72 +
-      homeAway * 0.58 +
-      oppDiff * 0.41 +
-      (10 - tableRank) * 0.03 -
-      missing * 0.11;
-    const homeWin = clamp01(1 / (1 + Math.exp(-signal)));
-    const draw = clamp01(0.21 + (1 - Math.abs(homeWin - 0.5) * 2) * 0.09);
-    const awayWin = clamp01(1 - homeWin - draw);
-
-    return {
-      probabilities: normalizeProbabilities({ homeWin, draw, awayWin }),
-      expectedScore: {
-        home: Number((Math.max(0.4, avgGoalsFor + form * 0.4 - missing * 0.08)).toFixed(2)),
-        away: Number((Math.max(0.3, avgGoalsAgainst * 0.9 + (1 - homeAway) * 0.45)).toFixed(2)),
-      },
-    };
   }
 
   private defaultEnsembleForSport(sportCode: SportCode) {

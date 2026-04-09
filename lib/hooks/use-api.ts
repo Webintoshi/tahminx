@@ -5,7 +5,6 @@ import { apiClient } from "@/lib/api/client";
 import type {
   ApiResponse,
   AuthTokens,
-  AuthUser,
   CalibrationResult,
   CalibrationRunResponse,
   DashboardSummary,
@@ -29,9 +28,11 @@ import type {
   PerformanceDriftSummary,
   PredictionItem,
   PredictionRiskSummary,
+  SeasonListItem,
   Sport,
   StandingRow,
   StrategySummary,
+  TeamComparisonResponse,
   TeamDetail,
   TeamFormPoint,
   TeamListItem,
@@ -43,7 +44,8 @@ import type {
   FeatureExperimentResultsQuery,
   MatchQuery,
   PredictionQuery,
-  StrategyQuery
+  StrategyQuery,
+  TeamComparisonQuery
 } from "@/lib/api/query";
 import type { AccountProfile, MembershipPlan, ModelInsight, PerformanceRecord } from "@/types/domain";
 
@@ -172,6 +174,14 @@ export const useLeagueStandings = (leagueId?: string) =>
     ...detailQueryOptions
   });
 
+export const useSeasons = (leagueId?: string) =>
+  useQuery({
+    queryKey: ["seasons", leagueId],
+    queryFn: () => apiClient.getSeasons(leagueId as string),
+    enabled: Boolean(leagueId),
+    ...listQueryOptions
+  });
+
 export const useTeams = (query?: MatchQuery) =>
   useQuery({ queryKey: buildListKey("teams", query), queryFn: () => apiClient.getTeams(query), ...listQueryOptions });
 
@@ -265,6 +275,19 @@ export const usePredictions = (query?: PredictionQuery) =>
 
 export const useHighConfidencePredictions = () =>
   useQuery({ queryKey: ["predictions-high-confidence"], queryFn: apiClient.getHighConfidencePredictions, ...listQueryOptions });
+
+export const useTeamComparisonQuery = (query: TeamComparisonQuery, enabled = true) =>
+  useQuery({
+    queryKey: ["team-comparison", query],
+    queryFn: () => apiClient.getTeamComparison(query),
+    enabled,
+    staleTime: 5 * 60_000,
+    gcTime: 15 * 60_000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false
+  });
 
 export const useDashboardAnalytics = () =>
   useQuery({ queryKey: ["analytics-dashboard"], queryFn: apiClient.getDashboardAnalytics, ...listQueryOptions });
@@ -470,6 +493,7 @@ export type SportsQueryResult = ApiResponse<Sport[]>;
 export type LeaguesQueryResult = ApiResponse<LeagueListItem[]>;
 export type LeagueDetailQueryResult = ApiResponse<LeagueDetail>;
 export type LeagueStandingsQueryResult = ApiResponse<StandingRow[]>;
+export type SeasonsQueryResult = ApiResponse<SeasonListItem[]>;
 export type TeamsQueryResult = ApiResponse<TeamListItem[]>;
 export type TeamDetailQueryResult = ApiResponse<TeamDetail>;
 export type TeamMatchesQueryResult = ApiResponse<MatchListItem[]>;
@@ -481,6 +505,7 @@ export type MatchEventsQueryResult = ApiResponse<MatchEvent[]>;
 export type MatchStatsQueryResult = ApiResponse<MatchStats>;
 export type MatchPredictionQueryResult = ApiResponse<MatchPrediction>;
 export type PredictionsQueryResult = ApiResponse<PredictionItem[]>;
+export type TeamComparisonQueryResult = ApiResponse<TeamComparisonResponse>;
 export type DashboardQueryResult = ApiResponse<DashboardSummary>;
 export type CalibrationResultsQueryResult = ApiResponse<CalibrationResult[]>;
 export type CalibrationRunMutationResult = ApiResponse<CalibrationRunResponse>;

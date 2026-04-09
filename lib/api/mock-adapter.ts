@@ -63,6 +63,7 @@ import {
   teamsMock,
   teamSquadMock
 } from "@/lib/api/mock-contract-data";
+import { seasonsMock, teamComparisonMock } from "@/lib/api/mock-team-comparison-data";
 
 const toNumber = (value: string | null, fallback: number) => {
   const parsed = Number(value);
@@ -369,6 +370,11 @@ export async function getMockResponse(path: string): Promise<ApiResponse<unknown
     return ok<StandingRow[]>(standingsMock[id] ?? []);
   }
 
+  if (pathname === "/api/v1/seasons") {
+    const list = seasonsMock.filter((item) => !query.leagueId || item.leagueId === query.leagueId);
+    return ok(list);
+  }
+
   if (pathname === "/api/v1/teams") {
     const list = teamsMock.filter((item) => {
       if (query.sport && query.sport !== "all" && item.sportKey !== query.sport) return false;
@@ -468,6 +474,52 @@ export async function getMockResponse(path: string): Promise<ApiResponse<unknown
 
   if (pathname === "/api/v1/predictions/high-confidence") {
     return ok<PredictionItem[]>(predictionsMock.filter((item) => (item.confidenceScore ?? 0) >= 78));
+  }
+
+  if (pathname === "/api/v1/compare/teams") {
+    const homeTeamId = url.searchParams.get("homeTeamId");
+    const awayTeamId = url.searchParams.get("awayTeamId");
+
+    if (!homeTeamId || !awayTeamId) {
+      return {
+        success: false,
+        data: null,
+        error: {
+          code: "BAD_REQUEST",
+          message: "homeTeamId and awayTeamId are required"
+        }
+      };
+    }
+
+    if (homeTeamId === awayTeamId) {
+      return {
+        success: false,
+        data: null,
+        error: {
+          code: "BAD_REQUEST",
+          message: "Home and away teams must be different"
+        }
+      };
+    }
+
+    return ok({
+      ...teamComparisonMock,
+      header: {
+        ...teamComparisonMock.header,
+        homeTeam: {
+          ...teamComparisonMock.header.homeTeam,
+          id: homeTeamId
+        },
+        awayTeam: {
+          ...teamComparisonMock.header.awayTeam,
+          id: awayTeamId
+        },
+        dataWindow:
+          url.searchParams.get("window") === "last3" || url.searchParams.get("window") === "last10"
+            ? (url.searchParams.get("window") as "last3" | "last10")
+            : "last5"
+      }
+    });
   }
 
   if (pathname === "/api/v1/analytics/dashboard") {

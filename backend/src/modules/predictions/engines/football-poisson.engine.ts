@@ -59,6 +59,47 @@ export class FootballPoissonEngine implements PredictionEngine {
     };
   }
 
+  async previewMatchup(input: {
+    homeTeamId: string;
+    awayTeamId: string;
+    beforeDate?: Date;
+  }): Promise<PredictionEngineOutput> {
+    const beforeDate = input.beforeDate ?? new Date();
+    const [homeStats, awayStats] = await Promise.all([
+      this.teamGoalProfile(input.homeTeamId, beforeDate),
+      this.teamGoalProfile(input.awayTeamId, beforeDate),
+    ]);
+
+    const lambdaHome = clampMin((homeStats.for + awayStats.against) / 2, 0.2);
+    const lambdaAway = clampMin((awayStats.for + homeStats.against) / 2, 0.2);
+
+    const maxGoals = 6;
+    let homeWin = 0;
+    let draw = 0;
+    let awayWin = 0;
+
+    for (let homeGoals = 0; homeGoals <= maxGoals; homeGoals += 1) {
+      for (let awayGoals = 0; awayGoals <= maxGoals; awayGoals += 1) {
+        const probability = poisson(lambdaHome, homeGoals) * poisson(lambdaAway, awayGoals);
+        if (homeGoals > awayGoals) {
+          homeWin += probability;
+        } else if (homeGoals === awayGoals) {
+          draw += probability;
+        } else {
+          awayWin += probability;
+        }
+      }
+    }
+
+    return {
+      probabilities: normalize({ homeWin, draw, awayWin }),
+      expectedScore: {
+        home: Number(lambdaHome.toFixed(2)),
+        away: Number(lambdaAway.toFixed(2)),
+      },
+    };
+  }
+
   private async teamGoalProfile(teamId: string, beforeDate: Date): Promise<{ for: number; against: number }> {
     const rows = await this.prisma.match.findMany({
       where: {

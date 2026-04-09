@@ -13,11 +13,13 @@ describe('JobsService scheduler tuning', () => {
       queueMock,
       queueMock,
       queueMock,
+      queueMock,
       {
         ingestionJob: {
           update: jest.fn().mockResolvedValue(undefined),
         },
       } as any,
+      { get: jest.fn((key: string) => (key === 'backup.enabled' ? false : false)) } as any,
       { setQueueDepth: jest.fn() } as any,
       { raise: jest.fn().mockResolvedValue(undefined) } as any,
     );
@@ -66,8 +68,10 @@ describe('JobsService scheduler tuning', () => {
       { add: jest.fn(), getJobCounts: jest.fn().mockResolvedValue({}), getJobs: jest.fn().mockResolvedValue([]) } as any,
       { add: jest.fn(), getJobCounts: jest.fn().mockResolvedValue({}), getJobs: jest.fn().mockResolvedValue([]) } as any,
       { add: jest.fn(), getJobCounts: jest.fn().mockResolvedValue({}), getJobs: jest.fn().mockResolvedValue([]) } as any,
+      { add: jest.fn(), getJobCounts: jest.fn().mockResolvedValue({}), getJobs: jest.fn().mockResolvedValue([]) } as any,
       deadLetterQueue,
       prismaMock,
+      { get: jest.fn(() => false) } as any,
       { setQueueDepth: jest.fn() } as any,
       { raise: jest.fn().mockResolvedValue(undefined) } as any,
     );
