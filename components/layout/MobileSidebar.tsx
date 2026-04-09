@@ -33,7 +33,7 @@ export function MobileSidebar() {
                     <path d="M6 4v14" stroke="black" strokeWidth="2.5" strokeLinecap="round"/>
                   </svg>
                 </div>
-                <span className="text-lg font-semibold tracking-tight text-[#ECEDEF]">betify</span>
+                <span className="text-lg font-semibold tracking-tight text-[#ECEDEF]">TahminX</span>
               </div>
               <button
                 type="button"

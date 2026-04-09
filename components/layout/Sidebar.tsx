@@ -21,7 +21,7 @@ export function Sidebar() {
             </svg>
           </div>
           <span className="text-lg font-semibold tracking-tight text-[#ECEDEF]">
-            betify
+            TahminX
           </span>
         </Link>
       </div>

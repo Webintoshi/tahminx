@@ -49,12 +49,11 @@ export function Logo({ className = "", size = "md" }: LogoProps) {
         </svg>
       </div>
       
-      {/* Text */}
       <span 
         className={`font-bold tracking-tight text-[#ECEDEF] ${text}`}
         style={{ fontFamily: "Inter, system-ui, sans-serif" }}
       >
-        betify
+        TahminX
       </span>
     </div>
   );

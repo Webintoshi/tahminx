@@ -71,7 +71,7 @@ function Navbar() {
               <path d="M6 4v14" stroke="black" strokeWidth="2.5" strokeLinecap="round"/>
             </svg>
           </div>
-          <span className="text-xl font-bold text-[#ECEDEF]">betify</span>
+          <span className="text-xl font-bold text-[#ECEDEF]">TahminX</span>
         </Link>
         
         <div className="hidden md:flex items-center gap-6">
@@ -169,7 +169,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-[#ECEDEF] mb-3">
-              Profesyoneller Neden <span className="text-[#7A84FF]">betify</span>?
+              Profesyoneller Neden <span className="text-[#7A84FF]">TahminX</span>?
             </h2>
             <p className="text-[#9CA3AF]">Yapay zeka destekli analizler ve gerçek zamanlı veriler</p>
           </div>
@@ -248,7 +248,7 @@ export default function HomePage() {
                 <path d="M6 4v14" stroke="black" strokeWidth="2.5" strokeLinecap="round"/>
               </svg>
             </div>
-            <span className="text-lg font-bold text-[#ECEDEF]">betify</span>
+            <span className="text-lg font-bold text-[#ECEDEF]">TahminX</span>
           </div>
           
           <div className="flex items-center gap-6">
@@ -256,7 +256,7 @@ export default function HomePage() {
             <Link href="/membership" className="text-sm text-[#9CA3AF] hover:text-[#ECEDEF] transition-colors">Planlar</Link>
           </div>
           
-          <p className="text-sm text-[#9CA3AF]">© 2025 betify</p>
+          <p className="text-sm text-[#9CA3AF]">© 2025 TahminX</p>
         </div>
       </footer>
     </div>
